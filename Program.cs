@@ -12,15 +12,21 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .WriteTo.Console()
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+    .CreateBootstrapLogger();
 
 try
 {
     Log.Information("正在启动 Web 应用程序主机...");
 
     var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration) // 从配置文件读取
+        .ReadFrom.Services(services) // 允许从DI容器注入服务到Sink或Enricher
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
+    //builder.Services.AddSerilog();
 
-    builder.Services.AddSerilog();
     // Add services to the container.
 
     // 注册自定义服务（Scoped生命周期： 每个请求创建一个新实例）
