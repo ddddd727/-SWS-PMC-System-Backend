@@ -29,5 +29,27 @@ namespace PMCSystem_Backend.Controllers
             input.Timestamp = DateTime.Now;
             return Ok(input);
         }
+
+        [HttpPost("posttodb")]
+        public IActionResult PostToDb([FromBody] ExampleDto input)
+        {
+            try
+            {
+                _service.SaveExample(input);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
+        }
+
+        [HttpGet("getfromdb")]
+        public IActionResult GetFromDb()
+        {
+            var data = _service.GetDbData();
+            return Ok(data);
+        }
     }
 }

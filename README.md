@@ -1,194 +1,203 @@
 # SWS-PMC-System-Backend - 后端 API 项目
 
-## 项目概述
+## 项目简介
+本项目是一个典型的 **前后端分离** 后端服务，使用 **ASP.NET Core Web API (.NET 8)** 开发，为 Vue 3 前端提供 RESTful 接口。
 
-本项目是一个基于 **ASP.NET Core Web API** 的后端服务，采用前后端分离架构设计，使用 **C# (.NET 8)** 开发。主要为 Vue 3 前端提供 RESTful API 接口。
+项目采用干净的分层架构，代码结构清晰、易于扩展，已集成常用企业级组件，适合多人协作开发。
 
-项目采用分层架构（Controllers → Services → Models），代码结构清晰、易于维护和扩展，便于多人协作开发。
+**当前核心特性**：
 
-## 技术栈
++ Swagger 在线 API 文档与测试
++ EF Core + SQL Server 数据库访问
++ AutoMapper 自动对象映射
++ CORS 跨域支持
++ 依赖注入、Swagger、日志等基础服务
 
-- **后端框架**：ASP.NET Core Web API (.NET 8)
-- **语言**：C#
-- **API 文档**：Swashbuckle.AspNetCore（Swagger UI）
-- **依赖注入**：内置 DI 容器
-- **跨域支持**：CORS（允许 Vue 前端访问）
-- **版本控制**：Git
-- **开发工具推荐**：Visual Studio 2022 / Visual Studio Code / Rider
+## 当前安装的依赖（NuGet 包）
+| 包名 | 作用 | 备注 |
+| --- | --- | --- |
+| Microsoft.EntityFrameworkCore.SqlServer | EF Core SQL Server 数据库提供程序 | 核心 ORM |
+| Microsoft.EntityFrameworkCore.Tools | EF Core 迁移工具（dotnet ef） | 用于生成迁移 |
+| Microsoft.EntityFrameworkCore.Design | 设计时支持 | 迁移命令必需 |
+| Swashbuckle.AspNetCore | Swagger / Swagger UI | API 文档与在线测试 |
+| AutoMapper | 对象映射（Entity ↔ DTO） | 减少手动赋值代码 |
+| AutoMapper.Extensions.Microsoft.DependencyInjection | AutoMapper 的 DI 集成 | 支持注入 IMapper |
+
+
+**附属服务**：
+
++ **数据库**：SQL Server LocalDB（开发环境），连接字符串在 `appsettings.json`
++ **Swagger UI**：访问 `/swagger`
++ **CORS**：允许 `http://localhost:3000`（Vue 默认端口）
 
 ## 项目结构
-
-```
+```plain
 BackendProject/
-├── Controllers/          # API 控制器（处理 HTTP 请求）
+├── Controllers/          # API 控制器
+├── Entities/             # 数据库实体类（EF Core）
 ├── Models/               # DTO（数据传输对象）
-├── Services/             # 业务逻辑层（接口 + 实现）
-├── Properties/           # 启动配置（launchSettings.json）
-├── appsettings.json      # 配置文件
-├── Program.cs            # 应用入口、服务注册与中间件配置
-├── BackendProject.csproj # 项目文件
-└── README.md             # 本文档
+├── Services/             # 业务逻辑层
+    ├──Interfaces					# 业务接口
+    ├──Impletation				# 接口对应实现
+├── MappingProfiles/      # AutoMapper 配置
+├── Data/                 # DbContext
+├── Properties/           # 启动配置
+├── Migrations/           # EF Core 迁移文件（自动生成）
+├── appsettings.json      # 配置（连接字符串等）
+├── Program.cs            # 服务注册与中间件配置
+└── README.md
 ```
 
-## 快速配置环境（新成员 10 分钟内上手）
+## 快速上手（新成员 10 分钟运行项目）
+### 1. 环境准备（只需一次）
++ 安装 **.NET 8 SDK**：[https://dotnet.microsoft.com/download/dotnet/8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
++ 安装 **Git**
++ （推荐）安装 Visual Studio 2022 Community
 
-### 1. 安装必备工具（只需一次）
-- **.NET 8 SDK**  
-  下载地址：https://dotnet.microsoft.com/download/dotnet/8.0  
-  安装后打开终端/PowerShell 执行：  
-  ```bash
-  dotnet --version
-  ```
-  应显示 `8.x.x`（如 8.0.100）
-
-- **Git**  
-  下载地址：https://git-scm.com/downloads  
-  安装后配置用户名和邮箱（只需一次）：
-  ```bash
-  git config --global user.name "Your Name"
-  git config --global user.email "your@email.com"
-  ```
-
-- **推荐 IDE**  
-  - Visual Studio 2022 Community（免费，内置一切）：https://visualstudio.microsoft.com/vs/community/  
-  - 或 Visual Studio Code + C# 扩展（轻量级）
-
-### 2. 获取代码并首次运行
+### 2. 获取代码并运行
 ```bash
-# 克隆仓库
 git clone https://your-repo-url/BackendProject.git
 cd BackendProject
 
-# 恢复 NuGet 包（自动下载依赖）
-dotnet restore
+dotnet restore          # 恢复所有 NuGet 依赖
+dotnet build            # 构建检查
 
-# 构建项目（检查是否有编译错误）
-dotnet build
+# 应用数据库迁移（首次运行必须）
+dotnet ef database update
 
-# 运行项目
-dotnet run
+dotnet run              # 或在 Visual Studio 按 F5
 ```
-运行成功后，控制台会显示类似：
+
+运行成功后，浏览器自动打开 **Swagger UI**：`https://localhost:{端口}/swagger`
+
+## 开发流程（标准步骤）
+### 1. 拉取最新代码
+```bash
+git pull origin main
 ```
-Now listening on: https://localhost:7xxx
-Now listening on: http://localhost:5xxx
+
+### 2. 创建功能分支（必须）
+```bash
+git checkout -b feature/功能描述   # 如 feature/add-user-module
 ```
-浏览器会自动打开 `https://localhost:{端口}/swagger`
 
-### 3. Visual Studio 快速启动（推荐）
-1. 双击项目根目录下的 `.sln` 文件（如果没有，可执行 `code .` 用 VS Code 打开）
-2. 在顶部工具栏选择 **IIS Express** 或项目名称
-3. 按 **F5**（调试运行）或 **Ctrl+F5**（无调试运行）
-4. 浏览器自动打开 Swagger UI 页面
+### 3. 新增功能典型流程
+1. **定义 DTO**（Models 文件夹）  
+新建如 `UserDto.cs`
+2. **定义实体**（Entities 文件夹）  
+新建如 `UserEntity.cs`
+3. **添加 AutoMapper 配置**（MappingProfiles）  
+新建或修改 Profile：
 
-**恭喜！环境配置完成，你已成功运行后端项目。**
+```csharp
+CreateMap<UserEntity, UserDto>();
+CreateMap<UserDto, UserEntity>();
+```
 
-## 理解开发流程（标准功能开发步骤）
+4. **扩展 DbContext**（Data/MyDbContext.cs）  
+添加 `public DbSet<UserEntity> Users { get; set; }`
+5. **创建迁移并更新数据库**
 
-1. **拉取最新代码**
-   ```bash
-   git pull origin main
-   ```
+```bash
+dotnet ef migrations add AddUserTable
+dotnet ef database update
+```
 
-2. **创建功能分支（必须）**
-   ```bash
-   git checkout -b feature/你的功能描述   # 如 feature/user-login
-   ```
+6. **实现业务逻辑**（Services）  
+修改或新建 Service，注入 `MyDbContext` 和 `IMapper`，使用 `_mapper.Map<>()` 进行转换
+7. **添加控制器接口**（Controllers）  
+注入 Service，为每个 Action 添加明确路由模板（如 `[HttpGet("list")]`），避免 Swagger 冲突
+8. **本地测试**  
+运行项目 → Swagger UI → 测试新接口
 
-3. **开发新功能（示例流程）**
-   - 在 `Models` 新建 DTO（如 `LoginRequestDto.cs`、`LoginResponseDto.cs`）
-   - 在 `Services` 新建接口 `IUserService.cs` 和实现 `UserService.cs`
-   - 在 `Controllers` 新建或修改控制器（如 `UserController.cs`），注入服务
-   - 为每个 Action 添加明确路由模板，避免 Swagger 冲突：
-     ```csharp
-     [HttpPost("login")]
-     [HttpGet("profile")]
-     ```
+### 4. 提交与合并
+```bash
+git add .
+git commit -m "feat: 添加用户模块（实体、DTO、映射、服务、接口）"
+git push origin feature/功能描述
+```
 
-4. **本地测试**
-   - 运行项目 → 打开 Swagger → 测试新接口
++ 在 Git 仓库网页创建 Pull Request → main
++ 等待代码审查通过后合并
++ 合并后切换回 main 并拉取最新：
 
-5. **提交代码**
-   ```bash
-   git add .
-   git commit -m "feat: 添加用户登录接口"
-   git push origin feature/你的功能描述
-   ```
-
-6. **提交 Pull Request**
-   - 去 Git 仓库网页（GitHub/GitLab 等）
-   - 创建 PR 从你的分支 → main
-   - 填写 PR 描述，@ 审查人
-   - 等待代码审查通过后合并
-
-7. **合并后更新本地 main**
-   ```bash
-   git checkout main
-   git pull origin main
-   ```
-
+```bash
+git checkout main
+git pull origin main
+```
 ## 掌握核心协作规范（团队必守规则）
-
 ### 1. 分支管理
-- **main 分支**：始终保持可部署状态，仅接受经审查的 PR 合并
-- **功能分支**：以 `feature/` 开头，开发完成后删除
-- **禁止直接推送至 main**
++ **main 分支**：始终保持可部署状态，仅接受经审查的 PR 合并
++ **功能分支**：以 `feature/` 开头，开发完成后删除
++ **禁止直接推送至 main**
 
 ### 2. 代码规范
-- **路由必须显式**：避免同一路径多个相同 HTTP 方法导致 Swagger 失败
-- **业务逻辑放 Services 层**：控制器只处理请求/响应
-- **所有服务使用接口 + DI**：便于测试和替换
-- **DTO 命名以 Dto 结尾**：如 `UserRegisterRequestDto`
-- **使用 XML 注释**（可选但推荐）：
-  ```csharp
-  /// <summary>
-  /// 用户登录
-  /// </summary>
-  ```
++ **路由必须显式**：避免同一路径多个相同 HTTP 方法导致 Swagger 失败
++ **业务逻辑放 Services 层**：控制器只处理请求/响应
++ **所有服务使用接口 + DI**：便于测试和替换
++ **DTO 命名以 Dto 结尾**：如 `UserRegisterRequestDto`
++ **使用 XML 注释**（可选但推荐）：
+
+```csharp
+/// <summary>
+/// 用户登录
+/// </summary>
+
+```
 
 ### 3. 提交规范（强烈推荐）
 使用清晰的 Commit Message：
-- `feat:` 新功能
-- `fix:` 修复 Bug
-- `refactor:` 重构
-- `docs:` 文档
-- `test:` 测试
+
++ `feat:` 新功能
++ `fix:` 修复 Bug
++ `refactor:` 重构
++ `docs:` 文档
++ `test:` 测试  
 示例：
-```
+
+```plain
 feat: 添加用户注册接口和验证逻辑
 fix: 修复示例接口路由冲突导致 Swagger 加载失败
 ```
 
 ### 4. Swagger 使用规范
-- 所有新接口必须能在 Swagger 中正常显示和测试
-- 如出现 “Failed to load API definition”，优先检查路由冲突
++ 所有新接口必须能在 Swagger 中正常显示和测试
++ 如出现 “Failed to load API definition”，优先检查路由冲突
 
 ### 5. 前后端协作注意
-- CORS 已允许 `http://localhost:3000`，若前端端口变更，请及时修改 `Program.cs`
-- 接口变更必须提前沟通，或在 PR 中@前端成员
++ CORS 已允许 `http://localhost:3000`，若前端端口变更，请及时修改 `Program.cs`
++ 接口变更必须提前沟通，或在 PR 中@前端成员
 
-## 测试接口示例
 
-- **GET** `/api/example/get`  
-  返回服务层数据
-- **POST** `/api/example`  
-  请求体示例：
-  ```json
-  {
-    "message": "Hello from Vue",
-    "timestamp": "2025-12-16T00:00:00Z"
-  }
-  ```
+## 常见命令汇总
+```bash
+# 恢复依赖
+dotnet restore
 
-## 后续扩展建议
+# 构建
+dotnet build
 
-- 集成数据库（EF Core）
-- 添加 JWT 认证
-- 引入日志（Serilog）
-- 编写单元测试（xUnit）
+# 添加迁移
+dotnet ef migrations add 迁移名称
+
+# 更新数据库
+dotnet ef database update
+
+# 移除最后一次迁移（未应用时）
+dotnet ef migrations remove
+
+# 运行项目
+dotnet run
+```
+
+## 测试示例接口
++ GET `/api/example/get` → 返回单条数据（DTO）
++ GET `/api/example/all` → 返回列表（AutoMapper 映射）
++ POST `/api/example` → 保存数据（DTO → Entity）
 
 ---
 
-**欢迎加入开发！遵守以上流程和规范，可最大程度减少冲突、提升协作效率。**  
+**欢迎贡献代码！**  
+严格遵循上述流程和规范，可大幅减少冲突、提升团队效率。  
+有问题优先查看本 README，其次在 Issues 中提问。
 
-有任何疑问，优先查阅本 README，其次在仓库 Issues 中搜索或新建提问。

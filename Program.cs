@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+
+using PMCSystem_Backend.Data;
+using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.Services.Impletation;
 using PMCSystem_Backend.Services.Interface;
 
@@ -21,10 +25,19 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Ìí¼Ó DbContext×¢²á
+builder.Services.AddDbContext<MyDbContext>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // SwaggerÅäÖÃ£¨APIÎÄµµ£©
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// ×¢²á AutoMapper
+builder.Services.AddAutoMapper(typeof(ExampleProfile));
+// builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 
 var app = builder.Build();
