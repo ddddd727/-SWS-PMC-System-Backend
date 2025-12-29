@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using PMCSystem_Backend.Data;
@@ -5,6 +6,7 @@ using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.Services.Impletation;
 using PMCSystem_Backend.Services.Interface;
 using Serilog;
+using System.Text.Json;
 
 // 配置Serilog
 Log.Logger = new LoggerConfiguration()
@@ -57,9 +59,30 @@ try
     builder.Services.AddAutoMapper(typeof(ExampleProfile));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add(new ProducesAttribute("application/json"));
+    });
+
+    // 配置JSON序列化
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            // 统一使用小驼峰命名
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            // 忽略空值（可选）
+            options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+            // 时间格式
+            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        });
+
+    // 注册异常中间件所需的服务
+    builder.Services.AddLogging();
 
 
     var app = builder.Build();
+
+    
 
     if (app.Environment.IsDevelopment())
     {
