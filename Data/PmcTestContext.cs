@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Entities;
 
 namespace PMCSystem_Backend.Data;
 
@@ -78,7 +78,6 @@ public partial class PmcTestContext : DbContext
 
     public virtual DbSet<DspValveOperatorMatlControlDatum> DspValveOperatorMatlControlData { get; set; }
 
-    public virtual DbSet<ExampleEntity> ExampleEntities { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -602,13 +601,6 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.LongMaterialDescription).HasMaxLength(500);
             entity.Property(e => e.OperatorPartNumber).HasMaxLength(255);
             entity.Property(e => e.ShortMatlDescription).HasMaxLength(500);
-        });
-
-        modelBuilder.Entity<ExampleEntity>(entity =>
-        {
-            entity.ToTable("ExampleEntity");
-
-            entity.Property(e => e.Message).HasMaxLength(100);
         });
 
         OnModelCreatingPartial(modelBuilder);

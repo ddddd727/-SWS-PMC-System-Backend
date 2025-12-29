@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PMCSystem_Backend.Models;
+namespace PMCSystem_Backend.Entities;
 
 public partial class DspCodeListHierarchy
 {
