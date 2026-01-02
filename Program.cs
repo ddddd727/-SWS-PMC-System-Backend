@@ -1,14 +1,17 @@
-using Microsoft.AspNetCore.Mvc;
+ï»¿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.Services.Impletation;
 using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
 using System.Text.Json;
+using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Services.Implementations;
 
-// ÅäÖÃSerilog
+// åˆå§‹åŒ–Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
@@ -18,20 +21,21 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("ÕıÔÚÆô¶¯ Web Ó¦ÓÃ³ÌĞòÖ÷»ú...");
+    Log.Information("æ­£åœ¨å¯åŠ¨ Web åº”ç”¨ç¨‹åº...");
 
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
-        .ReadFrom.Configuration(context.Configuration) // ´ÓÅäÖÃÎÄ¼ş¶ÁÈ¡
-        .ReadFrom.Services(services) // ÔÊĞí´ÓDIÈİÆ÷×¢Èë·şÎñµ½Sink»òEnricher
+        .ReadFrom.Configuration(context.Configuration) // ä»é…ç½®æ–‡ä»¶è¯»å–
+        .ReadFrom.Services(services) // ä»DIå®¹å™¨æ³¨å…¥é…ç½®çš„Sinkå’ŒEnricher
         .Enrich.FromLogContext()
         .WriteTo.Console()
         .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
     // Add services to the container.
+    builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
 
-    // ×¢²á×Ô¶¨Òå·şÎñ£¨ScopedÉúÃüÖÜÆÚ£º Ã¿¸öÇëÇó´´½¨Ò»¸öĞÂÊµÀı£©
+    // æ³¨å†Œè‡ªå®šä¹‰æœåŠ¡ä¸ºScopedç”Ÿå‘½å‘¨æœŸï¼Œæ¯ä¸ªè¯·æ±‚åˆ›å»ºä¸€ä¸ªæ–°å®ä¾‹
     builder.Services.AddScoped<IExampleService, ExampleService>();
 
     builder.Services.AddControllers();
@@ -40,22 +44,22 @@ try
     {
         options.AddPolicy("AllowVueFronted", policy =>
         {
-            policy.WithOrigins("http://localhost:3000")     // VueÄ¬ÈÏ¶Ë¿Ú£¬Éú²úÊ±Ìæ»»ÎªÊµ¼ÊÇ°¶ËURL
+            policy.WithOrigins("http://localhost:3000")     // Vueé»˜è®¤ç«¯å£ï¼Œéƒ¨ç½²æ—¶æ›¿æ¢ä¸ºå®é™…å‰ç«¯URL
             .AllowAnyHeader()
             .AllowAnyMethod();
         });
     });
 
-    // Ìí¼Ó DbContext×¢²á
+    // æ³¨å†Œ DbContext
     builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-    // SwaggerÅäÖÃ£¨APIÎÄµµ£©
+    // Swaggeré…ç½®ï¼ŒAPIæ–‡æ¡£
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // ×¢²á AutoMapper
+    // æ³¨å†Œ AutoMapper
     builder.Services.AddAutoMapper(typeof(ExampleProfile));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -64,39 +68,39 @@ try
         options.Filters.Add(new ProducesAttribute("application/json"));
     });
 
-    // ÅäÖÃJSONĞòÁĞ»¯
+    // é…ç½®JSONåºåˆ—åŒ–
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
-            // Í³Ò»Ê¹ÓÃĞ¡ÍÕ·åÃüÃû
+            // ç»Ÿä¸€ä½¿ç”¨å°é©¼å³°å‘½å
             options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            // ºöÂÔ¿ÕÖµ£¨¿ÉÑ¡£©
+            // ç©ºå€¼å±æ€§å¯é€‰
             options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-            // Ê±¼ä¸ñÊ½
+            // æ—¶é—´æ ¼å¼
             options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         });
 
-    // ×¢²áÒì³£ÖĞ¼ä¼şËùĞèµÄ·şÎñ
+    // æ³¨å†Œæ—¥å¿—æœåŠ¡
     builder.Services.AddLogging();
 
 
     var app = builder.Build();
 
-    
+
 
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            // ÉèÖÃSwagger UI µÄ¸ùÂ·¾¶Îª /swagger
+            // è®¾ç½®Swagger UI çš„æ ¹è·¯å¾„ä¸º /swagger
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            options.RoutePrefix = "swagger";        // ·ÃÎÊhttp://localhost:xxxx/swagger ¼´¿É´ò¿ªUI
+            options.RoutePrefix = "swagger";        // è®¿é—®http://localhost:xxxx/swagger å³å¯æ‰“å¼€UI
         });
     }
     else
     {
-        // Éú²ú»·¾³¿É¹Ø±Õ»òÕßÏŞÖÆ·ÃÎÊ
+        // ç”Ÿäº§ç¯å¢ƒä¹Ÿå¯ä»¥å¼€å¯ï¼Œæ ¹æ®éœ€æ±‚å…³é—­æˆ–é™åˆ¶è®¿é—®
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
@@ -104,9 +108,12 @@ try
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
         });
     }
-    // ÒÀÀµ×¢ÈëÅäÖÃ
+    // é…ç½®ä¸­é—´ä»¶
 
     // Configure the HTTP request pipeline.
+
+    // æ³¨å†Œå¼‚å¸¸å¤„ç†ä¸­é—´ä»¶ï¼ˆåº”æ”¾åœ¨ç®¡é“æœ€å‰é¢ï¼Œä»¥æ•è·æ‰€æœ‰å¼‚å¸¸ï¼‰
+    app.UseMiddleware<ExceptionMiddleware>();
 
     app.UseHttpsRedirection();
 
@@ -118,23 +125,11 @@ try
 
     app.Run();
 }
-catch(Exception ex)
+catch (Exception ex)
 {
-    Log.Fatal(ex, "Ó¦ÓÃ³ÌĞòÆô¶¯Ê§°Ü");
+    Log.Fatal(ex, "åº”ç”¨ç¨‹åºå¯åŠ¨å¤±è´¥");
 }
 finally
 {
     Log.CloseAndFlush();
 }
-
-
-
-
-
-
-
-
-
-
-
-

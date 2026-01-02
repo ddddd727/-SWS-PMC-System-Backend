@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class DspSpmcRulePmcdatum
+public partial class DspSpmcRulePmcdata
 {
     public int Id { get; set; }
 
-    public string? Pmccode { get; set; }
+    public string? PmcCode { get; set; }
 
     public string? ShipType { get; set; }
 

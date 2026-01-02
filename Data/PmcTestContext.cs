@@ -72,7 +72,7 @@ public partial class PmcTestContext : DbContext
 
     public virtual DbSet<DspSpmcRulePipingCompStandard> DspSpmcRulePipingCompStandards { get; set; }
 
-    public virtual DbSet<DspSpmcRulePmcdatum> DspSpmcRulePmcdata { get; set; }
+    public virtual DbSet<DspSpmcRulePmcdata> DspSpmcRulePmcdata { get; set; }
 
     public virtual DbSet<DspSpmcRulePressureRating> DspSpmcRulePressureRatings { get; set; }
 
@@ -546,7 +546,7 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.MaterialsCategoryCl).HasColumnName("MaterialsCategory_CL");
         });
 
-        modelBuilder.Entity<DspSpmcRulePmcdatum>(entity =>
+        modelBuilder.Entity<DspSpmcRulePmcdata>(entity =>
         {
             entity
                 .HasNoKey()
@@ -564,7 +564,7 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.NutStandard).HasMaxLength(500);
             entity.Property(e => e.OverpassStandard).HasMaxLength(500);
             entity.Property(e => e.PipeStandard).HasMaxLength(500);
-            entity.Property(e => e.Pmccode)
+            entity.Property(e => e.PmcCode)
                 .HasMaxLength(255)
                 .HasColumnName("PMCCode");
             entity.Property(e => e.RedStandard).HasMaxLength(500);

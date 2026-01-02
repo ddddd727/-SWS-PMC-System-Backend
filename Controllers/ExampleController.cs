@@ -6,7 +6,7 @@ namespace PMCSystem_Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ExampleController : Controller
+    public class ExampleController : ControllerBase
     {
         private readonly IExampleService _service;
 

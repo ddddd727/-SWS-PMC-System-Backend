@@ -96,7 +96,7 @@ CreateMap<UserDto, UserEntity>();
 
 4. **扩展 DbContext**（Data/MyDbContext.cs）  
 添加 `public DbSet<UserEntity> Users { get; set; }`
-5. **创建迁移并更新数据库**
+5. **创建迁移并更新数据库(如果已有数据库，则可忽略此步)**
 
 ```bash
 dotnet ef migrations add AddUserTable
