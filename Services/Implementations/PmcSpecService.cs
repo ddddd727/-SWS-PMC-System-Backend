@@ -1,4 +1,5 @@
-﻿using PMCSystem_Backend.Entities;
+﻿using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interfaces;
@@ -7,6 +8,13 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PmcSpecService : IPmcSpecService
     {
+        private readonly PmcTestContext _context;
+
+        public PmcSpecService(PmcTestContext context)
+        {
+            _context = context;
+        }
+
         public PMCCodeDto AnalyzeCodeFromPMC(string PmcCode)
         {
             throw new NotImplementedException();
@@ -17,8 +25,15 @@ namespace PMCSystem_Backend.Services.Implementations
             throw new NotImplementedException();
         }
 
-        public List<DspSpmcRulePmcdata> GetPmcRules(string shipNumber)
+        /// <summary>
+        /// 根据船号获取PMC数据
+        /// </summary>
+        /// <param name="shipNumber"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public List<DspSpmcRulePmcdata> GetPmcRulesByShipNum(string shipNumber)
         {
+
             throw new NotImplementedException();
         }
 

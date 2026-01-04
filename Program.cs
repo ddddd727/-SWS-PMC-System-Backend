@@ -33,6 +33,7 @@ try
     //builder.Services.AddSerilog();
 
     // Add services to the container.
+    // 注册服务层的接口与实现
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
 
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
@@ -51,7 +52,7 @@ try
     });
 
     // 注册 DbContext
-    builder.Services.AddDbContext<MyDbContext>(options =>
+    builder.Services.AddDbContext<PmcTestContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 

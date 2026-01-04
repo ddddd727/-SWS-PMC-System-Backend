@@ -22,7 +22,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <param name="shipNumber">船号</param>
         /// <returns>PMC编码列表信息</returns>
-        List<DspSpmcRulePmcdata> GetPmcRules(string shipNumber);
+        List<DspSpmcRulePmcdata> GetPmcRulesByShipNum(string shipNumber);
 
 
         /// <summary>
