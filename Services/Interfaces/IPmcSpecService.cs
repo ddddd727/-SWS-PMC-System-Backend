@@ -22,7 +22,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <param name="shipNumber">船号</param>
         /// <returns>PMC编码列表信息</returns>
-        List<DspSpmcRulePmcdata> GetPmcRulesByShipNum(string shipNumber);
+        List<PmcSelectInfoDto> GetPmcRulesByShipNum(string shipNumber);
 
 
         /// <summary>
@@ -45,6 +45,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <param name="PmcRules">配置的附件列表</param>
         /// <returns></returns>
-        bool SetSpecRules(List<DspSpmcRulePmcdata> PmcRules);
+        bool SetSpecRules(List<PmcSpecInfoDto> PmcRules);
     }
 }

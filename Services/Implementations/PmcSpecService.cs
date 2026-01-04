@@ -8,9 +8,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PmcSpecService : IPmcSpecService
     {
-        private readonly PmcTestContext _context;
+        private readonly MyDbContext _context;
 
-        public PmcSpecService(PmcTestContext context)
+        public PmcSpecService(MyDbContext context)
         {
             _context = context;
         }
@@ -31,7 +31,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <param name="shipNumber"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public List<DspSpmcRulePmcdata> GetPmcRulesByShipNum(string shipNumber)
+        public List<PmcSelectInfoDto> GetPmcRulesByShipNum(string shipNumber)
         {
 
             throw new NotImplementedException();
@@ -57,7 +57,7 @@ namespace PMCSystem_Backend.Services.Implementations
             return shipInfos;
         }
 
-        public bool SetSpecRules(List<DspSpmcRulePmcdata> PmcRules)
+        public bool SetSpecRules(List<PmcSpecInfoDto> PmcRules)
         {
             throw new NotImplementedException();
         }

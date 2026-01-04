@@ -52,7 +52,7 @@ try
     });
 
     // 注册 DbContext
-    builder.Services.AddDbContext<PmcTestContext>(options =>
+    builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
