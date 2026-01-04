@@ -1,6 +1,9 @@
-﻿using PMCSystem_Backend.Data;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interfaces;
 
@@ -8,11 +11,13 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PmcSpecService : IPmcSpecService
     {
-        private readonly MyDbContext _context;
+        private readonly PmcNewContext _context;
+        private readonly IMapper _mapper;
 
-        public PmcSpecService(MyDbContext context)
+        public PmcSpecService(PmcNewContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public PMCCodeDto AnalyzeCodeFromPMC(string PmcCode)
@@ -28,13 +33,20 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 根据船号获取PMC数据
         /// </summary>
-        /// <param name="shipNumber"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <param name="shipNumber">船号</param>
+        /// <returns>PMC编码列表信息</returns>
         public List<PmcSelectInfoDto> GetPmcRulesByShipNum(string shipNumber)
         {
+            // 根据船号查询数据库中的PMC数据
+            var pmcDataList = _context.S3dRulePmcdata
+                .Where(x => x.ShipNo == shipNumber)
+                .AsNoTracking()
+                .ToList();
 
-            throw new NotImplementedException();
+            // 使用AutoMapper将实体类转换为DTO
+            var result = _mapper.Map<List<PmcSelectInfoDto>>(pmcDataList);
+
+            return result;
         }
 
         /// <summary>

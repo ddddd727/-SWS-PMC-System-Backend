@@ -9,6 +9,8 @@ public partial class S3dRulePmcData
 
     public string? Pmccode { get; set; }
 
+    public string? ShipType { get; set; }
+
     public string? Material { get; set; }
 
     public string? ShipNo { get; set; }

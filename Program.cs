@@ -52,6 +52,9 @@ try
     });
 
     // 注册 DbContext
+    builder.Services.AddDbContext<PmcNewContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
     builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -61,6 +64,7 @@ try
     builder.Services.AddSwaggerGen();
 
     // 注册 AutoMapper
+    builder.Services.AddAutoMapper(typeof(PmcSpecRuleProfile));
     builder.Services.AddAutoMapper(typeof(ExampleProfile));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 

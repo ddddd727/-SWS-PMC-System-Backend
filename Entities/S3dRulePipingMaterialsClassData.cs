@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class S3dRulePipingMaterialsClassDatum
+public partial class S3dRulePipingMaterialsClassData
 {
     public int Id { get; set; }
 

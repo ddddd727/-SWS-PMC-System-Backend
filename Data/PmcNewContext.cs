@@ -68,9 +68,9 @@ public partial class PmcNewContext : DbContext
 
     public virtual DbSet<S3dRulePipingCompStandard> S3dRulePipingCompStandards { get; set; }
 
-    public virtual DbSet<S3dRulePipingMaterialsClassDatum> S3dRulePipingMaterialsClassData { get; set; }
+    public virtual DbSet<S3dRulePipingMaterialsClassData> S3dRulePipingMaterialsClassData { get; set; }
 
-    public virtual DbSet<S3dRulePmcdata> S3dRulePmcdata { get; set; }
+    public virtual DbSet<S3dRulePmcData> S3dRulePmcdata { get; set; }
 
     public virtual DbSet<S3dRulePressureRating> S3dRulePressureRatings { get; set; }
 
@@ -512,7 +512,7 @@ public partial class PmcNewContext : DbContext
             entity.Property(e => e.MaterialsCategoryCl).HasColumnName("MaterialsCategory_CL");
         });
 
-        modelBuilder.Entity<S3dRulePipingMaterialsClassDatum>(entity =>
+        modelBuilder.Entity<S3dRulePipingMaterialsClassData>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__S3D_Rule__3214EC27F45B0F0D");
 
@@ -532,7 +532,7 @@ public partial class PmcNewContext : DbContext
             entity.Property(e => e.SpecName).HasMaxLength(20);
         });
 
-        modelBuilder.Entity<S3dRulePmcdata>(entity =>
+        modelBuilder.Entity<S3dRulePmcData>(entity =>
         {
             entity
                 .HasNoKey()
