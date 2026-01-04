@@ -33,10 +33,12 @@ try
     //builder.Services.AddSerilog();
 
     // Add services to the container.
-    builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
+    // 注册业务服务已移动到下方
 
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IExampleService, ExampleService>();
+    builder.Services.AddScoped<IDspSpmcDictPipingBendService, DspSpmcDictPipingBendService>();
+    builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
 
     builder.Services.AddControllers();
 
@@ -50,9 +52,13 @@ try
         });
     });
 
-    // 注册 DbContext
+    // 注册 DbContext (使用 PmcTestContext 作为主上下文)
+    builder.Services.AddDbContext<PmcTestContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    // 注册 MyDbContext
     builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
     // Swagger配置，API文档
