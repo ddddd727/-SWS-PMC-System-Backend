@@ -70,6 +70,35 @@ namespace PMCSystem_Backend.Controllers
             return Success(pmcRules, $"成功获取船号 {shipNumber} 的PMC编码信息");
         }
 
+        /// <summary>
+        /// 解析PMC编码基础信息
+        /// </summary>
+        /// <param name="pmcCode">PMC 7位编码</param>
+        /// <returns>PMC基础信息</returns>
+        /// <response code="200">解析成功，返回PMC基础信息</response>
+        /// <response code="400">请求参数错误</response>
+        [HttpGet("Analyze/{pmcCode}")]
+        [ProducesResponseType(typeof(ApiResponse<PmcBaseInfoDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 400)]
+        public IActionResult AnalyzePmcCode(string pmcCode)
+        {
+            // 参数校验
+            if (string.IsNullOrWhiteSpace(pmcCode))
+            {
+                return Fail(ApiErrorCode.ValidationError, "PMC编码不能为空");
+            }
+
+            try
+            {
+                var result = _pmcSpecService.AnalyzeCodeFromPMC(pmcCode);
+                return Success(result, "PMC编码解析成功");
+            }
+            catch (Exception ex)
+            {
+                // 这里直接返回业务规则校验错误，可根据需要改成更细分的错误码
+                return Fail(ApiErrorCode.BusinessRuleViolation, $"PMC编码解析失败: {ex.Message}");
+            }
+        }
 
 
     }

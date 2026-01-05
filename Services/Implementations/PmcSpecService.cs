@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Entities;
@@ -20,7 +21,33 @@ namespace PMCSystem_Backend.Services.Implementations
             _mapper = mapper;
         }
 
-        public PMCCodeDto AnalyzeCodeFromPMC(string PmcCode)
+        /// <summary>
+        /// 解析PMCcode内容，返回7位编码的解析结果
+        /// </summary>
+        /// <param name="PmcCode"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public PmcBaseInfoDto AnalyzeCodeFromPMC(string PmcCode)
+        {
+            // 拆分7位编码
+            var singleCodes = PmcCode.ToArray();
+            PmcBaseInfoDto baseInfo = new PmcBaseInfoDto();
+            // 编码格式校验
+            if (singleCodes.Length != 7)
+            {
+                throw new Exception("输入的编码不为7位");
+            }
+            // 开发阶段使用测试数据测试接口跑通，后续将更改为对PMC编码的实际解析。
+            baseInfo.PmcCode = PmcCode;
+            baseInfo.WallThickness = "SCH20";
+            baseInfo.PipeStandard = "GB/T 8163";
+            baseInfo.Status = "UnApproved";
+            baseInfo.PressureRating = "PN 6";
+            baseInfo.MaterialGrade = "碳钢";
+            return baseInfo;
+        }
+
+        public SpecNPDInfoDto GetNPDInfoByPmc(string EndStandard, string Schedule)
         {
             throw new NotImplementedException();
         }

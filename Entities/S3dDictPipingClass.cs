@@ -12,4 +12,5 @@ public partial class S3dDictPipingClass
     public string? PipingClassCode { get; set; }
 
     public bool Status { get; set; }
+
 }

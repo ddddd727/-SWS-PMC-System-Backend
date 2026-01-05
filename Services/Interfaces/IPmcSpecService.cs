@@ -30,7 +30,17 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <param name="PmcCode">pmc编码</param>
         /// <returns></returns>
-        PMCCodeDto AnalyzeCodeFromPMC(string PmcCode);
+        PmcBaseInfoDto AnalyzeCodeFromPMC(string PmcCode);
+
+        /// <summary>
+        /// 根据PMC内包含的标准信息和壁厚系列获取对应的通径范围
+        /// </summary>
+        /// <param name="EndStandard">端面标准</param>
+        /// <param name="Schedule">壁厚系列</param>
+        /// <returns></returns>
+        SpecNPDInfoDto GetNPDInfoByPmc(string EndStandard, string Schedule);
+
+
 
         /// <summary>
         /// 获取PMC编码对应的基础管附件标准信息
