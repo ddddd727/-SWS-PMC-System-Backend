@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PMCSystem_Backend.Models;
+namespace PMCSystem_Backend.Entities;
 
-public partial class DspSpmcDictPipingStandard
+public partial class DspSpmcRulePipingCompStandard
 {
     public int Id { get; set; }
 
     public int GeometricIndustryStandardCl { get; set; }
 
-    public string? PipingStandardCode { get; set; }
+    public string? ComponentType { get; set; }
 
     public int MaterialsCategoryCl { get; set; }
-
-    public int? GeometricIndustryPracticeCl { get; set; }
 
     public bool Status { get; set; }
 }

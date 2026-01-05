@@ -79,7 +79,6 @@ public partial class PmcTestContext : DbContext
 
     public virtual DbSet<DspValveOperatorMatlControlDatum> DspValveOperatorMatlControlData { get; set; }
 
-    public virtual DbSet<ExampleEntity> ExampleEntities { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning Prefer configuring the connection via DI. This fallback only applies when options were not configured.
@@ -608,13 +607,6 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.LongMaterialDescription).HasMaxLength(500);
             entity.Property(e => e.OperatorPartNumber).HasMaxLength(255);
             entity.Property(e => e.ShortMatlDescription).HasMaxLength(500);
-        });
-
-        modelBuilder.Entity<ExampleEntity>(entity =>
-        {
-            entity.ToTable("ExampleEntity");
-
-            entity.Property(e => e.Message).HasMaxLength(100);
         });
 
         OnModelCreatingPartial(modelBuilder);
