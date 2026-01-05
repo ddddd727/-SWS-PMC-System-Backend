@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Entities;
 
 namespace PMCSystem_Backend.Data;
 
@@ -81,8 +82,13 @@ public partial class PmcTestContext : DbContext
     public virtual DbSet<ExampleEntity> ExampleEntities { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS;Database=PMC_TEST;Trusted_Connection=True;TrustServerCertificate=true");
+#warning Prefer configuring the connection via DI. This fallback only applies when options were not configured.
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Data Source=RICK;Initial Catalog=PMC0105;Integrated Security=True;TrustServerCertificate=True");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -476,9 +482,9 @@ public partial class PmcTestContext : DbContext
 
         modelBuilder.Entity<DspSpmcRuleAb2b3c2>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("DSP_SPMC_RULE_AB2B3C2_PK");
+            //entity.HasKey(e => e.Id).HasName("DSP_SPMC_RULE_AB2B3C2_PK");
 
-            entity.ToTable("DSP_SPMC_RULE_AB2B3C2");
+            entity.ToTable("S3D_Rule_AB2B3C2");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
