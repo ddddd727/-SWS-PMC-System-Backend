@@ -30,7 +30,7 @@ public partial class PmcNewContext : DbContext
 
     public virtual DbSet<S3dCommonPipingGenericDataFemale> S3dCommonPipingGenericDataFemales { get; set; }
 
-    public virtual DbSet<S3dCommonPlainPipingGenericDatum> S3dCommonPlainPipingGenericData { get; set; }
+    public virtual DbSet<S3dCommonPlainPipingGenericData> S3dCommonPlainPipingGenericData { get; set; }
 
     public virtual DbSet<S3dDictFlangeStandard> S3dDictFlangeStandards { get; set; }
 
@@ -232,7 +232,7 @@ public partial class PmcNewContext : DbContext
             entity.Property(e => e.ThreadDepth).HasColumnType("decimal(5, 3)");
         });
 
-        modelBuilder.Entity<S3dCommonPlainPipingGenericDatum>(entity =>
+        modelBuilder.Entity<S3dCommonPlainPipingGenericData>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("DSP_PlainPipingGenericData_PK");
 

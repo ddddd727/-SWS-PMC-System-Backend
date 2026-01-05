@@ -47,9 +47,59 @@ namespace PMCSystem_Backend.Services.Implementations
             return baseInfo;
         }
 
+        /// <summary>
+        /// 根据端面标准和壁厚系列获取通径、外径、壁厚信息
+        /// </summary>
+        /// <param name="EndStandard">端面标准</param>
+        /// <param name="Schedule">壁厚系列</param>
+        /// <returns>通径、外径、壁厚信息</returns>
         public SpecNPDInfoDto GetNPDInfoByPmc(string EndStandard, string Schedule)
         {
-            throw new NotImplementedException();
+            // 参数验证
+            if (string.IsNullOrWhiteSpace(EndStandard) || string.IsNullOrWhiteSpace(Schedule))
+            {
+                throw new ArgumentException("端面标准和壁厚系列不能为空");
+            }
+
+            // 将字符串参数转换为 int（假设参数是代码值的字符串形式）
+            // 如果转换失败，可能需要通过 CodeList 表查找对应的 CodeListNumber
+            if (!int.TryParse(EndStandard, out int endStandardCl) || !int.TryParse(Schedule, out int scheduleCl))
+            {
+                throw new ArgumentException("端面标准或壁厚系列格式不正确，无法转换为整数值");
+            }
+
+            // 查询数据库中符合条件的数据
+            var queryResult = _context.S3dCommonPlainPipingGenericData
+                .Where(x => x.EndStandardCl == endStandardCl && x.ScheduleCl == scheduleCl)
+                .AsNoTracking()
+                .ToList();
+
+            // 构建返回结果
+            var result = new SpecNPDInfoDto
+            {
+                EndStandard = EndStandard,
+                Schedule = Schedule,
+                NPD = queryResult
+                    .Where(x => x.NominalPipingDiameter > 0)
+                    .Select(x => (double)x.NominalPipingDiameter)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList(),
+                OutsideDiameter = queryResult
+                    .Where(x => x.PipingOutsideDiameter.HasValue && x.PipingOutsideDiameter.Value > 0)
+                    .Select(x => (double)x.PipingOutsideDiameter!.Value)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList(),
+                WallThickness = queryResult
+                    .Where(x => x.WallThickness.HasValue && x.WallThickness.Value > 0)
+                    .Select(x => (double)x.WallThickness!.Value)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList()
+            };
+
+            return result;
         }
 
         public List<PipeFittingSpecDto> GetPipeFittingSpec(string PmcCode)

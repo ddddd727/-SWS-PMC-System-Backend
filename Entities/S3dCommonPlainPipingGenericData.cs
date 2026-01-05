@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class S3dCommonPlainPipingGenericDatum
+public partial class S3dCommonPlainPipingGenericData
 {
     public int Id { get; set; }
 
