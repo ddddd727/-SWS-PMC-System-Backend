@@ -7,15 +7,25 @@ public partial class S3dRulePmcData
 {
     public int Id { get; set; }
 
-    public string? Pmccode { get; set; }
+    public string ShipType { get; set; } = null!;
 
-    public string? ShipType { get; set; }
+    public string ShipNo { get; set; } = null!;
 
-    public string? Material { get; set; }
+    public string Pmccode { get; set; } = null!;
 
-    public string? ShipNo { get; set; }
+    public string PipingClassName { get; set; } = null!;
 
-    public string? Status { get; set; }
+    public string MaterialsCategoryName { get; set; } = null!;
+
+    public string PipingStandardName { get; set; } = null!;
+
+    public string MaterialsGradeName { get; set; } = null!;
+
+    public string FlangeStandardName { get; set; } = null!;
+
+    public string PressureRatingName { get; set; } = null!;
+
+    public string ScheduleThicknessName { get; set; } = null!;
 
     public string? PipeStandard { get; set; }
 
@@ -48,4 +58,8 @@ public partial class S3dRulePmcData
     public string? NutStandard { get; set; }
 
     public string? WasherStandard { get; set; }
+
+    public string? Status { get; set; }
+
+    public string? JsonData { get; set; }
 }

@@ -12,10 +12,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PmcSpecService : IPmcSpecService
     {
-        private readonly PmcNewContext _context;
+        private readonly PmcContext _context;
         private readonly IMapper _mapper;
 
-        public PmcSpecService(PmcNewContext context, IMapper mapper)
+        public PmcSpecService(PmcContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
@@ -29,21 +29,42 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <exception cref="Exception"></exception>
         public PmcBaseInfoDto AnalyzeCodeFromPMC(string PmcCode)
         {
-            // 拆分7位编码
+            if (string.IsNullOrWhiteSpace(PmcCode))
+            {
+                throw new ArgumentException("PMC编码不能为空");
+            }
+
+            // 确保为7位编码
             var singleCodes = PmcCode.ToArray();
-            PmcBaseInfoDto baseInfo = new PmcBaseInfoDto();
-            // 编码格式校验
             if (singleCodes.Length != 7)
             {
                 throw new Exception("输入的编码不为7位");
             }
-            // 开发阶段使用测试数据测试接口跑通，后续将更改为对PMC编码的实际解析。
-            baseInfo.PmcCode = PmcCode;
-            baseInfo.WallThickness = "SCH20";
-            baseInfo.PipeStandard = "GB/T 8163";
-            baseInfo.Status = "UnApproved";
-            baseInfo.PressureRating = "PN 6";
-            baseInfo.MaterialGrade = "碳钢";
+
+            // 从数据库中查找对应PMC编码的数据
+            var entity = _context.S3dRulePmcdata
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Pmccode == PmcCode);
+
+            if (entity == null)
+            {
+                throw new Exception($"未找到PMC编码 {PmcCode} 对应的数据");
+            }
+
+            // 将实体数据映射到基础信息DTO
+            var baseInfo = new PmcBaseInfoDto
+            {
+                PmcCode = entity.Pmccode,
+                ShipNumber = entity.ShipNo,
+                Status = entity.Status ?? string.Empty,
+                PipingClass = entity.PipingClassName,
+                MaterialGrade = entity.MaterialsGradeName,
+                PressureRating = entity.PressureRatingName,
+                PipeStandard = entity.PipingStandardName,
+                MaterialCategory = entity.MaterialsCategoryName,
+                WallThickness = entity.ScheduleThicknessName
+            };
+
             return baseInfo;
         }
 

@@ -100,6 +100,56 @@ namespace PMCSystem_Backend.Controllers
             }
         }
 
+        /// <summary>
+        /// 根据端面标准和壁厚系列获取通径、外径、壁厚信息
+        /// </summary>
+        /// <param name="endStandard">端面标准</param>
+        /// <param name="schedule">壁厚系列</param>
+        /// <returns>通径、外径、壁厚信息列表</returns>
+        /// <response code="200">查询成功，返回通径、外径、壁厚信息</response>
+        /// <response code="400">请求参数错误或查询失败</response>
+        [HttpGet("NPDInfo")]
+        [ProducesResponseType(typeof(ApiResponse<SpecNPDInfoDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 400)]
+        public IActionResult GetNPDInfo([FromQuery] string endStandard, [FromQuery] string schedule)
+        {
+            // 参数验证
+            if (string.IsNullOrWhiteSpace(endStandard))
+            {
+                return Fail(ApiErrorCode.ValidationError, "端面标准不能为空");
+            }
+
+            if (string.IsNullOrWhiteSpace(schedule))
+            {
+                return Fail(ApiErrorCode.ValidationError, "壁厚系列不能为空");
+            }
+
+            try
+            {
+                // 调用服务层方法获取通径、外径、壁厚信息
+                var result = _pmcSpecService.GetNPDInfoByPmc(endStandard, schedule);
+
+                // 判断查询结果是否为空
+                if (result == null ||
+                    (result.NPD == null || result.NPD.Count == 0) &&
+                    (result.OutsideDiameter == null || result.OutsideDiameter.Count == 0) &&
+                    (result.WallThickness == null || result.WallThickness.Count == 0))
+                {
+                    return Fail(ApiErrorCode.ResourceNotFound,
+                        $"未找到端面标准 {endStandard} 和壁厚系列 {schedule} 对应的通径、外径、壁厚信息");
+                }
+
+                return Success(result, "成功获取通径、外径、壁厚信息");
+            }
+            catch (ArgumentException ex)
+            {
+                return Fail(ApiErrorCode.ValidationError, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return Fail(ApiErrorCode.BusinessRuleViolation, $"查询失败: {ex.Message}");
+            }
+        }
 
     }
 }

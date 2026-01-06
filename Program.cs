@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
-using PMCSystem_Backend.Services.Impletation;
-using PMCSystem_Backend.Services.Interface;
 using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
 using System.Text.Json;
@@ -34,10 +31,10 @@ try
 
     // Add services to the container.
     // 注册服务层的接口与实现
+    // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
 
-    // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
-    builder.Services.AddScoped<IExampleService, ExampleService>();
+    
 
     builder.Services.AddControllers();
 
@@ -52,11 +49,9 @@ try
     });
 
     // 注册 DbContext
-    builder.Services.AddDbContext<PmcNewContext>(options =>
+    builder.Services.AddDbContext<PmcContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
     // Swagger配置，API文档
@@ -65,7 +60,6 @@ try
 
     // 注册 AutoMapper
     builder.Services.AddAutoMapper(typeof(PmcSpecRuleProfile));
-    builder.Services.AddAutoMapper(typeof(ExampleProfile));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>

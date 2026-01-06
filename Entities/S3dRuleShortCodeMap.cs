@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class S3dRuleShortCodeHierarchyRule
+public partial class S3dRuleShortCodeMap
 {
     public int Id { get; set; }
 
-    public string ShortCodeHierarchyType { get; set; } = null!;
+    public int ComponentTypeId { get; set; }
 
     public string ShortCode { get; set; } = null!;
 }
