@@ -5,7 +5,7 @@ namespace PMCSystem_Backend.Controllers
 {
     [ApiController]
     [Route("api/rules/ab2b3c2")]
-    public class RuleAb2b3c2Controller : Controller
+    public class RuleAb2b3c2Controller : ApiControllerBase
     {
         private readonly IRuleAb2b3c2Service _service;
 

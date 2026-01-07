@@ -40,9 +40,9 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowVueFronted", policy =>
+        options.AddPolicy("AllowVueFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:3000")     // VueĬ�϶˿ڣ�����ʱ�滻Ϊʵ��ǰ��URL
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod();
         });
@@ -52,7 +52,7 @@ try
     builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Services.AddDbContext<PmcTestContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0105")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0106")));
 
 
     // Swagger���ã�API�ĵ���

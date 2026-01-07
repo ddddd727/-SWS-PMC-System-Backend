@@ -85,7 +85,7 @@ public partial class PmcTestContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseSqlServer("Data Source=RICK;Initial Catalog=PMC0105;Integrated Security=True;TrustServerCertificate=True");
+            optionsBuilder.UseSqlServer("Data Source=RICK;Initial Catalog=PMC0106;Integrated Security=True;TrustServerCertificate=True");
         }
     }
 

@@ -1,4 +1,5 @@
 using AutoMapper;
+using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Models;
 
 namespace PMCSystem_Backend.MappingProfiles
