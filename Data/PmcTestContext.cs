@@ -367,7 +367,7 @@ public partial class PmcTestContext : DbContext
         {
             entity.HasKey(e => e.Id);
 
-            entity.ToTable("DSP_SPMC_DICT_PipingBend");
+            entity.ToTable("S3D_Dict_PipingBend");
 
             entity.Property(e => e.HeaderClampLength).HasColumnType("decimal(10, 3)");
             entity.Property(e => e.Id).HasColumnName("ID");

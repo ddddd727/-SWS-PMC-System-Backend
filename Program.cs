@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using PMCSystem_Backend.Data;
@@ -44,9 +44,13 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowVueFronted", policy =>
+        options.AddPolicy("AllowVueFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:3000")     // Vue默认端口，部署时替换为实际前端URL
+            policy.WithOrigins(
+                "http://localhost:5173",   // Vite 默认端口
+                "http://localhost:3000",   // 一些前端工具默认端口
+                "http://localhost:8080"    // Vue CLI 默认端口
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
         });
