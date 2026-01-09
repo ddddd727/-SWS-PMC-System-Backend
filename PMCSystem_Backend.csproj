@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Entities\TempEntities\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
 

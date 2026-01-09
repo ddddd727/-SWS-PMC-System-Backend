@@ -1,19 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using PMCSystem_Backend.Entities;
+using System;
+using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Data;
 
 public partial class PmcContext : DbContext
 {
-    public PmcContext()
+    private readonly IConfiguration _configuration;
+
+    public PmcContext(IConfiguration configuration)
     {
+        _configuration = configuration;
     }
 
-    public PmcContext(DbContextOptions<PmcContext> options)
+    public PmcContext(DbContextOptions<PmcContext> options, IConfiguration configuration)
         : base(options)
     {
+        _configuration = configuration;
     }
 
     public virtual DbSet<S3dCdbPipeComponent> S3dCdbPipeComponents { get; set; }
@@ -26,9 +31,24 @@ public partial class PmcContext : DbContext
 
     public virtual DbSet<S3dRuleShortCodeMap> S3dRuleShortCodeMaps { get; set; }
 
+    public virtual DbSet<S3dRulePipingCompStandard> S3dRulePipingCompStandards { get; set; }
+
+    public virtual DbSet<S3dCommonCodeListHierarchy> S3dCommonCodeListHierarchies { get; set; }
+
+    public virtual DbSet<S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
+
+    public virtual DbSet<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; }
+
+    public virtual DbSet<S3dDictPipingComponentType> S3dDictPipingComponentTypes { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS;Database=PMC;Trusted_Connection=True;TrustServerCertificate=true");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            optionsBuilder.UseSqlServer(connectionString);
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -140,6 +160,91 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.ComponentTypeId).HasColumnName("ComponentTypeID");
             entity.Property(e => e.ShortCode).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<S3dRulePipingCompStandard>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__S3D_Rule__3214EC27723621A9");
+
+            entity.ToTable("S3D_Rule_PipingCompStandard");
+
+            entity.HasIndex(e => new { e.GeometricIndustryStandardCl, e.ComponentTypeId, e.MaterialsCategoryCl }, "UQ_PipingCompStandard_GeometricIndustryStandard_ComponentType_MaterialsCategory").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.ComponentTypeId).HasColumnName("ComponentTypeID");
+            entity.Property(e => e.GeometricIndustryStandardCl).HasColumnName("GeometricIndustryStandard_CL");
+            entity.Property(e => e.MaterialsCategoryCl).HasColumnName("MaterialsCategory_CL");
+            entity.Property(e => e.Status).HasDefaultValue(true);
+        });
+
+
+        modelBuilder.Entity<S3dCommonCodeListHierarchy>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("DSP_CodeListHierarchy_PK");
+
+            entity.ToTable("S3D_Common_CodeListHierarchy");
+
+            entity.HasIndex(e => e.CodeListTableId, "DSP_CodeListHierarchy_UNIQUE").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.CodeListTableId).HasColumnName("CodeListTableID");
+            entity.Property(e => e.ParentCodeListTableId).HasColumnName("ParentCodeListTableID");
+
+            entity.HasOne(d => d.CodeListTable).WithOne(p => p.S3dCommonCodeListHierarchy)
+                .HasForeignKey<S3dCommonCodeListHierarchy>(d => d.CodeListTableId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("DSP_CodeListHierarchy_DSP_CodeListTable_FK");
+        });
+
+        modelBuilder.Entity<S3dCommonCodeListTable>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__UD_CodeL__3214EC27484123D6");
+
+            entity.ToTable("S3D_Common_CodeListTable");
+
+            entity.HasIndex(e => e.Id, "UQ__UD_CodeL__3214EC26E7A97EC1").IsUnique();
+
+            entity.HasIndex(e => e.CodeListTableName, "UQ__UD_CodeL__87753419918C0611").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.CodeListTableName).HasMaxLength(255);
+            entity.Property(e => e.Major)
+                .HasMaxLength(10)
+                .HasDefaultValue("C");
+        });
+
+        modelBuilder.Entity<S3dCommonCodeListValue>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__UD_CodeL__0382013A28D8123E");
+
+            entity.ToTable("S3D_Common_CodeListValue");
+
+            entity.HasIndex(e => new { e.CodeListTableId, e.CodeListNumber }, "UQ__UD_CodeL__31A75F5EA32D472E").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.CodeListTableId).HasColumnName("CodeListTableID");
+            entity.Property(e => e.IsUserDefine).HasDefaultValue(true);
+            entity.Property(e => e.LongStringValue).HasMaxLength(255);
+            entity.Property(e => e.ShortStringValue).HasMaxLength(255);
+            entity.Property(e => e.Status).HasDefaultValue(true);
+
+            entity.HasOne(d => d.CodeListTable).WithMany(p => p.S3dCommonCodeListValues)
+                .HasForeignKey(d => d.CodeListTableId)
+                .HasConstraintName("FK__UD_CodeLi__CodeL__3B75D760");
+        });
+
+        modelBuilder.Entity<S3dDictPipingComponentType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__S3D_Dict__3214EC2756D3AB25");
+
+            entity.ToTable("S3D_Dict_PipingComponentType");
+
+            entity.HasIndex(e => e.ComponentTypeName, "UQ_PipingComponentType_Name").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.ComponentTypeDescription).HasMaxLength(255);
+            entity.Property(e => e.ComponentTypeName).HasMaxLength(255);
+            entity.Property(e => e.Status).HasDefaultValue(true);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -1,0 +1,31 @@
+﻿namespace PMCSystem_Backend.Services.Interfaces
+{
+    public interface ICodelistService
+    {
+        /// <summary>
+        /// 根据Codelist表名和Codelist值获取对应的短描述
+        /// </summary>
+        /// <param name="codelistTableName"></param>
+        /// <param name="codelistValue"></param>
+        /// <returns></returns>
+        Task<string> GetShortDesciptionByCodelistValue(string codelistTableName, string codelistValue);
+
+
+        /// <summary>
+        /// 根据列名和Codelist值（整数类型）获取对应的描述
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <param name="codelistValue"></param>
+        /// <returns></returns>
+        Task<string> GetCodelistDescriptionAsync(string columnName, int codelistValue);
+
+
+        /// <summary>
+        /// 批量获取Codelist描述
+        /// </summary>
+        /// <param name="codelistTableName"></param>
+        /// <param name="codelistNumbers"></param>
+        /// <returns></returns>
+        Task<Dictionary<int, string>> GetCodelistDescriptionsAsync(string codelistTableName, IEnumerable<int> codelistNumbers);
+    }
+}

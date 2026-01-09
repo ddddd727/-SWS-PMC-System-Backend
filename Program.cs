@@ -40,7 +40,7 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowVueFronted", policy =>
+        options.AddPolicy("AllowVueFrontend", policy =>
         {
             policy.WithOrigins("http://localhost:3000")     // Vue默认端口，部署时替换为实际前端URL
             .AllowAnyHeader()

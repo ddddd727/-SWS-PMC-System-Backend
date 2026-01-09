@@ -14,11 +14,13 @@ namespace PMCSystem_Backend.Services.Implementations
     {
         private readonly PmcContext _context;
         private readonly IMapper _mapper;
+        private readonly ICodelistService _codelistService;
 
-        public PmcSpecService(PmcContext context, IMapper mapper)
+        public PmcSpecService(PmcContext context, IMapper mapper, ICodelistService codelistService)
         {
             _context = context;
             _mapper = mapper;
+            _codelistService = codelistService;
         }
 
         /// <summary>
@@ -123,9 +125,91 @@ namespace PMCSystem_Backend.Services.Implementations
             return result;
         }
 
-        public List<PipeFittingSpecDto> GetPipeFittingSpec(string PmcCode)
+        public List<PipeFittingSpecDto> GetPipeFittingSpec(string compnentType)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(compnentType))
+            {
+                throw new ArgumentException("compnentType 不能为空");
+            }
+
+            // 通过部件类型获取对应的 ComponentTypeId
+            var compType = _context.S3dDictPipingComponentTypes
+                .AsNoTracking()
+                .FirstOrDefault(x => x.ComponentTypeName == compnentType);
+
+            if (compType == null)
+            {
+                // 未找到对应的部件类型，返回空列表
+                return new List<PipeFittingSpecDto>();
+            }
+
+            var componentTypeId = compType.Id;
+
+            // 在标准表中查找该部件类型下的所有标准条目
+            var standards = _context.S3dRulePipingCompStandards
+                .AsNoTracking()
+                .Where(x => x.ComponentTypeId == componentTypeId)
+                .ToList();
+
+            // 提取标准的 CodeList 值（假设存储在 GeometricIndustryStandardCl 字段）
+            var codeValues = standards
+                .Select(x => x.GeometricIndustryStandardCl)
+                .Where(v => v > 0)
+                .Distinct()
+                .ToList();
+
+            var result = new List<PipeFittingSpecDto>();
+
+            foreach (var code in codeValues)
+            {
+                string standardName = code.ToString();
+
+                // 先尝试通过表名+值的短描述方法
+                try
+                {
+                    var shortDescTask = _codelistService.GetShortDesciptionByCodelistValue("GeometricIndustryStandard", code.ToString());
+                    if (shortDescTask != null)
+                    {
+                        var tmp = shortDescTask.GetAwaiter().GetResult();
+                        if (!string.IsNullOrWhiteSpace(tmp))
+                        {
+                            standardName = tmp;
+                        }
+                    }
+                }
+                catch
+                {
+                    // 忽略异常，尝试其他方式
+                }
+
+                // 若仍为 code 字符串，则尝试按列名查询描述
+                if (standardName == code.ToString())
+                {
+                    try
+                    {
+                        var tmp = _codelistService.GetCodelistDescriptionAsync("GeometricIndustryStandard_Cl", code)
+                            .GetAwaiter()
+                            .GetResult();
+                        if (!string.IsNullOrWhiteSpace(tmp))
+                        {
+                            standardName = tmp;
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略
+                    }
+                }
+
+                result.Add(new PipeFittingSpecDto
+                {
+                    StandardName = standardName,
+                    StandardDescription = string.Empty,
+                    MaterialList = new List<string>()
+                });
+            }
+
+            return result.OrderBy(x => x.StandardName).ToList();
         }
 
         /// <summary>
@@ -166,6 +250,27 @@ namespace PMCSystem_Backend.Services.Implementations
             };
             return shipInfos;
         }
+
+
+        /// <summary>
+        /// 通过标准名称获取对应的材料列表
+        /// </summary>
+        /// <param name="standardName"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public List<string> GetMaterialListByStandard(string standardName,string ComponentType, string commidityType)
+        {
+            /* 通过获取到的具体的几何工业标准名称，去数据库中查询对应的材料             
+             * 1. 通过传入的ComponentType,到对应的部件类型表中获取到其ComponentTypeId
+             * 2. 通过映射的ComponentTypeId找到S3D_Rule_ComponentTypeHierachy中的映射的PipingCommoditySubClassId
+             * 3. 通过SubClassId到对应的详细的CommodityType
+             * 4. 通过输入的StandardName结合CommodityType,到对应的标准部件库中进行查询，获取到其标准下具体对应的Material
+             */
+
+            throw new NotImplementedException();
+        }
+
+
 
         public bool SetSpecRules(List<PmcSpecInfoDto> PmcRules)
         {

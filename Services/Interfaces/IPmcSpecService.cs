@@ -45,15 +45,15 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <summary>
         /// 获取PMC编码对应的基础管附件标准信息
         /// </summary>
-        /// <param name="PmcCode"></param>
+        /// <param name="compnentType"> 部件类型 </param>
         /// <returns></returns>
-        List<PipeFittingSpecDto> GetPipeFittingSpec(string PmcCode);
+        List<PipeFittingSpecDto> GetPipeFittingSpec(string compnentType);
 
 
         /// <summary>
         /// 保存页面配置的管系规格书信息
         /// </summary>
-        /// <param name="PmcRules">配置的附件列表</param>
+        /// <param name="PmcRules"> 配置的附件列表 </param>
         /// <returns></returns>
         bool SetSpecRules(List<PmcSpecInfoDto> PmcRules);
     }
