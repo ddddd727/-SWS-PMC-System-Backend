@@ -18,20 +18,20 @@ namespace PMCSystem_Backend.Services.Impletation
             _mapper = mapper;
         }
 
-        public IEnumerable<DspSpmcRuleAb2b3c2Dto> GetAll()
+        public IEnumerable<S3dRuleAb2b3c2Dto> GetAll()
         {
-            return _context.DspSpmcRuleAb2b3c2s
+            return _context.S3dRuleAb2b3c2s
                 .AsNoTracking()
-                .ProjectTo<DspSpmcRuleAb2b3c2Dto>(_mapper.ConfigurationProvider)
+                .ProjectTo<S3dRuleAb2b3c2Dto>(_mapper.ConfigurationProvider)
                 .ToList();
         }
 
-        public DspSpmcRuleAb2b3c2Dto? GetById(int id)
+        public S3dRuleAb2b3c2Dto? GetById(int id)
         {
-            var entity = _context.DspSpmcRuleAb2b3c2s
+            var entity = _context.S3dRuleAb2b3c2s
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Id == id);
-            return entity == null ? null : _mapper.Map<DspSpmcRuleAb2b3c2Dto>(entity);
+            return entity == null ? null : _mapper.Map<S3dRuleAb2b3c2Dto>(entity);
         }
     }
 }

@@ -52,7 +52,7 @@ try
     builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Services.AddDbContext<PmcTestContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0106")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0108")));
 
 
     // Swagger���ã�API�ĵ���
@@ -60,7 +60,7 @@ try
     builder.Services.AddSwaggerGen();
 
     // ע�� AutoMapper
-    builder.Services.AddAutoMapper(typeof(ExampleProfile));
+    builder.Services.AddAutoMapper(typeof(ExampleProfile), typeof(RuleProfiles));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>

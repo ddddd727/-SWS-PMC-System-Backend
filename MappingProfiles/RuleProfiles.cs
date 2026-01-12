@@ -8,7 +8,7 @@ namespace PMCSystem_Backend.MappingProfiles
     {
         public RuleProfiles()
         {
-            CreateMap<DspSpmcRuleAb2b3c2, DspSpmcRuleAb2b3c2Dto>();
+            CreateMap<S3dRuleAb2b3c2, S3dRuleAb2b3c2Dto>();
         }
     }
 }
