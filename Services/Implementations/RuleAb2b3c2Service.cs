@@ -20,7 +20,7 @@ namespace PMCSystem_Backend.Services.Impletation
 
         public IEnumerable<S3dRuleAb2b3c2Dto> GetAll()
         {
-            return _context.S3dRuleAb2b3c2s
+            return _context.S3dRuleAb2b3c2s 
                 .AsNoTracking()
                 .ProjectTo<S3dRuleAb2b3c2Dto>(_mapper.ConfigurationProvider)
                 .ToList();

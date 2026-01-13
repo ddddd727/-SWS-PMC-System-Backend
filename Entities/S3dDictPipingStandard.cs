@@ -15,6 +15,8 @@ public partial class S3dDictPipingStandard
 
     public int? GeometricIndustryPracticeCl { get; set; }
 
+    public int ScheduleSeriesId { get; set; }
+
     public bool Status { get; set; }
 
     public string? JsonData { get; set; }

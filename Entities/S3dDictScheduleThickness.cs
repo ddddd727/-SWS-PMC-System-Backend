@@ -13,6 +13,8 @@ public partial class S3dDictScheduleThickness
 
     public int MaterialsCategoryCl { get; set; }
 
+    public int ScheduleSeriesId { get; set; }
+
     public bool Status { get; set; }
 
     public string? JsonData { get; set; }

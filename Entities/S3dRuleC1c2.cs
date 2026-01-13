@@ -7,9 +7,9 @@ public partial class S3dRuleC1c2
 {
     public int Id { get; set; }
 
-    public int FlangeStandardId { get; set; }
+    public int GeometricIndustryStandardCl { get; set; }
 
-    public int PressureRatingId { get; set; }
+    public int PressureRatingCl { get; set; }
 
     public string RuleName { get; set; } = null!;
 

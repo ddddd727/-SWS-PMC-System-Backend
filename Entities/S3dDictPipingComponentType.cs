@@ -13,6 +13,8 @@ public partial class S3dDictPipingComponentType
 
     public bool Status { get; set; }
 
+    public virtual ICollection<S3dDictGeometricIndustryStandard> S3dDictGeometricIndustryStandards { get; set; } = new List<S3dDictGeometricIndustryStandard>();
+
     public virtual ICollection<S3dRuleComponentTypeHierarchyRule> S3dRuleComponentTypeHierarchyRules { get; set; } = new List<S3dRuleComponentTypeHierarchyRule>();
 
     public virtual ICollection<S3dRulePipingCompStandard> S3dRulePipingCompStandards { get; set; } = new List<S3dRulePipingCompStandard>();
