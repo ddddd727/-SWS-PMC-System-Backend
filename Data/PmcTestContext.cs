@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Entities;
@@ -95,6 +95,7 @@ public partial class PmcTestContext : DbContext
     public virtual DbSet<S3dDictScheduleThickness> S3dDictScheduleThicknesses { get; set; }
 
     public virtual DbSet<S3dDictWallThickness> S3dDictWallThicknesses { get; set; }
+    public virtual DbSet<S3dDictWallThicknessCodeConverted> S3dDictWallThicknessCodeConverted { get; set; }
 
     public virtual DbSet<S3dPropertyInterfaceConfig> S3dPropertyInterfaceConfigs { get; set; }
 
@@ -887,6 +888,23 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
             entity.Property(e => e.Status).HasDefaultValue(true);
             entity.Property(e => e.WallThickness).HasColumnType("decimal(10, 3)");
+        });
+
+        modelBuilder.Entity<S3dDictWallThicknessCodeConverted>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToView("S3D_Dict_WallThickness_CodeConverted");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.Npd).HasColumnName("NPD").HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.Ndpunit).HasColumnName("NDPUnit").HasMaxLength(100);
+            entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
+            entity.Property(e => e.ScheduleThickness).HasMaxLength(100);
+            entity.Property(e => e.EndStandardCl).HasColumnName("EndStandard_CL");
+            entity.Property(e => e.EndStandard).HasMaxLength(100);
+            entity.Property(e => e.PipingOutsideDiameter).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.WallThickness).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.Status).HasDefaultValue(true);
         });
 
         modelBuilder.Entity<S3dPropertyInterfaceConfig>(entity =>
