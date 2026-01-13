@@ -35,8 +35,8 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <summary>
         /// 根据PMC内包含的标准信息和壁厚系列获取对应的通径范围
         /// </summary>
-        /// <param name="EndStandard">端面标准</param>
-        /// <param name="Schedule">壁厚系列</param>
+        /// <param name="EndStandard"> 端面标准 </param>
+        /// <param name="Schedule"> 壁厚系列 </param>
         /// <returns></returns>
         SpecNPDInfoDto GetNPDInfoByPmc(string EndStandard, string Schedule);
 
@@ -56,5 +56,12 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <param name="PmcRules"> 配置的附件列表 </param>
         /// <returns></returns>
         bool SetSpecRules(List<PmcSpecInfoDto> PmcRules);
+
+
+        /// <summary>
+        /// 生成对应的管系规格书
+        /// </summary>
+        /// <returns></returns>
+        bool GeneratePipeSpecTable();
     }
 }

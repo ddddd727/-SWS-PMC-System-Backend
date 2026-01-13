@@ -1,4 +1,6 @@
-﻿namespace PMCSystem_Backend.Services.Interfaces
+﻿using PMCSystem_Backend.Models;
+
+namespace PMCSystem_Backend.Services.Interfaces
 {
     public interface ICodelistService
     {
@@ -27,5 +29,27 @@
         /// <param name="codelistNumbers"></param>
         /// <returns></returns>
         Task<Dictionary<int, string>> GetCodelistDescriptionsAsync(string codelistTableName, IEnumerable<int> codelistNumbers);
+
+        /// <summary>
+        /// 根据父表名和父表代码值获取对应子表中所有的值
+        /// </summary>
+        /// <param name="parentTableName"></param>
+        /// <param name="parentCodeNumber"></param>
+        /// <returns></returns>
+        Task<Dictionary<string, List<CodeListItem>>> GetChildCodeListsByParentValueAsync(string parentTableName, int parentCodeNumber);
+
+        /// <summary>
+        /// 获取父表的所有直接子表
+        /// </summary>
+        /// <param name="parentTableName"></param>
+        /// <returns></returns>
+        Task<List<CodeListTableInfo>> GetDirectChildTablesAsync(string parentTableName);
+
+        /// <summary>
+        /// 获取指定表的所有父表
+        /// </summary>
+        /// <param name="childTableName"></param>
+        /// <returns></returns>
+        Task<List<CodeListTableInfo>> GetParentTablesAsync(string childTableName);
     }
 }

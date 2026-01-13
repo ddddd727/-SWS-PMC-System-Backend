@@ -41,6 +41,9 @@ public partial class PmcContext : DbContext
 
     public virtual DbSet<S3dDictPipingComponentType> S3dDictPipingComponentTypes { get; set; }
 
+    public virtual DbSet<S3dRuleComponentTypeHierarchyRule> S3dRuleComponentTypeHierarchyRules { get; set; }
+
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -244,6 +247,20 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.ComponentTypeDescription).HasMaxLength(255);
             entity.Property(e => e.ComponentTypeName).HasMaxLength(255);
+            entity.Property(e => e.Status).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<S3dRuleComponentTypeHierarchyRule>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__S3D_Rule__3214EC2773507ACE");
+
+            entity.ToTable("S3D_Rule_ComponentTypeHierarchyRule");
+
+            entity.HasIndex(e => new { e.ComponentTypeId, e.PipingCommoditySubClassCl }, "UQ_PipingComponentType_ID_SubClass").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.ComponentTypeId).HasColumnName("ComponentTypeID");
+            entity.Property(e => e.PipingCommoditySubClassCl).HasColumnName("PipingCommoditySubClass_CL");
             entity.Property(e => e.Status).HasDefaultValue(true);
         });
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
@@ -216,6 +217,12 @@ namespace PMCSystem_Backend.Services.Implementations
             }
         }
 
+        /// <summary>
+        /// 根据列名和代码值列表，批量获取描述
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <param name="codelistNumbers"></param>
+        /// <returns></returns>
         public async Task<Dictionary<int, string>> GetCodelistDescriptionsAsync(string columnName, IEnumerable<int> codelistNumbers)
         {
             var result = new Dictionary<int, string>();
@@ -253,6 +260,182 @@ namespace PMCSystem_Backend.Services.Implementations
                 _logger.LogError(ex, "批量获取Codelist描述失败，列名：{ColumnName}", columnName);
                 return result;
             }
+        }
+
+
+        /// <summary>
+        /// 根据父级Codelist值，获取所有子Codelist值
+        /// </summary>
+        /// <param name="parentTableName"></param>
+        /// <param name="parentCodeNumber"></param>
+        /// <returns></returns>
+        public async Task<Dictionary<string, List<CodeListItem>>> GetChildCodeListsByParentValueAsync(string parentTableName, int parentCodeNumber)
+        {
+            var result = new Dictionary<string, List<CodeListItem>>();
+
+            try
+            {
+                //1. 获取父表ID
+                var parentTableId = await GetCodelistTableIdAsync(parentTableName);
+
+                if (parentTableId == 0)
+                {
+                    _logger.LogWarning($"未找到父表:{parentTableName}");
+                    return result;
+                }
+
+                //2. 验证父值存在
+                var parentCodeExists = await _pmcContext.S3dCommonCodeListValues
+                    .AnyAsync(v => v.CodeListTableId == parentTableId && v.CodeListNumber == parentCodeNumber);
+
+                if ( !parentCodeExists)
+                {
+                    _logger.LogWarning($"父表{parentTableName}中未找到代码值:{parentCodeNumber}");
+                    return result;
+                }
+
+                //3. 查找所有直接子表
+                var childTables = await _pmcContext.S3dCommonCodeListHierarchies
+                    .Where(h => h.ParentCodeListTableId == parentTableId)
+                    .Join(
+                        _pmcContext.S3dCommonCodeListTables,
+                        hierachy => hierachy.CodeListTableId,
+                        table => table.Id,
+                        (hierachy, table) => new { table.CodeListTableName, table.Id }).ToListAsync();
+
+                if (!childTables.Any())
+                {
+                    _logger.LogInformation($"父表{parentTableName}没有直接子表");
+                    return result;
+                }
+
+                // 4. 查询所有子表中ParentCodelistNumber等于父代码值的记录
+                var childTableIds = childTables.Select(t => t.Id).ToList();
+
+                var childValues = await _pmcContext.S3dCommonCodeListValues
+                    .Where(v => childTableIds.Contains(v.CodeListTableId)
+                        && v.ParentCodeListNumber == parentCodeNumber)
+                    .OrderBy(v => v.CodeListTableId)
+                    .ThenBy(v => v.CodeListNumber)
+                    .ToListAsync();
+
+                // 5. 按子表分组
+                foreach (var childTable in childTables)
+                {
+                    var tableItems = childValues
+                        .Where(v => v.CodeListTableId == childTable.Id)
+                        .Select(v => new CodeListItem
+                        {
+                            Id = v.Id,
+                            CodeListNumber = v.CodeListNumber,
+                            ShortStringValue = v.ShortStringValue,
+                            LongStringValue = v.LongStringValue,
+                            ParentCodeListNumber = v.ParentCodeListNumber,
+                            IsUserDefine = v.IsUserDefine,
+                            Status = v.Status
+                        })
+                        .ToList();
+
+                    if (tableItems.Any())
+                    {
+                        result[childTable.CodeListTableName] = tableItems;
+                    }
+                }
+
+                _logger.LogInformation($"找到父表{parentTableName}({parentCodeNumber})的 {result.Count} 个子表数据");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取子Codelist失败，父表：{ParentTableName}，父代码值：{ParentCodeNumber}", parentTableName, parentCodeNumber);
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// 获取直接子表
+        /// </summary>
+        /// <param name="parentTableName"></param>
+        /// <returns></returns>
+        public async Task<List<CodeListTableInfo>> GetDirectChildTablesAsync(string parentTableName)
+        {
+            var result = new List<CodeListTableInfo>();
+
+            try
+            {
+                // 1. 获取父表ID
+                var parentTableId = await GetCodelistTableIdAsync(parentTableName);
+
+                if (parentTableId == 0)
+                {
+                    _logger.LogWarning($"未找到父表:{parentTableName}");
+                    return result;
+                }
+
+                // 2. 查询直接子表
+                var childTables = await _pmcContext.S3dCommonCodeListHierarchies
+                    .Where(h => h.ParentCodeListTableId == parentTableId)
+                    .Join(
+                        _pmcContext.S3dCommonCodeListTables,
+                        hierachy => hierachy.CodeListTableId,
+                        table => table.Id,
+                        (hierachy, table) => new CodeListTableInfo
+                        {
+                            Id = table.Id,
+                            TableName = table.CodeListTableName,
+                            IsUserDefined = table.IsUserDefined,
+                            Major = table.Major
+                        }).ToListAsync();
+                return childTables;
+            }catch(Exception ex)
+            {
+                _logger.LogError(ex, $"获取直接子表失败：{parentTableName}");
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// 获取直接父表
+        /// </summary>
+        /// <param name="childTableName"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<List<CodeListTableInfo>> GetParentTablesAsync(string childTableName)
+        {
+            var result = new List<CodeListTableInfo>();
+
+            try
+            {
+                // 1. 获取子表ID
+                var childTableId = await GetCodelistTableIdAsync(childTableName);
+
+                if (childTableId == 0)
+                {
+                    _logger.LogWarning($"未找到子表:{childTableName}");
+                    return result;
+                }
+
+                // 2. 查询父表
+                var parentTables = await _pmcContext.S3dCommonCodeListHierarchies
+                    .Where(h => h.CodeListTableId == childTableId)
+                    .Join(
+                        _pmcContext.S3dCommonCodeListTables,
+                        hierachy => hierachy.ParentCodeListTableId,
+                        table => table.Id,
+                        (hierachy, table) => new CodeListTableInfo
+                        {
+                            Id = table.Id,
+                            TableName = table.CodeListTableName,
+                            IsUserDefined = table.IsUserDefined,
+                            Major = table.Major
+                        }).ToListAsync();
+                return parentTables;
+            }catch(Exception ex)
+            {
+                _logger.LogError(ex, $"获取父表失败：{childTableName}");
+                return result;
+            }
+            throw new NotImplementedException();
         }
     }
 }

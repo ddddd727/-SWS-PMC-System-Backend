@@ -15,12 +15,14 @@ namespace PMCSystem_Backend.Services.Implementations
         private readonly PmcContext _context;
         private readonly IMapper _mapper;
         private readonly ICodelistService _codelistService;
+        private readonly ILogger<PmcSpecService> _logger;
 
-        public PmcSpecService(PmcContext context, IMapper mapper, ICodelistService codelistService)
+        public PmcSpecService(PmcContext context, IMapper mapper, ICodelistService codelistService, ILogger<PmcSpecService> logger)
         {
             _context = context;
             _mapper = mapper;
             _codelistService = codelistService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -33,6 +35,7 @@ namespace PMCSystem_Backend.Services.Implementations
         {
             if (string.IsNullOrWhiteSpace(PmcCode))
             {
+                _logger.LogError("PMC编码不能为空");
                 throw new ArgumentException("PMC编码不能为空");
             }
 
@@ -40,6 +43,7 @@ namespace PMCSystem_Backend.Services.Implementations
             var singleCodes = PmcCode.ToArray();
             if (singleCodes.Length != 7)
             {
+                _logger.LogError("输入的PMC编码不为7位: {PmcCode}", PmcCode);
                 throw new Exception("输入的编码不为7位");
             }
 
@@ -50,6 +54,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
             if (entity == null)
             {
+                _logger.LogError("未找到PMC编码 {PmcCode} 对应的数据", PmcCode);
                 throw new Exception($"未找到PMC编码 {PmcCode} 对应的数据");
             }
 
@@ -81,6 +86,7 @@ namespace PMCSystem_Backend.Services.Implementations
             // 参数验证
             if (string.IsNullOrWhiteSpace(EndStandard) || string.IsNullOrWhiteSpace(Schedule))
             {
+                _logger.LogError("端面标准和壁厚系列不能为空");
                 throw new ArgumentException("端面标准和壁厚系列不能为空");
             }
 
@@ -88,6 +94,7 @@ namespace PMCSystem_Backend.Services.Implementations
             // 如果转换失败，可能需要通过 CodeList 表查找对应的 CodeListNumber
             if (!int.TryParse(EndStandard, out int endStandardCl) || !int.TryParse(Schedule, out int scheduleCl))
             {
+                _logger.LogError("端面标准或壁厚系列格式不正确，无法转换为整数值");
                 throw new ArgumentException("端面标准或壁厚系列格式不正确，无法转换为整数值");
             }
 
@@ -129,6 +136,7 @@ namespace PMCSystem_Backend.Services.Implementations
         {
             if (string.IsNullOrWhiteSpace(compnentType))
             {
+                _logger.LogError("compnentType 不能为空");
                 throw new ArgumentException("compnentType 不能为空");
             }
 
@@ -180,6 +188,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 catch
                 {
                     // 忽略异常，尝试其他方式
+                    _logger.LogWarning(code.ToString() + "无法通过表名+值的短描述方法获取标准名称");
                 }
 
                 // 若仍为 code 字符串，则尝试按列名查询描述
@@ -197,7 +206,7 @@ namespace PMCSystem_Backend.Services.Implementations
                     }
                     catch
                     {
-                        // 忽略
+                        _logger.LogWarning(code.ToString() + "无法通过列名查询描述方法获取标准名称");
                     }
                 }
 
@@ -255,24 +264,141 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 通过标准名称获取对应的材料列表
         /// </summary>
-        /// <param name="standardName"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public List<string> GetMaterialListByStandard(string standardName,string ComponentType, string commidityType)
+        /// <param name="standardName">几何工业标准名称</param>
+        /// <param name="ComponentType">部件类型名称</param>
+        /// <param name="commidityType">商品类型（可选过滤）</param>
+        /// <returns>去重后的材料列表</returns>
+        public List<string> GetMaterialListByStandard(string standardName, string ComponentType, string commidityType)
         {
-            /* 通过获取到的具体的几何工业标准名称，去数据库中查询对应的材料             
-             * 1. 通过传入的ComponentType,到对应的部件类型表中获取到其ComponentTypeId
-             * 2. 通过映射的ComponentTypeId找到S3D_Rule_ComponentTypeHierachy中的映射的PipingCommoditySubClassId
-             * 3. 通过SubClassId到对应的详细的CommodityType
-             * 4. 通过输入的StandardName结合CommodityType,到对应的标准部件库中进行查询，获取到其标准下具体对应的Material
-             */
+            // 参数验证
+            if (string.IsNullOrWhiteSpace(standardName))
+            {
+                throw new ArgumentException("标准名称不能为空", nameof(standardName));
+            }
 
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(ComponentType))
+            {
+                throw new ArgumentException("部件类型不能为空", nameof(ComponentType));
+            }
+
+            // 1. 通过传入的ComponentType，到对应的部件类型表中获取到其ComponentTypeId
+            var compType = _context.S3dDictPipingComponentTypes
+                .AsNoTracking()
+                .FirstOrDefault(x => x.ComponentTypeName == ComponentType);
+
+            if (compType == null)
+            {
+                // 未找到对应的部件类型，返回空列表
+                _logger.LogWarning("未找到对应的部件类型: {ComponentType}", ComponentType);
+                return new List<string>();
+            }
+
+            var componentTypeId = compType.Id;
+
+            // 2. 通过映射的ComponentTypeId找到S3D_Rule_ComponentTypeHierarchy中的映射的PipingCommoditySubClassCl
+            var hierarchyRules = _context.S3dRuleComponentTypeHierarchyRules
+                .AsNoTracking()
+                .Where(x => x.ComponentTypeId == componentTypeId && x.Status)
+                .ToList();
+
+            if (!hierarchyRules.Any())
+            {
+                // 未找到层级规则，返回空列表
+                _logger.LogWarning("未找到对应的层级规则 for ComponentTypeId: {ComponentTypeId}", componentTypeId);
+                return new List<string>();
+            }
+
+            // 3. 通过SubClassCl和对应的codelist表找到对应子表中的具体的CommodityType类型
+            var commodityTypes = new List<string>();
+
+            foreach (var rule in hierarchyRules)
+            {
+                if (!rule.PipingCommoditySubClassCl.HasValue)
+                {
+                    continue;
+                }
+
+                var subClassCl = rule.PipingCommoditySubClassCl.Value;
+
+                try
+                {
+                    // 获取子codelist表中的所有CommodityType值
+                    var childCodeLists = _codelistService
+                        .GetChildCodeListsByParentValueAsync("PipingCommoditySubClass", subClassCl)
+                        .GetAwaiter()
+                        .GetResult();
+
+                    if (childCodeLists != null)
+                    {
+                        foreach (var kvp in childCodeLists)
+                        {
+                            foreach (var item in kvp.Value)
+                            {
+                                if (!string.IsNullOrWhiteSpace(item.ShortStringValue))
+                                {
+                                    commodityTypes.Add(item.ShortStringValue);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // 忽略异常，继续处理下一个规则
+                    _logger.LogWarning("无法通过子类代码 {SubClassCl} 获取对应的 CommodityType 列表", subClassCl);
+                }
+            }
+
+            // 如果传入了特定的commidityType，则仅使用该类型进行过滤
+            if (!string.IsNullOrWhiteSpace(commidityType))
+            {
+                commodityTypes = commodityTypes
+                    .Where(ct => ct.Equals(commidityType, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                // 如果过滤后没有匹配项，直接使用传入的commidityType
+                if (!commodityTypes.Any())
+                {
+                    commodityTypes.Add(commidityType);
+                }
+            }
+
+            if (!commodityTypes.Any())
+            {
+                _logger.LogWarning("未找到任何匹配的 CommodityType for ComponentType: {ComponentType}", ComponentType);
+                return new List<string>();
+            }
+
+            // 去重CommodityType列表
+            commodityTypes = commodityTypes.Distinct().ToList();
+
+            // 4. 通过输入的StandardName和CommodityType，到S3dCdbPipeComponent中查询材料
+            var materials = _context.S3dCdbPipeComponents
+                .AsNoTracking()
+                .Where(x => x.GeometricIndustryStandard == standardName
+                         && x.CommodityType != null
+                         && commodityTypes.Contains(x.CommodityType)
+                         && !string.IsNullOrEmpty(x.MaterialGrade))
+                .Select(x => x.MaterialGrade!)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            return materials;
         }
 
 
 
         public bool SetSpecRules(List<PmcSpecInfoDto> PmcRules)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 生成对应的管系规格书
+        /// </summary>
+        /// <returns></returns>
+        public bool GeneratePipeSpecTable()
         {
             throw new NotImplementedException();
         }
