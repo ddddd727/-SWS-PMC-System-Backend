@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Entities;
+using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interfaces;
@@ -17,7 +17,7 @@ namespace PMCSystem_Backend.Services.Implementations
             throw new NotImplementedException();
         }
 
-        public List<DspSpmcRulePmcdata> GetPmcRules(string shipNumber)
+        public List<S3dRulePmcdatum> GetPmcRules(string shipNumber)
         {
             throw new NotImplementedException();
         }
@@ -42,7 +42,7 @@ namespace PMCSystem_Backend.Services.Implementations
             return shipInfos;
         }
 
-        public bool SetSpecRules(List<DspSpmcRulePmcdata> PmcRules)
+        public bool SetSpecRules(List<S3dRulePmcdatum> PmcRules)
         {
             throw new NotImplementedException();
         }

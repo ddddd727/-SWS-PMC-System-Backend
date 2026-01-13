@@ -8,9 +8,9 @@ namespace PMCSystem_Backend.MappingProfiles
     {
         public PmcProfile()
         {
-            CreateMap<DspSpmcDictPipingBend, DspSpmcDictPipingBendDto>().ReverseMap();
-            CreateMap<CreateDspSpmcDictPipingBendDto, DspSpmcDictPipingBend>();
-            CreateMap<UpdateDspSpmcDictPipingBendDto, DspSpmcDictPipingBend>();
+            CreateMap<S3dDictPipingBend, DspSpmcDictPipingBendDto>().ReverseMap();
+            CreateMap<CreateDspSpmcDictPipingBendDto, S3dDictPipingBend>();
+            CreateMap<UpdateDspSpmcDictPipingBendDto, S3dDictPipingBend>();
         }
     }
 }

@@ -21,25 +21,25 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<List<DspSpmcDictPipingBendDto>> GetAllListAsync()
         {
-            var items = await _context.DspSpmcDictPipingBends.ToListAsync();
+            var items = await _context.S3dDictPipingBends.ToListAsync();
             return _mapper.Map<List<DspSpmcDictPipingBendDto>>(items);
         }
 
         public async Task<DspSpmcDictPipingBendDto?> GetByIdAsync(int id)
         {
-            var entity = await _context.DspSpmcDictPipingBends.FindAsync(id);
+            var entity = await _context.S3dDictPipingBends.FindAsync(id);
             return _mapper.Map<DspSpmcDictPipingBendDto>(entity);
         }
 
         public async Task<DspSpmcDictPipingBendDto> CreateAsync(CreateDspSpmcDictPipingBendDto dto)
         {
-            var entity = _mapper.Map<DspSpmcDictPipingBend>(dto);
+            var entity = _mapper.Map<S3dDictPipingBend>(dto);
             
             // 手动计算下一个 ID
-            var maxId = await _context.DspSpmcDictPipingBends.MaxAsync(e => (int?)e.Id) ?? 0;
+            var maxId = await _context.S3dDictPipingBends.MaxAsync(e => (int?)e.Id) ?? 0;
             entity.Id = maxId + 1;
             
-            _context.DspSpmcDictPipingBends.Add(entity);
+            _context.S3dDictPipingBends.Add(entity);
             
             // 如果数据库开启了 IDENTITY_INSERT，可能需要显式处理，
             // 但如果之前是自动增长，EF Core 通常会忽略手动设置的 ID，除非配置了 ValueGeneratedNever。
@@ -64,7 +64,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<bool> UpdateAsync(UpdateDspSpmcDictPipingBendDto dto)
         {
-            var entity = await _context.DspSpmcDictPipingBends.FindAsync(dto.Id);
+            var entity = await _context.S3dDictPipingBends.FindAsync(dto.Id);
             if (entity == null) return false;
 
             _mapper.Map(dto, entity);
@@ -74,10 +74,10 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var entity = await _context.DspSpmcDictPipingBends.FindAsync(id);
+            var entity = await _context.S3dDictPipingBends.FindAsync(id);
             if (entity == null) return false;
 
-            _context.DspSpmcDictPipingBends.Remove(entity);
+            _context.S3dDictPipingBends.Remove(entity);
             await _context.SaveChangesAsync();
             return true;
         }
