@@ -20,7 +20,11 @@ public partial class PmcTestContext : DbContext
 
     public virtual DbSet<S3dCdbNutPart> S3dCdbNutParts { get; set; }
 
+    public virtual DbSet<S3dCdbPipeCompGeometryDatum> S3dCdbPipeCompGeometryData { get; set; }
+
     public virtual DbSet<S3dCdbPipeComponent> S3dCdbPipeComponents { get; set; }
+
+    public virtual DbSet<S3dCdbPipeGeometryDatum> S3dCdbPipeGeometryData { get; set; }
 
     public virtual DbSet<S3dCdbPipeStock> S3dCdbPipeStocks { get; set; }
 
@@ -182,6 +186,8 @@ public partial class PmcTestContext : DbContext
 
     public virtual DbSet<VwMaterialsCategoryPipingStandard> VwMaterialsCategoryPipingStandards { get; set; }
 
+    public virtual DbSet<VwPipingClassWithCode> VwPipingClassWithCodes { get; set; }
+
     public virtual DbSet<VwPipingStandardMaterialsGrade> VwPipingStandardMaterialsGrades { get; set; }
 
     public virtual DbSet<VwPipingStandardPressureRating> VwPipingStandardPressureRatings { get; set; }
@@ -198,11 +204,13 @@ public partial class PmcTestContext : DbContext
     {
         modelBuilder.Entity<S3dCdbBoltPart>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC27C388D377");
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC279DF749FA");
 
             entity.ToTable("S3D_CDB_BoltPart");
 
-            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A1CD12FAB1").IsUnique();
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ_BoltPart_IndustryCommodityCode").IsUnique();
+
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A14C1E454F").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.BoltType).HasMaxLength(100);
@@ -213,7 +221,7 @@ public partial class PmcTestContext : DbContext
 
         modelBuilder.Entity<S3dCdbGasketPart>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC2781363C49");
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC2742101228");
 
             entity.ToTable("S3D_CDB_GasketPart");
 
@@ -271,11 +279,13 @@ public partial class PmcTestContext : DbContext
 
         modelBuilder.Entity<S3dCdbNutPart>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC2794445D53");
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC272A6765B2");
 
             entity.ToTable("S3D_CDB_NutPart");
 
-            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A1BF70807B").IsUnique();
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ_NutPart_IndustryCommodityCode").IsUnique();
+
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A1297A38DB").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.GeometricIndustryStandard).HasMaxLength(255);
@@ -285,13 +295,45 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.NutType).HasMaxLength(100);
         });
 
+        modelBuilder.Entity<S3dCdbPipeCompGeometryDatum>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC272B5375D9");
+
+            entity.ToTable("S3D_CDB_PipeCompGeometryData");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.BendRadius).HasMaxLength(100);
+            entity.Property(e => e.DryCogX).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.DryCogY).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.DryCogZ).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.DryWeight).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.EndPreparation1).HasMaxLength(100);
+            entity.Property(e => e.EndPreparation2).HasMaxLength(100);
+            entity.Property(e => e.GeometricIndustryStandard).HasMaxLength(255);
+            entity.Property(e => e.IndustryCommodityCode).HasMaxLength(255);
+            entity.Property(e => e.MaterialsMgmtIdent).HasMaxLength(255);
+            entity.Property(e => e.Npd1)
+                .HasColumnType("decimal(10, 3)")
+                .HasColumnName("NPD1");
+            entity.Property(e => e.Npd2)
+                .HasColumnType("decimal(10, 3)")
+                .HasColumnName("NPD2");
+            entity.Property(e => e.NpdUnitType1).HasMaxLength(20);
+            entity.Property(e => e.NpdUnitType2).HasMaxLength(20);
+            entity.Property(e => e.PartDescription).HasMaxLength(500);
+            entity.Property(e => e.ScheduleThickness1).HasMaxLength(50);
+            entity.Property(e => e.ScheduleThickness2).HasMaxLength(50);
+        });
+
         modelBuilder.Entity<S3dCdbPipeComponent>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC27E87DE18B");
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC27024910E6");
 
             entity.ToTable("S3D_CDB_PipeComponent");
 
-            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A1C230F695").IsUnique();
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ_PipeComponent_IndustryCommodityCode").IsUnique();
+
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A122AE79AE").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.BendAngle).HasColumnType("decimal(10, 3)");
@@ -304,33 +346,60 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.PartDataBasis).HasMaxLength(100);
         });
 
+        modelBuilder.Entity<S3dCdbPipeGeometryDatum>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC27D2CF78F4");
+
+            entity.ToTable("S3D_CDB_PipeGeometryData");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.Density).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.EndPreparation1).HasMaxLength(100);
+            entity.Property(e => e.EndPreparation2).HasMaxLength(100);
+            entity.Property(e => e.GeometricIndustryStandard).HasMaxLength(255);
+            entity.Property(e => e.IndustryCommodityCode).HasMaxLength(255);
+            entity.Property(e => e.MaterialsMgmtIdent).HasMaxLength(255);
+            entity.Property(e => e.MaximumPipeLength).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.MinimumPipeLength).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.Npd1)
+                .HasColumnType("decimal(10, 3)")
+                .HasColumnName("NPD1");
+            entity.Property(e => e.Npd2)
+                .HasColumnType("decimal(10, 3)")
+                .HasColumnName("NPD2");
+            entity.Property(e => e.NpdUnitType1).HasMaxLength(20);
+            entity.Property(e => e.NpdUnitType2).HasMaxLength(20);
+            entity.Property(e => e.PartDescription).HasMaxLength(500);
+            entity.Property(e => e.PurchaseLength).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.ScheduleThickness1).HasMaxLength(50);
+            entity.Property(e => e.ScheduleThickness2).HasMaxLength(50);
+            entity.Property(e => e.WeightPerUnitLength).HasColumnType("decimal(10, 3)");
+        });
+
         modelBuilder.Entity<S3dCdbPipeStock>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC2720138F5C");
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC2770593B31");
 
             entity.ToTable("S3D_CDB_PipeStock");
 
-            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A1A40F0DB3").IsUnique();
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ_PipeStock_IndustryCommodityCode").IsUnique();
+
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A1E6C9A434").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.CommodityType).HasMaxLength(100);
-            entity.Property(e => e.Density).HasColumnType("decimal(10, 3)");
             entity.Property(e => e.GeometricIndustryStandard).HasMaxLength(255);
             entity.Property(e => e.IndustryCommodityCode).HasMaxLength(100);
             entity.Property(e => e.MaterialGrade).HasMaxLength(100);
-            entity.Property(e => e.MaximumPipeLength).HasColumnType("decimal(10, 3)");
-            entity.Property(e => e.MinimumPipeLength).HasColumnType("decimal(10, 3)");
-            entity.Property(e => e.PurchaseLength).HasColumnType("decimal(10, 3)");
-            entity.Property(e => e.WeightPerUnitLength).HasColumnType("decimal(10, 3)");
         });
 
         modelBuilder.Entity<S3dCdbPortDatum>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC27011179BF");
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC27888CC3C9");
 
             entity.ToTable("S3D_CDB_PortData");
 
-            entity.HasIndex(e => new { e.Npd1, e.NpdUnitType1, e.PressureRating1, e.EndPreparation1, e.EndStandard1, e.SchduleThickness1, e.FlowDirection1, e.Npd2, e.NpdUnitType2, e.PressureRating2, e.EndPreparation2, e.EndStandard2, e.SchduleThickness2, e.FlowDirection2 }, "UQ_S3D_CDB_PortData_CompositeUnique").IsUnique();
+            entity.HasIndex(e => new { e.Npd1, e.NpdUnitType1, e.PressureRating1, e.EndPreparation1, e.EndStandard1, e.SchduleThickness1, e.Npd2, e.NpdUnitType2, e.PressureRating2, e.EndPreparation2, e.EndStandard2, e.SchduleThickness2 }, "UQ_S3D_CDB_PortData_CompositeUnique").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.EndPreparation1).HasMaxLength(100);
@@ -355,11 +424,11 @@ public partial class PmcTestContext : DbContext
 
         modelBuilder.Entity<S3dCdbWasherPart>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC27E4F84F37");
+            entity.HasKey(e => e.Id).HasName("PK__S3D_CDB___3214EC2791478BBB");
 
             entity.ToTable("S3D_CDB_WasherPart");
 
-            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A1AC047644").IsUnique();
+            entity.HasIndex(e => e.IndustryCommodityCode, "UQ__S3D_CDB___782B02A17139C7EB").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.GeometricIndustryStandard).HasMaxLength(255);
@@ -1910,6 +1979,17 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.MaterialsCategoryDesc).HasMaxLength(255);
             entity.Property(e => e.PipeStandDesc).HasMaxLength(255);
             entity.Property(e => e.PipingStandardCode).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<VwPipingClassWithCode>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("VW_PipingClass_WithCodes");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.PipingClassCode).HasMaxLength(100);
+            entity.Property(e => e.ShortStringValue).HasMaxLength(255);
         });
 
         modelBuilder.Entity<VwPipingStandardMaterialsGrade>(entity =>

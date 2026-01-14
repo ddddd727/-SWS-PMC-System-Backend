@@ -13,15 +13,5 @@ public partial class S3dCdbPipeStock
 
     public string? MaterialGrade { get; set; }
 
-    public decimal? Density { get; set; }
-
-    public decimal? WeightPerUnitLength { get; set; }
-
-    public decimal? PurchaseLength { get; set; }
-
-    public decimal? MinimumPipeLength { get; set; }
-
-    public decimal? MaximumPipeLength { get; set; }
-
     public string? GeometricIndustryStandard { get; set; }
 }

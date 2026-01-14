@@ -1,0 +1,47 @@
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Entities;
+using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Services.Interface;
+
+namespace PMCSystem_Backend.Services.Impletation
+{
+    public class MainMaterialRuleService : IMainMaterialRuleService
+    {
+        private readonly PmcTestContext _context;
+
+        public MainMaterialRuleService(PmcTestContext context)
+        {
+            _context = context;
+        }
+
+        public IEnumerable<string> GetRuleNames()
+        {
+            return _context.VwS3dRuleB1b2b3dWithCodes
+                .AsNoTracking()
+                .Select(x => x.RuleName)
+                .Where(x => x != null)
+                .Distinct()
+                .ToList()!;
+        }
+
+        public IEnumerable<MainMaterialRuleDto> GetByRuleName(string ruleName)
+        {
+            var entities = _context.VwS3dRuleB1b2b3dWithCodes
+                .AsNoTracking()
+                .Where(x => x.RuleName == ruleName)
+                .ToList();
+
+            return entities.Select(entity => new MainMaterialRuleDto
+            {
+                Id = entity.Id,
+                RuleName = entity.RuleName,
+                MaterialsCategoryCode = entity.MaterialsCategoryCode,
+                PipingStandardCode = entity.PipingStandardCode,
+                MaterialsGradeCode = entity.MaterialsGradeCode,
+                ScheduleThicknessCode = entity.ScheduleThicknessCode
+            }).ToList();
+        }
+    }
+}

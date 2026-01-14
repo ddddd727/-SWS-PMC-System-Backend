@@ -34,7 +34,10 @@ try
 
     // ע���Զ������Scoped�������ڣ� ÿ�����󴴽�һ����ʵ����
     builder.Services.AddScoped<IExampleService, ExampleService>();
-    builder.Services.AddScoped<IRuleAb2b3c2Service, RuleAb2b3c2Service>();
+    builder.Services.AddScoped<IPipeLimitRuleService, PipeLimitRuleService>();
+    builder.Services.AddScoped<IMainMaterialRuleService, MainMaterialRuleService>();
+    builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
+    builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
 
     builder.Services.AddControllers();
 
