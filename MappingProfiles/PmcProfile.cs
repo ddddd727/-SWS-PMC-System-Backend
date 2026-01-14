@@ -15,6 +15,10 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<CreateDspSpmcDictPipingBendDataDto, S3dDictPipingBendDatum>();
             CreateMap<UpdateDspSpmcDictPipingBendDataDto, S3dDictPipingBendDatum>();
             CreateMap<S3dDictWallThicknessCodeConverted, WallThicknessCodeConvertedDto>();
+
+            CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();
+            CreateMap<CreateS3dDictWallThicknessDto, S3dDictWallThickness>();
+            CreateMap<UpdateS3dDictWallThicknessDto, S3dDictWallThickness>();
         }
     }
 }

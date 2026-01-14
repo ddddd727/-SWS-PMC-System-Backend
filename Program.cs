@@ -41,6 +41,7 @@ try
     builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
     builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
+    builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
 
     builder.Services.AddControllers();
 
