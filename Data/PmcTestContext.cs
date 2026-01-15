@@ -893,7 +893,7 @@ public partial class PmcTestContext : DbContext
         modelBuilder.Entity<S3dDictWallThicknessCodeConverted>(entity =>
         {
             entity.HasNoKey();
-            entity.ToView("S3D_Dict_WallThickness_CodeConverted");
+            entity.ToView("S3D_Code_WallThickness");
 
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.Npd).HasColumnName("NPD").HasColumnType("decimal(10, 3)");
