@@ -151,5 +151,49 @@ namespace PMCSystem_Backend.Controllers
             }
         }
 
+        /// <summary>
+        /// 根据部件类型获取标准列表和对应的材料列表
+        /// </summary>
+        /// <param name="componentTypeName">部件类型名称</param>
+        /// <returns>标准列表及每个标准对应的材料列表</returns>
+        /// <response code="200">查询成功，返回标准列表和材料列表</response>
+        /// <response code="400">请求参数错误或查询失败</response>
+        /// <response code="404">未找到该部件类型对应的标准数据</response>
+        [HttpGet("PipeFittingSpec")]
+        [ProducesResponseType(typeof(ApiResponse<List<PipeFittingSpecDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 400)]
+        [ProducesResponseType(typeof(ApiResponse), 404)]
+        public IActionResult GetPipeFittingSpec([FromQuery] string componentTypeName)
+        {
+            // 参数验证
+            if (string.IsNullOrWhiteSpace(componentTypeName))
+            {
+                return Fail(ApiErrorCode.ValidationError, "部件类型名称不能为空");
+            }
+
+            try
+            {
+                // 调用服务层方法获取标准列表和材料列表
+                var result = _pmcSpecService.GetPipeFittingSpec(componentTypeName);
+
+                // 判断查询结果是否为空
+                if (result == null || result.Count == 0)
+                {
+                    return Fail(ApiErrorCode.ResourceNotFound,
+                        $"未找到部件类型 {componentTypeName} 对应的标准列表和材料列表");
+                }
+
+                return Success(result, $"成功获取部件类型 {componentTypeName} 的标准列表和材料列表");
+            }
+            catch (ArgumentException ex)
+            {
+                return Fail(ApiErrorCode.ValidationError, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return Fail(ApiErrorCode.BusinessRuleViolation, $"查询失败: {ex.Message}");
+            }
+        }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PMCSystem_Backend.Models;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
@@ -17,47 +18,47 @@ public partial class S3dRulePmcData
 
     public string MaterialsCategoryName { get; set; } = null!;
 
-    public string PipingStandardName { get; set; } = null!;
+    public List<PmcStandardInfo>? PipingStandardName { get; set; } = null!;
 
-    public string MaterialsGradeName { get; set; } = null!;
+    public string? MaterialsGradeName { get; set; } = null!;
 
-    public string FlangeStandardName { get; set; } = null!;
+    public string? FlangeStandardName { get; set; } = null!;
 
-    public string PressureRatingName { get; set; } = null!;
+    public string? PressureRatingName { get; set; } = null!;
 
-    public string ScheduleThicknessName { get; set; } = null!;
+    public string? ScheduleThicknessName { get; set; } = null!;
 
-    public string? PipeStandard { get; set; }
+    public List<PmcStandardInfo>? PipeStandard { get; set; }
 
-    public string? ElbowStandard { get; set; }
+    public List<PmcStandardInfo>? ElbowStandard { get; set; }
 
-    public string? RedStandard { get; set; }
+    public List<PmcStandardInfo>? RedStandard { get; set; }
 
-    public string? TeeStandard { get; set; }
+    public List<PmcStandardInfo>? TeeStandard { get; set; }
 
-    public string? SleeveStandard { get; set; }
+    public List<PmcStandardInfo>? SleeveStandard { get; set; }
 
-    public string? BossesStandard { get; set; }
+    public List<PmcStandardInfo>? BossesStandard { get; set; }
 
-    public string? SaddlesStandard { get; set; }
+    public List<PmcStandardInfo>? SaddlesStandard { get; set; }
 
-    public string? CapsStandard { get; set; }
+    public List<PmcStandardInfo>? CapsStandard { get; set; }
 
-    public string? OverpassStandard { get; set; }
+    public List<PmcStandardInfo>? OverpassStandard { get; set; }
 
-    public string? AccessoriesStandard { get; set; }
+    public List<PmcStandardInfo>? AccessoriesStandard { get; set; }
 
-    public string? FlangeStandard { get; set; }
+    public List<PmcStandardInfo>? FlangeStandard { get; set; }
 
-    public string? BlindFlangeStandard { get; set; }
+    public List<PmcStandardInfo>? BlindFlangeStandard { get; set; }
 
-    public string? GasketStandard { get; set; }
+    public List<PmcStandardInfo>? GasketStandard { get; set; }
 
-    public string? BoltStandard { get; set; }
+    public List<PmcStandardInfo>? BoltStandard { get; set; }
 
-    public string? NutStandard { get; set; }
+    public List<PmcStandardInfo>? NutStandard { get; set; }
 
-    public string? WasherStandard { get; set; }
+    public List<PmcStandardInfo>? WasherStandard { get; set; }
 
     public string? Status { get; set; }
 

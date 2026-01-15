@@ -6,30 +6,30 @@
     public class PmcBaseInfoDto
     {
         // pmc7位编码
-        public string PmcCode { get; set; }
+        public required string PmcCode { get; set; }
 
         // 船号
-        public string ShipNumber { get; set; }
+        public string? ShipNumber { get; set; }
 
         // pmc编码状态
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         // 管道等级
-        public string PipingClass { get; set; }
+        public string? PipingClass { get; set; }
 
         // 牌号
-        public string MaterialGrade { get; set; }
+        public string? MaterialGrade { get; set; }
 
         // 法兰压力等级
-        public string PressureRating { get; set; }
+        public string? PressureRating { get; set; }
 
         // 管材标准
-        public string PipeStandard { get; set; }
+        public string? PipeStandard { get; set; }
 
         // 管材材料
-        public string MaterialCategory { get; set; }
+        public string? MaterialCategory { get; set; }
 
         // 壁厚系列
-        public string WallThickness { get; set; }
+        public string? WallThickness { get; set; }
     }
 }

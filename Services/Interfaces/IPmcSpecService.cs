@@ -55,7 +55,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <param name="PmcRules"> 配置的附件列表 </param>
         /// <returns></returns>
-        bool SetSpecRules(List<PmcSpecInfoDto> PmcRules);
+        bool SaveSpecRules(string pmcCode, List<PmcSpecInfoDto> PmcRules);
 
 
         /// <summary>
