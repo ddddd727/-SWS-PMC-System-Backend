@@ -37,5 +37,45 @@ namespace PMCSystem_Backend.Models
 
         public string? DDesc { get; set; }
     }
+
+    public class PmcCodeQueryItem
+    {
+        public string PmcCode { get; set; } = string.Empty;
+        public string PipingClassName { get; set; } = string.Empty;
+        public string MaterialsCategoryName { get; set; } = string.Empty;
+        public string PipingStandardName { get; set; } = string.Empty;
+        public string MaterialsGradeName { get; set; } = string.Empty;
+        public string FlangeStandardName { get; set; } = string.Empty;
+        public string PressureRatingName { get; set; } = string.Empty;
+        public string ScheduleThicknessName { get; set; } = string.Empty;
+    }
+
+    public class PmcCodeSaveItem
+    {
+        public string PmcCode { get; set; } = string.Empty;
+
+        public string PipingClassName { get; set; } = string.Empty;
+
+        public string MaterialsCategoryName { get; set; } = string.Empty;
+
+        public string PipingStandardName { get; set; } = string.Empty;
+
+        public string MaterialsGradeName { get; set; } = string.Empty;
+
+        public string FlangeStandardName { get; set; } = string.Empty;
+
+        public string PressureRatingName { get; set; } = string.Empty;
+
+        public string ScheduleThicknessName { get; set; } = string.Empty;
+    }
+
+    public class PmcCodeSaveRequest
+    {
+        public string ShipType { get; set; } = string.Empty;
+
+        public string ShipNo { get; set; } = string.Empty;
+
+        public List<PmcCodeSaveItem> Items { get; set; } = new List<PmcCodeSaveItem>();
+    }
 }
 

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interface;
 
@@ -186,6 +187,90 @@ namespace PMCSystem_Backend.Services.Impletation
                 throw;
             }
         }
+
+        public void SavePmcCodes(PmcCodeSaveRequest request)
+        {
+            try
+            {
+                if (request == null) throw new ArgumentNullException(nameof(request));
+                var shipType = (request.ShipType ?? string.Empty).Trim();
+                var shipNo = (request.ShipNo ?? string.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(shipType) || string.IsNullOrWhiteSpace(shipNo))
+                    throw new ArgumentException("ShipType or ShipNo is empty.");
+
+                var items = (request.Items ?? new List<PmcCodeSaveItem>())
+                    .Where(x => !string.IsNullOrWhiteSpace(x.PmcCode))
+                    .ToList();
+
+                // 1. Fetch existing for this ShipType + ShipNo
+                var existing = _context.S3dRulePmcdata
+                    .Where(x => x.ShipType == shipType && x.ShipNo == shipNo)
+                    .ToList();
+                var existingByCode = existing.ToDictionary(x => x.Pmccode, x => x);
+
+                // 2. Determine Add / Update / Delete
+                var newCodes = new HashSet<string>(items.Select(x => x.PmcCode));
+                
+                // Delete: existing in DB but not in current list
+                var toDelete = existing.Where(x => !newCodes.Contains(x.Pmccode)).ToList();
+                if (toDelete.Count > 0)
+                {
+                    _context.S3dRulePmcdata.RemoveRange(toDelete);
+                }
+
+                // Upsert
+                foreach (var item in items)
+                {
+                    if (!existingByCode.TryGetValue(item.PmcCode, out var entity))
+                    {
+                        // Add
+                        entity = new S3dRulePmcdatum
+                        {
+                            ShipType = shipType,
+                            ShipNo = shipNo,
+                            Pmccode = item.PmcCode
+                        };
+                        _context.S3dRulePmcdata.Add(entity);
+                        // Update dict to avoid duplicates if input has dupes (though frontend should handle)
+                        existingByCode[item.PmcCode] = entity;
+                    }
+
+                    // Update fields
+                    entity.PipingClassName = item.PipingClassName;
+                    entity.MaterialsCategoryName = item.MaterialsCategoryName;
+                    entity.PipingStandardName = item.PipingStandardName;
+                    entity.MaterialsGradeName = item.MaterialsGradeName;
+                    entity.FlangeStandardName = item.FlangeStandardName;
+                    entity.PressureRatingName = item.PressureRatingName;
+                    entity.ScheduleThicknessName = item.ScheduleThicknessName;
+                }
+
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in SavePmcCodes for ShipType={ShipType}, ShipNo={ShipNo}", request?.ShipType, request?.ShipNo);
+                throw;
+            }
+        }
+
+        public IEnumerable<PmcCodeQueryItem> GetPmcCodes(string shipType, string shipNo)
+        {
+            return _context.S3dRulePmcdata
+                .Where(x => x.ShipType == shipType && x.ShipNo == shipNo)
+                .Select(x => new PmcCodeQueryItem
+                {
+                    PmcCode = x.Pmccode,
+                    PipingClassName = x.PipingClassName,
+                    MaterialsCategoryName = x.MaterialsCategoryName,
+                    PipingStandardName = x.PipingStandardName,
+                    MaterialsGradeName = x.MaterialsGradeName,
+                    FlangeStandardName = x.FlangeStandardName,
+                    PressureRatingName = x.PressureRatingName,
+                    ScheduleThicknessName = x.ScheduleThicknessName
+                })
+                .ToList();
+        }
     }
 }
-

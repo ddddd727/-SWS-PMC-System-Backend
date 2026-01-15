@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PMCSystem_Backend.Common.Enums;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interface;
 
@@ -38,6 +39,44 @@ namespace PMCSystem_Backend.Controllers
                 return StatusCode(500, new { code = 500, message = "生成PMC编码失败: " + ex.Message });
             }
         }
+
+        [HttpPost("save")]
+        public IActionResult Save([FromBody] PmcCodeSaveRequest request)
+        {
+            try
+            {
+                if (request == null || string.IsNullOrWhiteSpace(request.ShipType) || string.IsNullOrWhiteSpace(request.ShipNo))
+                {
+                    return Fail(ApiErrorCode.ValidationError, "请填写船型船号");
+                }
+
+                _logger.LogInformation("Saving PMC codes for ShipType={ShipType}, ShipNo={ShipNo}", request.ShipType, request.ShipNo);
+                _service.SavePmcCodes(request);
+                return Success("PMC编码保存成功");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save PMC codes");
+                return StatusCode(500, new { code = 500, message = "保存PMC编码失败: " + ex.Message });
+            }
+        }
+
+        [HttpGet("query")]
+        public IActionResult Query(string shipType, string shipNo)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(shipType) || string.IsNullOrWhiteSpace(shipNo))
+                    return Fail(ApiErrorCode.ValidationError, "请填写船型船号");
+
+                var data = _service.GetPmcCodes(shipType, shipNo);
+                return Success(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to query PMC codes");
+                return StatusCode(500, new { code = 500, message = "查询PMC编码失败: " + ex.Message });
+            }
+        }
     }
 }
-
