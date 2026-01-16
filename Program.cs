@@ -42,6 +42,7 @@ try
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
     builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
     builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
+    builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
 
     builder.Services.AddControllers();
 

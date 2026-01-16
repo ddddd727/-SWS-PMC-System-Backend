@@ -19,6 +19,10 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();
             CreateMap<CreateS3dDictWallThicknessDto, S3dDictWallThickness>();
             CreateMap<UpdateS3dDictWallThicknessDto, S3dDictWallThickness>();
+
+            CreateMap<S3dRuleShortCodeHierarchyRule, S3dRuleShortCodeHierarchyRuleDto>().ReverseMap();
+            CreateMap<CreateS3dRuleShortCodeHierarchyRuleDto, S3dRuleShortCodeHierarchyRule>();
+            CreateMap<UpdateS3dRuleShortCodeHierarchyRuleDto, S3dRuleShortCodeHierarchyRule>();
         }
     }
 }
