@@ -50,6 +50,12 @@ namespace PMCSystem_Backend.Models
         public string ScheduleThicknessName { get; set; } = string.Empty;
     }
 
+    public class PmcOptionDto
+    {
+        public string Label { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty; // Code
+    }
+
     public class PmcCodeSaveItem
     {
         public string PmcCode { get; set; } = string.Empty;
@@ -76,6 +82,20 @@ namespace PMCSystem_Backend.Models
         public string ShipNo { get; set; } = string.Empty;
 
         public List<PmcCodeSaveItem> Items { get; set; } = new List<PmcCodeSaveItem>();
+    }
+
+    public class ShipInfo
+    {
+        public string ShipType { get; set; } = string.Empty;
+        public string ShipNumber { get; set; } = string.Empty;
+    }
+
+    public class CopyRuleRequest
+    {
+        public string SourceShipType { get; set; } = string.Empty;
+        public string SourceShipNo { get; set; } = string.Empty;
+        public string TargetShipType { get; set; } = string.Empty;
+        public string TargetShipNo { get; set; } = string.Empty;
     }
 }
 

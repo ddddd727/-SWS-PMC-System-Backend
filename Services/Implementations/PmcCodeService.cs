@@ -272,5 +272,163 @@ namespace PMCSystem_Backend.Services.Impletation
                 })
                 .ToList();
         }
+
+        public IEnumerable<PmcOptionDto> GetOptions(string type, string? parentDesc = null)
+        {
+            switch (type.ToLower())
+            {
+                case "a": // 管材等级
+                    return _context.VwPipingClassWithCodes
+                        .Select(x => new { Desc = x.ShortStringValue, Code = x.PipingClassCode })
+                        .Distinct()
+                        .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
+                        .ToList();
+
+                case "b1": // 主材料
+                    return _context.VwMaterialsCategoryPipingStandards
+                        .Select(x => new { Desc = x.MaterialsCategoryDesc, Code = x.MaterialsCategoryCode })
+                        .Distinct()
+                        .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
+                        .ToList();
+
+                case "b2": // 管材标准 (级联: parentDesc = B1 Desc)
+                    var qB2 = _context.VwMaterialsCategoryPipingStandards.AsQueryable();
+                    if (!string.IsNullOrWhiteSpace(parentDesc))
+                    {
+                        qB2 = qB2.Where(x => x.MaterialsCategoryDesc == parentDesc);
+                    }
+                    return qB2
+                        .Where(x => !string.IsNullOrEmpty(x.PipeStandDesc) && !string.IsNullOrEmpty(x.PipingStandardCode))
+                        .Select(x => new { Desc = x.PipeStandDesc, Code = x.PipingStandardCode })
+                        .Distinct()
+                        .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
+                        .ToList();
+
+                case "b3": // 牌号
+                    return _context.VwPipingStandardMaterialsGrades
+                        .Select(x => new { Desc = x.MaterialsGradeDesc, Code = x.MaterialsGradeCode })
+                        .Distinct()
+                        .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
+                        .ToList();
+
+                case "c1": // 法兰标准
+                    return _context.VwFlangeStandPressureRatings
+                        .Select(x => new { Desc = x.FlangeStandDesc, Code = x.FlangeStandardCode })
+                        .Distinct()
+                        .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
+                        .ToList();
+
+                case "c2": // 法兰压力等级
+                    return _context.VwFlangeStandPressureRatings
+                        .Where(x => !string.IsNullOrEmpty(x.PressureRatingDesc) && !string.IsNullOrEmpty(x.PressureRatingCode))
+                        .Select(x => new { Desc = x.PressureRatingDesc, Code = x.PressureRatingCode })
+                        .Distinct()
+                        .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
+                        .ToList();
+
+                case "d": // 壁厚等级
+                    return _context.VwPipingStandardScheduleThicknesses
+                        .Select(x => new { Desc = x.ScheduleThicknessDesc, Code = x.ScheduleThicknessCode })
+                        .Distinct()
+                        .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
+                        .ToList();
+
+                default:
+                    return new List<PmcOptionDto>();
+            }
+        }
+
+        public List<ShipInfo> GetShipInfos()
+        {
+            // 从外部接口获取船型船号，目前先暂时用模拟数据代替
+            List<ShipInfo> shipInfos = new List<ShipInfo>
+            {
+                new ShipInfo { ShipNumber = "H1508", ShipType = "邮轮" },
+                new ShipInfo { ShipNumber = "H1509", ShipType = "邮轮" },
+                new ShipInfo { ShipNumber = "H1403", ShipType = "民船" },
+                new ShipInfo { ShipNumber = "H1404", ShipType = "民船" },
+                new ShipInfo { ShipNumber = "H1301", ShipType = "货船" },
+                new ShipInfo { ShipNumber = "H1603", ShipType = "民船" }
+            };
+            return shipInfos;
+        }
+
+        public int CopyRules(CopyRuleRequest request)
+        {
+            try
+            {
+                if (request == null) throw new ArgumentNullException(nameof(request));
+                
+                var sourceShipType = (request.SourceShipType ?? string.Empty).Trim();
+                var sourceShipNo = (request.SourceShipNo ?? string.Empty).Trim();
+                var targetShipType = (request.TargetShipType ?? string.Empty).Trim();
+                var targetShipNo = (request.TargetShipNo ?? string.Empty).Trim();
+
+                if (string.IsNullOrEmpty(sourceShipType) || string.IsNullOrEmpty(sourceShipNo) ||
+                    string.IsNullOrEmpty(targetShipType) || string.IsNullOrEmpty(targetShipNo))
+                {
+                    throw new ArgumentException("源船型船号和目标船型船号都不能为空");
+                }
+
+                // 1. 查询源数据
+                var sourceItems = _context.S3dRulePmcdata
+                    .Where(x => x.ShipType == sourceShipType && x.ShipNo == sourceShipNo)
+                    .AsNoTracking()
+                    .ToList();
+
+                if (sourceItems.Count == 0)
+                {
+                    throw new Exception($"未查到源船型船号 ({sourceShipType} - {sourceShipNo}) 的数据");
+                }
+
+                // 2. 准备新数据
+                var newItems = sourceItems.Select(src => new S3dRulePmcdatum
+                {
+                    // ID 自增，不设置
+                    ShipType = targetShipType,
+                    ShipNo = targetShipNo,
+                    Pmccode = src.Pmccode,
+                    PipingClassName = src.PipingClassName,
+                    MaterialsCategoryName = src.MaterialsCategoryName,
+                    PipingStandardName = src.PipingStandardName,
+                    MaterialsGradeName = src.MaterialsGradeName,
+                    FlangeStandardName = src.FlangeStandardName,
+                    PressureRatingName = src.PressureRatingName,
+                    ScheduleThicknessName = src.ScheduleThicknessName,
+                    // 复制其他可能需要的字段
+                    PipeStandard = src.PipeStandard,
+                    ElbowStandard = src.ElbowStandard,
+                    RedStandard = src.RedStandard,
+                    TeeStandard = src.TeeStandard,
+                    SleeveStandard = src.SleeveStandard,
+                    BossesStandard = src.BossesStandard,
+                    SaddlesStandard = src.SaddlesStandard,
+                    CapsStandard = src.CapsStandard,
+                    OverpassStandard = src.OverpassStandard,
+                    AccessoriesStandard = src.AccessoriesStandard,
+                    FlangeStandard = src.FlangeStandard,
+                    BlindFlangeStandard = src.BlindFlangeStandard,
+                    GasketStandard = src.GasketStandard,
+                    BoltStandard = src.BoltStandard,
+                    NutStandard = src.NutStandard,
+                    WasherStandard = src.WasherStandard,
+                    Status = src.Status,
+                    JsonData = src.JsonData
+                }).ToList();
+
+                // 3. 批量插入
+                _context.S3dRulePmcdata.AddRange(newItems);
+                _context.SaveChanges();
+
+                _logger.LogInformation("Copied {Count} rules from {Source} to {Target}", newItems.Count, $"{sourceShipType}-{sourceShipNo}", $"{targetShipType}-{targetShipNo}");
+                
+                return newItems.Count;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to copy rules");
+                throw;
+            }
+        }
     }
 }

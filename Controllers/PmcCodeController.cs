@@ -78,5 +78,56 @@ namespace PMCSystem_Backend.Controllers
                 return StatusCode(500, new { code = 500, message = "查询PMC编码失败: " + ex.Message });
             }
         }
+
+        [HttpGet("add")]
+        public IActionResult GetOptions(string type, string? parentDesc = null)
+        {
+            try
+            {
+                var data = _service.GetOptions(type, parentDesc);
+                return Success(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get options for type={Type}", type);
+                return StatusCode(500, new { code = 500, message = "获取选项失败: " + ex.Message });
+            }
+        }
+
+        [HttpGet("ShipInfos")]
+        public IActionResult GetShipInfos()
+        {
+            try
+            {
+                var shipInfos = _service.GetShipInfos();
+                if (shipInfos == null || shipInfos.Count == 0)
+                {
+                    return Fail(ApiErrorCode.ResourceNotFound, "获取船型船号信息失败");
+                }
+                return Success(shipInfos, "获取船型船号信息成功");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get ship infos");
+                return StatusCode(500, new { code = 500, message = "获取船型船号信息失败: " + ex.Message });
+            }
+        }
+
+        [HttpPost("copy")]
+        public IActionResult Copy([FromBody] CopyRuleRequest request)
+        {
+            try
+            {
+                if (request == null) return Fail(ApiErrorCode.ValidationError, "请求参数为空");
+                
+                var count = _service.CopyRules(request);
+                return Success($"成功复制 {count} 条规则");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to copy rules");
+                return StatusCode(500, new { code = 500, message = "复制规则失败: " + ex.Message });
+            }
+        }
     }
 }
