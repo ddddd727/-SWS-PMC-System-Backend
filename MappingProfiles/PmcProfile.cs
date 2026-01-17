@@ -15,6 +15,7 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<CreateDspSpmcDictPipingBendDataDto, S3dDictPipingBendDatum>();
             CreateMap<UpdateDspSpmcDictPipingBendDataDto, S3dDictPipingBendDatum>();
             CreateMap<S3dDictWallThicknessCodeConverted, WallThicknessCodeConvertedDto>();
+            CreateMap<S3dRulePipingBendParameterCodeConverted, PipingBendParameterCodeConvertedDto>();
 
             CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();
             CreateMap<CreateS3dDictWallThicknessDto, S3dDictWallThickness>();
@@ -23,6 +24,9 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dRuleShortCodeHierarchyRule, S3dRuleShortCodeHierarchyRuleDto>().ReverseMap();
             CreateMap<CreateS3dRuleShortCodeHierarchyRuleDto, S3dRuleShortCodeHierarchyRule>();
             CreateMap<UpdateS3dRuleShortCodeHierarchyRuleDto, S3dRuleShortCodeHierarchyRule>();
+            CreateMap<S3dRulePipingBendParameter, S3dRulePipingBendParameterDto>().ReverseMap();
+            CreateMap<CreateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
+            CreateMap<UpdateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
         }
     }
 }

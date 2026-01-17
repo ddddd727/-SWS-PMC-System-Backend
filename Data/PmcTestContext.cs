@@ -96,6 +96,7 @@ public partial class PmcTestContext : DbContext
 
     public virtual DbSet<S3dDictWallThickness> S3dDictWallThicknesses { get; set; }
     public virtual DbSet<S3dDictWallThicknessCodeConverted> S3dDictWallThicknessCodeConverted { get; set; }
+    public virtual DbSet<S3dRulePipingBendParameterCodeConverted> S3dRulePipingBendParameterCodeConverted { get; set; }
 
     public virtual DbSet<S3dPropertyInterfaceConfig> S3dPropertyInterfaceConfigs { get; set; }
 
@@ -904,6 +905,22 @@ public partial class PmcTestContext : DbContext
             entity.Property(e => e.EndStandard).HasMaxLength(100);
             entity.Property(e => e.PipingOutsideDiameter).HasColumnType("decimal(10, 3)");
             entity.Property(e => e.WallThickness).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.Status).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<S3dRulePipingBendParameterCodeConverted>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToView("S3D_Code_PipingBendParameter");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.MaterialsCategoryCl).HasColumnName("MaterialsCategory_CL");
+            entity.Property(e => e.MaterialsCategory).HasMaxLength(255);
+            entity.Property(e => e.NormalDiameter).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.UnitType).HasMaxLength(100);
+            entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
+            entity.Property(e => e.ScheduleThickness).HasMaxLength(100);
+            entity.Property(e => e.BendRadiusMultiplier).HasColumnType("decimal(10, 3)");
             entity.Property(e => e.Status).HasDefaultValue(true);
         });
 
