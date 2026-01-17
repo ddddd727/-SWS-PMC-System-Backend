@@ -37,7 +37,6 @@ try
 
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IExampleService, ExampleService>();
-    builder.Services.AddScoped<IDspSpmcDictPipingBendService, DspSpmcDictPipingBendService>();
     builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
     builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
