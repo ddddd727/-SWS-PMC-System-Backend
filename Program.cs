@@ -44,6 +44,7 @@ try
     builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
     builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
 
     builder.Services.AddControllers();
 
