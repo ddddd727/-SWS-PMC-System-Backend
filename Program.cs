@@ -33,8 +33,7 @@ try
     // 注册服务层的接口与实现
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
-
-    
+    builder.Services.AddScoped<ICodelistService, CodelistService>();
 
     builder.Services.AddControllers();
 

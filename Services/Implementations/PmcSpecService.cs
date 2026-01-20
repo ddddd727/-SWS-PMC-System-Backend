@@ -402,11 +402,11 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 保存PMC管系规格书中的标准规格
         /// </summary>
-        /// <param name="pmcCode"></param>
-        /// <param name="PmcRules"></param>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="standardInfos">标准信息列表</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public bool SaveSpecRules(string pmcCode, List<PmcSpecInfoDto> PmcRules)
+        public bool SaveSpecRules(string pmcCode, List<PmcStandardInfo> standardInfos)
         {
             if (string.IsNullOrWhiteSpace(pmcCode))
             {
@@ -414,10 +414,10 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("PMC编码不能为空");
             }
 
-            if (PmcRules == null || !PmcRules.Any())
+            if (standardInfos == null || !standardInfos.Any())
             {
-                _logger.LogError("规则列表不能为空");
-                throw new ArgumentException("规则列表不能为空");
+                _logger.LogError("标准信息列表不能为空");
+                throw new ArgumentException("标准信息列表不能为空");
             }
 
             try
@@ -432,83 +432,68 @@ namespace PMCSystem_Backend.Services.Implementations
                     throw new Exception($"未找到PMC编码 {pmcCode} 对应的数据");
                 }
 
-                // 合并所有传入规则的标准信息
-                foreach (var rule in PmcRules)
+                // 根据 StandardType 将标准信息分组
+                var groupedStandards = standardInfos.GroupBy(x => x.StandardType);
+
+                foreach (var group in groupedStandards)
                 {
-                    // 合并各类标准配置
-                    if (rule.ElbowStandard != null && rule.ElbowStandard.Any())
-                    {
-                        existingEntity.ElbowStandard = MergeStandardList(existingEntity.ElbowStandard, rule.ElbowStandard);
-                    }
+                    var standardType = group.Key;
+                    var standards = group.ToList();
 
-                    if (rule.RedStandard != null && rule.RedStandard.Any())
+                    // 根据部件类型分配到对应的实体字段
+                    switch (standardType)
                     {
-                        existingEntity.RedStandard = MergeStandardList(existingEntity.RedStandard, rule.RedStandard);
-                    }
-
-                    if (rule.TeeStandard != null && rule.TeeStandard.Any())
-                    {
-                        existingEntity.TeeStandard = MergeStandardList(existingEntity.TeeStandard, rule.TeeStandard);
-                    }
-
-                    if (rule.SleeveStandard != null && rule.SleeveStandard.Any())
-                    {
-                        existingEntity.SleeveStandard = MergeStandardList(existingEntity.SleeveStandard, rule.SleeveStandard);
-                    }
-
-                    if (rule.BossesStandard != null && rule.BossesStandard.Any())
-                    {
-                        existingEntity.BossesStandard = MergeStandardList(existingEntity.BossesStandard, rule.BossesStandard);
-                    }
-
-                    if (rule.SaddlesStandard != null && rule.SaddlesStandard.Any())
-                    {
-                        existingEntity.SaddlesStandard = MergeStandardList(existingEntity.SaddlesStandard, rule.SaddlesStandard);
-                    }
-
-                    if (rule.CapsStandard != null && rule.CapsStandard.Any())
-                    {
-                        existingEntity.CapsStandard = MergeStandardList(existingEntity.CapsStandard, rule.CapsStandard);
-                    }
-
-                    if (rule.OverpassStandard != null && rule.OverpassStandard.Any())
-                    {
-                        existingEntity.OverpassStandard = MergeStandardList(existingEntity.OverpassStandard, rule.OverpassStandard);
-                    }
-
-                    if (rule.AccessoriesStandard != null && rule.AccessoriesStandard.Any())
-                    {
-                        existingEntity.AccessoriesStandard = MergeStandardList(existingEntity.AccessoriesStandard, rule.AccessoriesStandard);
-                    }
-
-                    if (rule.FlangeStandard != null && rule.FlangeStandard.Any())
-                    {
-                        existingEntity.FlangeStandard = MergeStandardList(existingEntity.FlangeStandard, rule.FlangeStandard);
-                    }
-
-                    if (rule.BlindFlangeStandard != null && rule.BlindFlangeStandard.Any())
-                    {
-                        existingEntity.BlindFlangeStandard = MergeStandardList(existingEntity.BlindFlangeStandard, rule.BlindFlangeStandard);
-                    }
-
-                    if (rule.GasketStandard != null && rule.GasketStandard.Any())
-                    {
-                        existingEntity.GasketStandard = MergeStandardList(existingEntity.GasketStandard, rule.GasketStandard);
-                    }
-
-                    if (rule.BoltStandard != null && rule.BoltStandard.Any())
-                    {
-                        existingEntity.BoltStandard = MergeStandardList(existingEntity.BoltStandard, rule.BoltStandard);
-                    }
-
-                    if (rule.NutStandard != null && rule.NutStandard.Any())
-                    {
-                        existingEntity.NutStandard = MergeStandardList(existingEntity.NutStandard, rule.NutStandard);
-                    }
-
-                    if (rule.WasherStandard != null && rule.WasherStandard.Any())
-                    {
-                        existingEntity.WasherStandard = MergeStandardList(existingEntity.WasherStandard, rule.WasherStandard);
+                        case "Elbow":
+                            existingEntity.ElbowStandard = MergeStandardList(existingEntity.ElbowStandard, standards);
+                            break;
+                        case "Reducer":
+                            existingEntity.RedStandard = MergeStandardList(existingEntity.RedStandard, standards);
+                            break;
+                        case "Tee":
+                            existingEntity.TeeStandard = MergeStandardList(existingEntity.TeeStandard, standards);
+                            break;
+                        case "Sleeve":
+                            existingEntity.SleeveStandard = MergeStandardList(existingEntity.SleeveStandard, standards);
+                            break;
+                        case "Bosses":
+                            existingEntity.BossesStandard = MergeStandardList(existingEntity.BossesStandard, standards);
+                            break;
+                        case "Saddles":
+                            existingEntity.SaddlesStandard = MergeStandardList(existingEntity.SaddlesStandard, standards);
+                            break;
+                        case "Caps":
+                            existingEntity.CapsStandard = MergeStandardList(existingEntity.CapsStandard, standards);
+                            break;
+                        case "Overpass":
+                            existingEntity.OverpassStandard = MergeStandardList(existingEntity.OverpassStandard, standards);
+                            break;
+                        case "Accessories":
+                            existingEntity.AccessoriesStandard = MergeStandardList(existingEntity.AccessoriesStandard, standards);
+                            break;
+                        case "Flange":
+                            existingEntity.FlangeStandard = MergeStandardList(existingEntity.FlangeStandard, standards);
+                            break;
+                        case "BlindFlange":
+                            existingEntity.BlindFlangeStandard = MergeStandardList(existingEntity.BlindFlangeStandard, standards);
+                            break;
+                        case "Gasket":
+                            existingEntity.GasketStandard = MergeStandardList(existingEntity.GasketStandard, standards);
+                            break;
+                        case "Bolt":
+                            existingEntity.BoltStandard = MergeStandardList(existingEntity.BoltStandard, standards);
+                            break;
+                        case "Nut":
+                            existingEntity.NutStandard = MergeStandardList(existingEntity.NutStandard, standards);
+                            break;
+                        case "Washer":
+                            existingEntity.WasherStandard = MergeStandardList(existingEntity.WasherStandard, standards);
+                            break;
+                        case "Pipe":
+                            existingEntity.PipeStandard = MergeStandardList(existingEntity.PipeStandard, standards);
+                            break;
+                        default:
+                            _logger.LogWarning("未知的部件类型: {StandardType}", standardType);
+                            break;
                     }
                 }
 
@@ -555,7 +540,7 @@ namespace PMCSystem_Backend.Services.Implementations
                     existingItem.DiameterRange = newItem.DiameterRange;
                     existingItem.Material = newItem.Material;
                     existingItem.IsDefault = newItem.IsDefault;
-                    existingItem.OverlapRange =  newItem.OverlapRange;
+                    existingItem.OverlapRange = newItem.OverlapRange;
                 }
                 else
                 {
@@ -565,6 +550,78 @@ namespace PMCSystem_Backend.Services.Implementations
             }
             return result;
         }
+
+        /// <summary>
+        /// 根据PmcCode获取对应的规格规则
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="standardInfos">输出的标准信息列表</param>
+        /// <returns>是否成功获取规则</returns>
+        /// <exception cref="ArgumentException"></exception>
+        public bool GetSpecRules(string pmcCode, out List<PmcStandardInfo> standardInfos)
+        {
+            standardInfos = new List<PmcStandardInfo>();
+
+            if (string.IsNullOrWhiteSpace(pmcCode))
+            {
+                _logger.LogError("PMC编码不能为空");
+                throw new ArgumentException("PMC编码不能为空");
+            }
+
+            try
+            {
+                // 根据PMC编码查询数据库
+                var entity = _context.S3dRulePmcdata
+                    .AsNoTracking()
+                    .FirstOrDefault(x => x.Pmccode == pmcCode);
+
+                if (entity == null)
+                {
+                    _logger.LogWarning("未找到PMC编码 {PmcCode} 对应的数据", pmcCode);
+                    return false;
+                }
+
+                // 将实体中所有标准字段合并到一个列表中
+                AddStandardsToList(standardInfos, entity.PipeStandard);
+                AddStandardsToList(standardInfos, entity.ElbowStandard);
+                AddStandardsToList(standardInfos, entity.RedStandard);
+                AddStandardsToList(standardInfos, entity.TeeStandard);
+                AddStandardsToList(standardInfos, entity.SleeveStandard);
+                AddStandardsToList(standardInfos, entity.BossesStandard);
+                AddStandardsToList(standardInfos, entity.SaddlesStandard);
+                AddStandardsToList(standardInfos, entity.CapsStandard);
+                AddStandardsToList(standardInfos, entity.OverpassStandard);
+                AddStandardsToList(standardInfos, entity.AccessoriesStandard);
+                AddStandardsToList(standardInfos, entity.FlangeStandard);
+                AddStandardsToList(standardInfos, entity.BlindFlangeStandard);
+                AddStandardsToList(standardInfos, entity.GasketStandard);
+                AddStandardsToList(standardInfos, entity.BoltStandard);
+                AddStandardsToList(standardInfos, entity.NutStandard);
+                AddStandardsToList(standardInfos, entity.WasherStandard);
+
+                _logger.LogInformation("成功获取PMC编码 {PmcCode} 的规格规则，共 {Count} 条", pmcCode, standardInfos.Count);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取PMC编码 {PmcCode} 的规格规则时发生错误", pmcCode);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 将标准列表添加到目标列表中
+        /// </summary>
+        /// <param name="targetList">目标列表</param>
+        /// <param name="sourceList">源列表</param>
+        private void AddStandardsToList(List<PmcStandardInfo> targetList, List<PmcStandardInfo>? sourceList)
+        {
+            if (sourceList != null && sourceList.Any())
+            {
+                targetList.AddRange(sourceList);
+            }
+        }
+
 
         /// <summary>
         /// 生成对应的管系规格书

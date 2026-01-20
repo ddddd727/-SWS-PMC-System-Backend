@@ -53,9 +53,19 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <summary>
         /// 保存页面配置的管系规格书信息
         /// </summary>
-        /// <param name="PmcRules"> 配置的附件列表 </param>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="standardInfos">配置的标准信息列表</param>
         /// <returns></returns>
-        bool SaveSpecRules(string pmcCode, List<PmcSpecInfoDto> PmcRules);
+        bool SaveSpecRules(string pmcCode, List<PmcStandardInfo> standardInfos);
+
+
+        /// <summary>
+        /// 获取保存配置的管系规格书信息
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="standardInfos">输出的标准信息列表</param>
+        /// <returns></returns>
+        bool GetSpecRules(string pmcCode, out List<PmcStandardInfo> standardInfos);
 
 
         /// <summary>

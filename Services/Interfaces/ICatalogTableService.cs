@@ -16,7 +16,5 @@
         /// </summary>
         /// <param name="partType"> 部件类型 </param>
         public void GeneratePartCatalogTable(string partType);
-
-
     }
 }

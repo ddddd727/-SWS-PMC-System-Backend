@@ -22,5 +22,5 @@
 
         // 默认匹配的重叠通径范围
         public List<DiameterRange>? OverlapRange { get; set; }
-}
+    }
 }
