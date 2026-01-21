@@ -34,6 +34,11 @@ try
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
     builder.Services.AddScoped<ICodelistService, CodelistService>();
+    builder.Services.AddScoped<ITemplatePreviewService>(provider =>
+    {
+        var templateBasePath = builder.Configuration.GetValue<string>("TemplateBasePath") ?? "Templates";
+        return new TemplatePreviewService(templateBasePath);
+    });
 
     builder.Services.AddControllers();
 
@@ -65,6 +70,7 @@ try
     {
         options.Filters.Add(new ProducesAttribute("application/json"));
     });
+   
 
     // 配置JSON序列化
     builder.Services.AddControllers()

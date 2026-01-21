@@ -113,6 +113,150 @@ namespace PMCSystem_Backend.Services.Implementations
             };
         }
 
+        /// <summary>
+        /// 导出模板为Excel文件
+        /// </summary>
+        /// <param name="templateId">模板ID</param>
+        /// <param name="parameters">模板参数</param>
+        /// <returns>Excel文件的字节流</returns>
+        public byte[] ExportTemplate(string templateId, Dictionary<string, string> parameters)
+        {
+            // 1. 验证templateId
+            if (!Regex.IsMatch(templateId, "^[a-zA-Z0-9_-]+$"))
+            {
+                throw new ArgumentException("Invalid templateId format", nameof(templateId));
+            }
+
+            // 2. 构建文件路径
+            string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("Template file not found", filePath);
+            }
+
+            // 3. 读取原始Excel模板
+            using var sourcePackage = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
+            var sourceSheet = sourcePackage.Workbook.Worksheets[0];
+            var dim = sourceSheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
+
+            // 4. 创建新的Excel包用于导出
+            using var exportPackage = new OfficeOpenXml.ExcelPackage();
+            var exportSheet = exportPackage.Workbook.Worksheets.Add("Export");
+
+            // 5. 复制所有单元格内容、样式和合并信息
+            CopySheetContent(sourceSheet, exportSheet, dim, parameters);
+
+            // 6. 填充业务数据
+            FillBusinessData(exportSheet, parameters);
+
+            // 7. 生成Excel文件并返回字节流
+            return exportPackage.GetAsByteArray();
+        }
+
+        /// <summary>
+        /// 复制Excel表格内容、样式和格式
+        /// </summary>
+        private void CopySheetContent(OfficeOpenXml.ExcelWorksheet sourceSheet, OfficeOpenXml.ExcelWorksheet exportSheet, OfficeOpenXml.ExcelAddress dim, Dictionary<string, string> parameters)
+        {
+            // 复制普通单元格内容和样式
+            for (int r = 1; r <= dim.Rows; r++)
+            {
+                for (int c = 1; c <= dim.Columns; c++)
+                {
+                    var sourceCell = sourceSheet.Cells[r, c];
+                    var exportCell = exportSheet.Cells[r, c];
+
+                    // 复制值并替换参数
+                    var cellValue = sourceCell.Text;
+                    foreach (var param in parameters)
+                    {
+                        cellValue = cellValue.Replace($"{{{{{param.Key}}}}}", param.Value);
+                    }
+                    exportCell.Value = cellValue;
+
+                    // 复制样式
+                    CopyCellStyle(sourceCell, exportCell);
+                }
+            }
+
+            // 复制合并单元格
+            foreach (var mergedCell in sourceSheet.MergedCells.ToList())
+            {
+                exportSheet.Cells[mergedCell].Merge = true;
+            }
+
+            // 复制列宽
+            for (int c = 1; c <= dim.Columns; c++)
+            {
+                exportSheet.Column(c).Width = sourceSheet.Column(c).Width;
+            }
+
+            // 复制行高
+            for (int r = 1; r <= dim.Rows; r++)
+            {
+                exportSheet.Row(r).Height = sourceSheet.Row(r).Height;
+            }
+        }
+
+        /// <summary>
+        /// 复制单元格样式
+        /// </summary>
+        private void CopyCellStyle(OfficeOpenXml.ExcelRange sourceCell, OfficeOpenXml.ExcelRange exportCell)
+        {
+            // 复制字体
+            exportCell.Style.Font.Name = sourceCell.Style.Font.Name;
+            exportCell.Style.Font.Size = sourceCell.Style.Font.Size;
+            exportCell.Style.Font.Bold = sourceCell.Style.Font.Bold;
+            exportCell.Style.Font.Italic = sourceCell.Style.Font.Italic;
+
+            // 复制背景颜色
+            if (sourceCell.Style.Fill.BackgroundColor?.Rgb != null)
+            {
+                exportCell.Style.Fill.PatternType = sourceCell.Style.Fill.PatternType;
+                try
+                {
+                    exportCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml($"#{sourceCell.Style.Fill.BackgroundColor.Rgb[2..]}"));
+                }
+                catch
+                {
+                    // 如果颜色转换失败，跳过颜色复制
+                }
+            }
+
+            // 复制对齐方式
+            exportCell.Style.HorizontalAlignment = sourceCell.Style.HorizontalAlignment;
+            exportCell.Style.VerticalAlignment = sourceCell.Style.VerticalAlignment;
+
+            // 复制边框
+            exportCell.Style.Border.Left.Style = sourceCell.Style.Border.Left.Style;
+            exportCell.Style.Border.Right.Style = sourceCell.Style.Border.Right.Style;
+            exportCell.Style.Border.Top.Style = sourceCell.Style.Border.Top.Style;
+            exportCell.Style.Border.Bottom.Style = sourceCell.Style.Border.Bottom.Style;
+        }
+
+        /// <summary>
+        /// 填充业务数据到导出的Excel文件中
+        /// 需要根据具体的业务逻辑进行实现
+        /// </summary>
+        private void FillBusinessData(OfficeOpenXml.ExcelWorksheet exportSheet, Dictionary<string, string> parameters)
+        {
+            // 空实现，后续根据业务逻辑补充
+            // 此方法用于将动态业务数据填充到Excel表格中
+            var businessData = GetExportBusinessData(parameters);
+            
+            // 示例：填充业务数据
+            // for (int r = 2; r <= exportSheet.Dimension?.Rows; r++)
+            // {
+            //     for (int c = 1; c <= exportSheet.Dimension?.Columns; c++)
+            //     {
+            //         if (exportSheet.Cells[r, c].Text.Contains("{{material}}"))
+            //         {
+            //             exportSheet.Cells[r, c].Value = businessData[0];
+            //         }
+            //     }
+            // }
+        }
+
         private CellStyle ExtractCellStyle(OfficeOpenXml.ExcelRange cell)
         {
             var rgb = cell.Style.Fill.BackgroundColor?.Rgb;
@@ -127,5 +271,17 @@ namespace PMCSystem_Backend.Services.Implementations
 
         // 业务数据模拟（实际项目需要替换）
         private List<string> GetBusinessData(Dictionary<string, string> _) => (new List<string> { "20#", "SSL 304" });
+
+        /// <summary>
+        /// 获取导出所需的业务数据
+        /// 空实现，需要根据具体业务逻辑进行补充
+        /// </summary>
+        /// <param name="parameters">模板参数</param>
+        /// <returns>业务数据列表</returns>
+        private List<string> GetExportBusinessData(Dictionary<string, string> parameters)
+        {
+            // 空实现 - 后续补充具体的业务数据获取逻辑
+            return new List<string>();
+        }
     }
 }
