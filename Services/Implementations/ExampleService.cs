@@ -1,10 +1,10 @@
-﻿using AutoMapper;
+using AutoMapper;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interface;
 
-namespace PMCSystem_Backend.Services.Impletation
+namespace PMCSystem_Backend.Services.Implementations
 {
     public class ExampleService : IExampleService
     {

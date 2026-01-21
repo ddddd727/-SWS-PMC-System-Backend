@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Entities;
 
 namespace PMCSystem_Backend.Data

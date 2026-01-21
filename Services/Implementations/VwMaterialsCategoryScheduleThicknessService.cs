@@ -1,0 +1,35 @@
+using Microsoft.EntityFrameworkCore;
+using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Services.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace PMCSystem_Backend.Services.Implementations
+{
+    public class VwMaterialsCategoryScheduleThicknessService : IVwMaterialsCategoryScheduleThicknessService
+    {
+        private readonly PmcContext _context;
+
+        public VwMaterialsCategoryScheduleThicknessService(PmcContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<IEnumerable<ScheduleThicknessDto>> GetScheduleThicknessesByMaterialsCategoryClAsync(int materialsCategoryCl)
+        {
+            return await _context.VwMaterialsCategoryScheduleThicknesses
+                .Where(x => x.MaterialsCategoryCl == materialsCategoryCl)
+                .Select(x => new ScheduleThicknessDto
+                {
+                    ScheduleThicknessCode = x.ScheduleThicknessCode,
+                    ScheduleThicknessDesc = x.ScheduleThicknessDesc,
+                    ScheduleThicknessCl = x.ScheduleThicknessCl
+                })
+                .Distinct()
+                .ToListAsync();
+        }
+    }
+}
+
