@@ -55,7 +55,7 @@ try
     builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Services.AddDbContext<PmcTestContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0108")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0120")));
 
 
     // Swagger���ã�API�ĵ���

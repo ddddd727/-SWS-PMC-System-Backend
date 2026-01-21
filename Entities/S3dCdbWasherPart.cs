@@ -9,11 +9,11 @@ public partial class S3dCdbWasherPart
 
     public string IndustryCommodityCode { get; set; } = null!;
 
-    public string? MaterialGrade { get; set; }
+    public int? WasherType { get; set; }
 
-    public string? GeometricIndustryStandard { get; set; }
+    public int? GeometricIndustryStandard { get; set; }
 
-    public string? WasherType { get; set; }
+    public int? MaterialGrade { get; set; }
 
     public string? WasherThickness { get; set; }
 }

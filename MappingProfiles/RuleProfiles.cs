@@ -8,7 +8,7 @@ namespace PMCSystem_Backend.MappingProfiles
     {
         public RuleProfiles()
         {
-            CreateMap<VwS3dRuleAb2b3c2WithCode, PipeLimitRuleDto>();
+            CreateMap<S3dCodeAb2b3c2, PipeLimitRuleDto>();
         }
     }
 }

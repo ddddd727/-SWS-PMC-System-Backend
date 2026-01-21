@@ -9,9 +9,9 @@ public partial class S3dCdbBoltPart
 
     public string IndustryCommodityCode { get; set; } = null!;
 
-    public string? MaterialGrade { get; set; }
+    public int? MaterialGrade { get; set; }
 
-    public string? GeometricIndustryStandard { get; set; }
+    public int? GeometricIndustryStandard { get; set; }
 
-    public string? BoltType { get; set; }
+    public int? BoltType { get; set; }
 }

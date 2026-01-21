@@ -7,31 +7,31 @@ public partial class S3dCdbPortDatum
 {
     public int Id { get; set; }
 
-    public decimal? Npd1 { get; set; }
+    public double? Npd1 { get; set; }
 
     public string? NpdUnitType1 { get; set; }
 
-    public string? PressureRating1 { get; set; }
+    public int? PressureRating1 { get; set; }
 
-    public string? EndPreparation1 { get; set; }
+    public int? EndPreparation1 { get; set; }
 
-    public string? EndStandard1 { get; set; }
+    public int? EndStandard1 { get; set; }
 
-    public string? SchduleThickness1 { get; set; }
+    public int? SchduleThickness1 { get; set; }
 
-    public string? FlowDirection1 { get; set; }
+    public int? FlowDirection1 { get; set; }
 
-    public decimal? Npd2 { get; set; }
+    public double? Npd2 { get; set; }
 
     public string? NpdUnitType2 { get; set; }
 
-    public string? PressureRating2 { get; set; }
+    public int? PressureRating2 { get; set; }
 
-    public string? EndPreparation2 { get; set; }
+    public int? EndPreparation2 { get; set; }
 
-    public string? EndStandard2 { get; set; }
+    public int? EndStandard2 { get; set; }
 
-    public string? SchduleThickness2 { get; set; }
+    public int? SchduleThickness2 { get; set; }
 
-    public string? FlowDirection2 { get; set; }
+    public int? FlowDirection2 { get; set; }
 }

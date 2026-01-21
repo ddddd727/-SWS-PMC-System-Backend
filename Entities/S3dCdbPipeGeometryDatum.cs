@@ -9,33 +9,33 @@ public partial class S3dCdbPipeGeometryDatum
 
     public string? IndustryCommodityCode { get; set; }
 
-    public decimal? Npd1 { get; set; }
+    public double? Npd1 { get; set; }
 
     public string? NpdUnitType1 { get; set; }
 
-    public string? EndPreparation1 { get; set; }
+    public int? EndPreparation1 { get; set; }
 
-    public string? ScheduleThickness1 { get; set; }
+    public int? ScheduleThickness1 { get; set; }
 
-    public decimal? Npd2 { get; set; }
+    public double? Npd2 { get; set; }
 
     public string? NpdUnitType2 { get; set; }
 
-    public string? EndPreparation2 { get; set; }
+    public int? EndPreparation2 { get; set; }
 
-    public string? ScheduleThickness2 { get; set; }
+    public int? ScheduleThickness2 { get; set; }
 
-    public string? GeometricIndustryStandard { get; set; }
+    public int? GeometricIndustryStandard { get; set; }
 
-    public decimal? Density { get; set; }
+    public double? Density { get; set; }
 
-    public decimal? PurchaseLength { get; set; }
+    public double? PurchaseLength { get; set; }
 
-    public decimal? MinimumPipeLength { get; set; }
+    public double? MinimumPipeLength { get; set; }
 
-    public decimal? MaximumPipeLength { get; set; }
+    public double? MaximumPipeLength { get; set; }
 
-    public decimal? WeightPerUnitLength { get; set; }
+    public double? WeightPerUnitLength { get; set; }
 
     public string? PartDescription { get; set; }
 

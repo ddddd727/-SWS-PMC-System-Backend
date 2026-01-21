@@ -20,7 +20,7 @@ namespace PMCSystem_Backend.Services.Impletation
 
         public IEnumerable<PipeLimitRuleDto> GetAll()
         {
-            var query = _context.VwS3dRuleAb2b3c2WithCodes.AsNoTracking();
+            var query = _context.S3dCodeAb2b3c2s.AsNoTracking();
             return query.Select(x => new PipeLimitRuleDto
             {
                 Id = x.Id,
@@ -34,7 +34,7 @@ namespace PMCSystem_Backend.Services.Impletation
 
         public PipeLimitRuleDto? GetById(int id)
         {
-            var entity = _context.VwS3dRuleAb2b3c2WithCodes
+            var entity = _context.S3dCodeAb2b3c2s
                 .AsNoTracking()
                 .FirstOrDefault(x => x.Id == id);
             if (entity == null) return null;
@@ -51,7 +51,7 @@ namespace PMCSystem_Backend.Services.Impletation
 
         public IEnumerable<PipeLimitRuleDto> GetByRuleName(string ruleName)
         {
-            var entities = _context.VwS3dRuleAb2b3c2WithCodes
+            var entities = _context.S3dCodeAb2b3c2s
                 .AsNoTracking()
                 .Where(x => x.RuleName == ruleName)
                 .ToList();
@@ -69,7 +69,7 @@ namespace PMCSystem_Backend.Services.Impletation
 
         public IEnumerable<string> GetRuleNames()
         {
-            return _context.VwS3dRuleAb2b3c2WithCodes
+            return _context.S3dCodeAb2b3c2s
                 .AsNoTracking()
                 .Select(x => x.RuleName)
                 .Where(x => x != null)

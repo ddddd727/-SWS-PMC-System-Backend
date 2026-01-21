@@ -48,35 +48,35 @@ namespace PMCSystem_Backend.Services.Impletation
                     string.Join(",", aCodes), string.Join(",", b1Codes), string.Join(",", b2Codes), 
                     string.Join(",", b3Codes), string.Join(",", c1Codes), string.Join(",", c2Codes), string.Join(",", dCodes));
 
-                var pipingClasses = _context.VwPipingClassWithCodes
+                var pipingClasses = _context.S3dCodePipingClasses
                     .AsNoTracking()
                     .Where(x => aCodes.Contains(x.PipingClassCode))
                     .ToList();
                 _logger.LogDebug("Fetched {Count} PipingClasses (A)", pipingClasses.Count);
 
-                var materialsCategoryStandards = _context.VwMaterialsCategoryPipingStandards
+                var materialsCategoryStandards = _context.S3dCodeMaterialsCategoryPipingStandards
                     .AsNoTracking()
                     .Where(x => b1Codes.Contains(x.MaterialsCategoryCode) || (x.PipingStandardCode != null && b2Codes.Contains(x.PipingStandardCode)))
                     .ToList();
                 _logger.LogDebug("Fetched {Count} MaterialsCategoryStandards (B1/B2)", materialsCategoryStandards.Count);
 
-                var pipingStandardGrades = _context.VwPipingStandardMaterialsGrades
+                var pipingStandardGrades = _context.S3dCodePipingStandardMaterialsGrades
                     .AsNoTracking()
                     .Where(x => (x.PipingStandardCode != null && b2Codes.Contains(x.PipingStandardCode)) || b3Codes.Contains(x.MaterialsGradeCode))
                     .ToList();
                 _logger.LogDebug("Fetched {Count} PipingStandardGrades (B2/B3)", pipingStandardGrades.Count);
 
-                var flangeStandRatings = _context.VwFlangeStandPressureRatings
+                var flangeStandRatings = _context.S3dCodeFlangeStandPressureRatings
                     .AsNoTracking()
                     .Where(x => c1Codes.Contains(x.FlangeStandardCode) || (x.PressureRatingCode != null && c2Codes.Contains(x.PressureRatingCode)))
                     .ToList();
                 _logger.LogDebug("Fetched {Count} FlangeStandRatings (C1/C2)", flangeStandRatings.Count);
 
-                var pipingStandardThicknesses = _context.VwPipingStandardScheduleThicknesses
+                var scheduleThicknesses = _context.S3dCodeMaterialsCategoryScheduleThicknesses
                     .AsNoTracking()
-                    .Where(x => (x.PipingStandardCode != null && b2Codes.Contains(x.PipingStandardCode)) || dCodes.Contains(x.ScheduleThicknessCode))
+                    .Where(x => b1Codes.Contains(x.MaterialsCategoryCode) && dCodes.Contains(x.ScheduleThicknessCode))
                     .ToList();
-                _logger.LogDebug("Fetched {Count} PipingStandardThicknesses (B2/D)", pipingStandardThicknesses.Count);
+                _logger.LogDebug("Fetched {Count} MaterialsCategoryScheduleThicknesses (B1/D)", scheduleThicknesses.Count);
 
                 foreach (var pmc in distinctCodes)
                 {
@@ -165,15 +165,15 @@ namespace PMCSystem_Backend.Services.Impletation
                         _logger.LogWarning("PMC {Pmc}: C2 segment '{C2}' (with C1='{C1}') not found in FlangeStandRatings", pmc, c2, c1);
                     }
 
-                    var dEntity = pipingStandardThicknesses
-                        .FirstOrDefault(x => x.PipingStandardCode == b2 && x.ScheduleThicknessCode == d);
+                    var dEntity = scheduleThicknesses
+                        .FirstOrDefault(x => x.MaterialsCategoryCode == b1 && x.ScheduleThicknessCode == d);
                     if (dEntity != null)
                     {
                         item.DDesc = dEntity.ScheduleThicknessDesc;
                     }
                     else
                     {
-                        _logger.LogWarning("PMC {Pmc}: D segment '{D}' (with B2='{B2}') not found in PipingStandardThicknesses", pmc, d, b2);
+                        _logger.LogWarning("PMC {Pmc}: D segment '{D}' (with B1='{B1}') not found in MaterialsCategoryScheduleThicknesses", pmc, d, b1);
                     }
 
                     result.Add(item);
@@ -278,21 +278,21 @@ namespace PMCSystem_Backend.Services.Impletation
             switch (type.ToLower())
             {
                 case "a": // 管材等级
-                    return _context.VwPipingClassWithCodes
+                    return _context.S3dCodePipingClasses
                         .Select(x => new { Desc = x.ShortStringValue, Code = x.PipingClassCode })
                         .Distinct()
                         .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
                         .ToList();
 
                 case "b1": // 主材料
-                    return _context.VwMaterialsCategoryPipingStandards
+                    return _context.S3dCodeMaterialsCategoryPipingStandards
                         .Select(x => new { Desc = x.MaterialsCategoryDesc, Code = x.MaterialsCategoryCode })
                         .Distinct()
                         .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
                         .ToList();
 
                 case "b2": // 管材标准 (级联: parentDesc = B1 Desc)
-                    var qB2 = _context.VwMaterialsCategoryPipingStandards.AsQueryable();
+                    var qB2 = _context.S3dCodeMaterialsCategoryPipingStandards.AsQueryable();
                     if (!string.IsNullOrWhiteSpace(parentDesc))
                     {
                         qB2 = qB2.Where(x => x.MaterialsCategoryDesc == parentDesc);
@@ -305,21 +305,21 @@ namespace PMCSystem_Backend.Services.Impletation
                         .ToList();
 
                 case "b3": // 牌号
-                    return _context.VwPipingStandardMaterialsGrades
+                    return _context.S3dCodePipingStandardMaterialsGrades
                         .Select(x => new { Desc = x.MaterialsGradeDesc, Code = x.MaterialsGradeCode })
                         .Distinct()
                         .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
                         .ToList();
 
                 case "c1": // 法兰标准
-                    return _context.VwFlangeStandPressureRatings
+                    return _context.S3dCodeFlangeStandPressureRatings
                         .Select(x => new { Desc = x.FlangeStandDesc, Code = x.FlangeStandardCode })
                         .Distinct()
                         .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })
                         .ToList();
 
                 case "c2": // 法兰压力等级
-                    return _context.VwFlangeStandPressureRatings
+                    return _context.S3dCodeFlangeStandPressureRatings
                         .Where(x => !string.IsNullOrEmpty(x.PressureRatingDesc) && !string.IsNullOrEmpty(x.PressureRatingCode))
                         .Select(x => new { Desc = x.PressureRatingDesc, Code = x.PressureRatingCode })
                         .Distinct()
@@ -327,7 +327,7 @@ namespace PMCSystem_Backend.Services.Impletation
                         .ToList();
 
                 case "d": // 壁厚等级
-                    return _context.VwPipingStandardScheduleThicknesses
+                    return _context.S3dCodeMaterialsCategoryScheduleThicknesses
                         .Select(x => new { Desc = x.ScheduleThicknessDesc, Code = x.ScheduleThicknessCode })
                         .Distinct()
                         .Select(x => new PmcOptionDto { Label = x.Desc, Value = x.Code })

@@ -18,7 +18,7 @@ namespace PMCSystem_Backend.Services.Impletation
 
         public IEnumerable<string> GetRuleNames()
         {
-            return _context.VwS3dRuleC1c2WithCodes
+            return _context.S3dCodeC1c2s
                 .AsNoTracking()
                 .Select(x => x.RuleName)
                 .Where(x => x != null)
@@ -28,7 +28,7 @@ namespace PMCSystem_Backend.Services.Impletation
 
         public IEnumerable<FlangeRuleDto> GetByRuleName(string ruleName)
         {
-            var entities = _context.VwS3dRuleC1c2WithCodes
+            var entities = _context.S3dCodeC1c2s
                 .AsNoTracking()
                 .Where(x => x.RuleName == ruleName)
                 .ToList();

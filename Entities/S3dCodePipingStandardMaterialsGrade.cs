@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class VwPipingStandardScheduleThickness
+public partial class S3dCodePipingStandardMaterialsGrade
 {
     public string? PipingStandardCode { get; set; }
 
@@ -11,9 +11,9 @@ public partial class VwPipingStandardScheduleThickness
 
     public int GeometricIndustryStandardCl { get; set; }
 
-    public string ScheduleThicknessCode { get; set; } = null!;
+    public string MaterialsGradeCode { get; set; } = null!;
 
-    public string ScheduleThicknessDesc { get; set; } = null!;
+    public string MaterialsGradeDesc { get; set; } = null!;
 
-    public int ScheduleThicknessCl { get; set; }
+    public int MaterialsGradeCl { get; set; }
 }

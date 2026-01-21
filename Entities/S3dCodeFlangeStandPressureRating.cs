@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class VwPipingStandardPressureRating
+public partial class S3dCodeFlangeStandPressureRating
 {
-    public string? PipingStandardCode { get; set; }
+    public string FlangeStandardCode { get; set; } = null!;
 
-    public string? PipingStandardDesc { get; set; }
+    public string FlangeStandDesc { get; set; } = null!;
 
     public int GeometricIndustryStandardCl { get; set; }
 
@@ -15,5 +15,5 @@ public partial class VwPipingStandardPressureRating
 
     public string? PressureRatingDesc { get; set; }
 
-    public int PressureRatingCl { get; set; }
+    public int? PressureRatingCl { get; set; }
 }

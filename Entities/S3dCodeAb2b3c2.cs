@@ -3,19 +3,27 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class VwS3dRuleC1c2WithCode
+public partial class S3dCodeAb2b3c2
 {
     public int Id { get; set; }
 
+    public int PipingClassCl { get; set; }
+
     public int GeometricIndustryStandardCl { get; set; }
+
+    public int MaterialsGradeCl { get; set; }
 
     public int PressureRatingCl { get; set; }
 
-    public string RuleName { get; set; } = null!;
+    public string? RuleName { get; set; }
 
     public bool Status { get; set; }
 
-    public string? FlangeStandardCode { get; set; }
+    public string? PipingClassCode { get; set; }
+
+    public string? PipingStandardCode { get; set; }
+
+    public string? MaterialsGradeCode { get; set; }
 
     public string? PressureRatingCode { get; set; }
 }
