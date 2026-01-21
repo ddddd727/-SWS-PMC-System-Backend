@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\**" />
+    <Content Remove="Migrations\**" />
+    <EmbeddedResource Remove="Migrations\**" />
+    <None Remove="Migrations\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="appsettings.Development.json" />
   </ItemGroup>
 
@@ -27,11 +34,11 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+    <PackageReference Include="EPPlus" Version=" 7.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Entities\TempEntities\" />
-    <Folder Include="Migrations\" />
   </ItemGroup>
 
   <ItemGroup>
