@@ -9,11 +9,11 @@ public partial class S3dCdbNutPart
 
     public string IndustryCommodityCode { get; set; } = null!;
 
-    public string? MaterialGrade { get; set; }
+    public int? NutType { get; set; }
 
-    public string? GeometricIndustryStandard { get; set; }
+    public int? GeometricIndustryStandard { get; set; }
 
-    public string? NutType { get; set; }
+    public int? MaterialGrade { get; set; }
 
     public string? NutHeight { get; set; }
 }

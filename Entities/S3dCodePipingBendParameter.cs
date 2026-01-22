@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class S3dRulePipingBendParameterCodeConverted
+public partial class S3dCodePipingBendParameter
 {
     public int Id { get; set; }
 
@@ -22,5 +22,6 @@ public partial class S3dRulePipingBendParameterCodeConverted
     public decimal BendRadiusMultiplier { get; set; }
 
     public bool Status { get; set; }
-}
 
+    public string? JsonData { get; set; }
+}

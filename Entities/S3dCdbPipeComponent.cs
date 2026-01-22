@@ -9,17 +9,17 @@ public partial class S3dCdbPipeComponent
 
     public string IndustryCommodityCode { get; set; } = null!;
 
-    public string? CommodityType { get; set; }
+    public int? CommodityType { get; set; }
 
-    public string? GeometryType { get; set; }
+    public int? GeometryType { get; set; }
 
-    public string? MaterialGrade { get; set; }
+    public int? MaterialGrade { get; set; }
 
-    public string? GeometricIndustryStandard { get; set; }
+    public int? GeometricIndustryStandard { get; set; }
 
-    public decimal? BendAngle { get; set; }
+    public string? BendAngle { get; set; }
 
-    public string? PartDataBasis { get; set; }
+    public int? PartDataBasis { get; set; }
 
     public string? PartClassName { get; set; }
 }

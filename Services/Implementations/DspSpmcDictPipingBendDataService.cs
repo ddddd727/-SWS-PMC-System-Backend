@@ -9,42 +9,31 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class DspSpmcDictPipingBendDataService : IDspSpmcDictPipingBendDataService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContext _context;
         private readonly IMapper _mapper;
 
-        public DspSpmcDictPipingBendDataService(PmcTestContext context, IMapper mapper)
+        public DspSpmcDictPipingBendDataService(PmcContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
         }
 
-        public async Task<List<DspSpmcDictPipingBendDataDto>> GetAllListAsync()
-        {
-            var items = await _context.S3dDictPipingBendData.ToListAsync();
-            return _mapper.Map<List<DspSpmcDictPipingBendDataDto>>(items);
-        }
-
         public async Task<DspSpmcDictPipingBendDataDto> CreateAsync(CreateDspSpmcDictPipingBendDataDto dto)
         {
-            var entity = _mapper.Map<S3dDictPipingBendDatum>(dto);
+            var entity = _mapper.Map<S3dDictPipingBendData>(dto);
             entity.Status = dto.Status ?? true;
             var maxId = await _context.S3dDictPipingBendData.MaxAsync(e => (int?)e.Id) ?? 0;
             entity.Id = maxId + 1;
+
             _context.S3dDictPipingBendData.Add(entity);
-
-            await _context.Database.OpenConnectionAsync();
-            try
-            {
-                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT S3D_Dict_PipingBendData ON");
-                await _context.SaveChangesAsync();
-                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT S3D_Dict_PipingBendData OFF");
-            }
-            finally
-            {
-                await _context.Database.CloseConnectionAsync();
-            }
-
+            await _context.SaveChangesAsync();
             return _mapper.Map<DspSpmcDictPipingBendDataDto>(entity);
+        }
+
+        public async Task<List<DspSpmcDictPipingBendDataDto>> GetAllListAsync()
+        {
+            var data = await _context.S3dDictPipingBendData.ToListAsync();
+            return _mapper.Map<List<DspSpmcDictPipingBendDataDto>>(data);
         }
 
         public async Task<bool> UpdateAsync(UpdateDspSpmcDictPipingBendDataDto dto)

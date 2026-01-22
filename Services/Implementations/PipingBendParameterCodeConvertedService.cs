@@ -8,10 +8,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PipingBendParameterCodeConvertedService : IPipingBendParameterCodeConvertedService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContext _context;
         private readonly IMapper _mapper;
 
-        public PipingBendParameterCodeConvertedService(PmcTestContext context, IMapper mapper)
+        public PipingBendParameterCodeConvertedService(PmcContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
@@ -19,7 +19,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<List<PipingBendParameterCodeConvertedDto>> GetAllAsync()
         {
-            var data = await _context.S3dRulePipingBendParameterCodeConverted.ToListAsync();
+            var data = await _context.S3dCodePipingBendParameters.ToListAsync();
             return _mapper.Map<List<PipingBendParameterCodeConvertedDto>>(data);
         }
     }

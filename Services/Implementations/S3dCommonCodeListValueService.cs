@@ -7,9 +7,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCommonCodeListValueService : IS3dCommonCodeListValueService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContext _context;
 
-        public S3dCommonCodeListValueService(PmcTestContext context)
+        public S3dCommonCodeListValueService(PmcContext context)
         {
             _context = context;
         }

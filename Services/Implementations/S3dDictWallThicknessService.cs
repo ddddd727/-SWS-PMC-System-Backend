@@ -9,10 +9,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dDictWallThicknessService : IS3dDictWallThicknessService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContext _context;
         private readonly IMapper _mapper;
 
-        public S3dDictWallThicknessService(PmcTestContext context, IMapper mapper)
+        public S3dDictWallThicknessService(PmcContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

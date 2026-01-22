@@ -9,31 +9,31 @@ public partial class S3dCdbPipeCompGeometryDatum
 
     public string? IndustryCommodityCode { get; set; }
 
-    public decimal? Npd1 { get; set; }
+    public double? Npd1 { get; set; }
 
     public string? NpdUnitType1 { get; set; }
 
-    public string? EndPreparation1 { get; set; }
+    public int? EndPreparation1 { get; set; }
 
-    public string? ScheduleThickness1 { get; set; }
+    public int? ScheduleThickness1 { get; set; }
 
-    public decimal? Npd2 { get; set; }
+    public double? Npd2 { get; set; }
 
     public string? NpdUnitType2 { get; set; }
 
-    public string? EndPreparation2 { get; set; }
+    public int? EndPreparation2 { get; set; }
 
-    public string? ScheduleThickness2 { get; set; }
+    public int? ScheduleThickness2 { get; set; }
 
-    public string? GeometricIndustryStandard { get; set; }
+    public int? GeometricIndustryStandard { get; set; }
 
-    public decimal? DryWeight { get; set; }
+    public double? DryWeight { get; set; }
 
-    public decimal? DryCogX { get; set; }
+    public double? DryCogX { get; set; }
 
-    public decimal? DryCogY { get; set; }
+    public double? DryCogY { get; set; }
 
-    public decimal? DryCogZ { get; set; }
+    public double? DryCogZ { get; set; }
 
     public string? PartDescription { get; set; }
 

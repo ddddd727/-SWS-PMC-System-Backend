@@ -8,10 +8,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class WallThicknessCodeConvertedService : IWallThicknessCodeConvertedService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContext _context;
         private readonly IMapper _mapper;
 
-        public WallThicknessCodeConvertedService(PmcTestContext context, IMapper mapper)
+        public WallThicknessCodeConvertedService(PmcContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
@@ -19,7 +19,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<List<WallThicknessCodeConvertedDto>> GetAllAsync()
         {
-            var data = await _context.S3dDictWallThicknessCodeConverted.ToListAsync();
+            var data = await _context.S3dCodeWallThicknesses.ToListAsync();
             return _mapper.Map<List<WallThicknessCodeConvertedDto>>(data);
         }
     }

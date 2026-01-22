@@ -9,19 +9,19 @@ public partial class S3dCdbGasketPart
 
     public string IndustryCommodityCode { get; set; } = null!;
 
-    public decimal? NominalDiameterFrom { get; set; }
+    public double? NominalDiameterFrom { get; set; }
 
-    public decimal? NominalDiameterTo { get; set; }
+    public double? NominalDiameterTo { get; set; }
 
-    public decimal? NominalDiameter { get; set; }
+    public double? NominalDiameter { get; set; }
 
     public string? NpdUnitType { get; set; }
 
-    public string GeometricIndustryStandard { get; set; } = null!;
+    public int GeometricIndustryStandard { get; set; }
 
-    public string? MaterialGrade { get; set; }
+    public int? MaterialGrade { get; set; }
 
-    public string? GasketType { get; set; }
+    public int? GasketType { get; set; }
 
     public string? ThicknessFor3Dmodel { get; set; }
 

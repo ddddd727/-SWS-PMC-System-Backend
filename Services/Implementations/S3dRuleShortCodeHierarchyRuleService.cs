@@ -9,10 +9,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dRuleShortCodeHierarchyRuleService : IS3dRuleShortCodeHierarchyRuleService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContext _context;
         private readonly IMapper _mapper;
 
-        public S3dRuleShortCodeHierarchyRuleService(PmcTestContext context, IMapper mapper)
+        public S3dRuleShortCodeHierarchyRuleService(PmcContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

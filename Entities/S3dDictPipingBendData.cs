@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class S3dDictPipingBendDatum
+public partial class S3dDictPipingBendData
 {
     public int Id { get; set; }
 
