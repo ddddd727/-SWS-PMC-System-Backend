@@ -84,12 +84,6 @@ namespace PMCSystem_Backend.Models
         public List<PmcCodeSaveItem> Items { get; set; } = new List<PmcCodeSaveItem>();
     }
 
-    public class ShipInfo
-    {
-        public string ShipType { get; set; } = string.Empty;
-        public string ShipNumber { get; set; } = string.Empty;
-    }
-
     public class CopyRuleRequest
     {
         public string SourceShipType { get; set; } = string.Empty;

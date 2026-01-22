@@ -170,35 +170,18 @@ public partial class PmcContextLr : DbContext
             entity.HasIndex(e => new { e.Pmccode, e.ShipType, e.ShipNo }, "UQ_SPMC_PMCCode").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.AccessoriesStandard).HasMaxLength(500);
-            entity.Property(e => e.BlindFlangeStandard).HasMaxLength(500);
-            entity.Property(e => e.BoltStandard).HasMaxLength(500);
-            entity.Property(e => e.BossesStandard).HasMaxLength(500);
-            entity.Property(e => e.CapsStandard).HasMaxLength(500);
-            entity.Property(e => e.ElbowStandard).HasMaxLength(500);
-            entity.Property(e => e.FlangeStandard).HasMaxLength(500);
             entity.Property(e => e.FlangeStandardName).HasMaxLength(255);
-            entity.Property(e => e.GasketStandard).HasMaxLength(500);
             entity.Property(e => e.MaterialsCategoryName).HasMaxLength(255);
             entity.Property(e => e.MaterialsGradeName).HasMaxLength(255);
-            entity.Property(e => e.NutStandard).HasMaxLength(500);
-            entity.Property(e => e.OverpassStandard).HasMaxLength(500);
-            entity.Property(e => e.PipeStandard).HasMaxLength(500);
             entity.Property(e => e.PipingClassName).HasMaxLength(255);
             entity.Property(e => e.PipingStandardName).HasMaxLength(255);
             entity.Property(e => e.Pmccode)
                 .HasMaxLength(255)
                 .HasColumnName("PMCCode");
             entity.Property(e => e.PressureRatingName).HasMaxLength(255);
-            entity.Property(e => e.RedStandard).HasMaxLength(500);
-            entity.Property(e => e.SaddlesStandard).HasMaxLength(500);
             entity.Property(e => e.ScheduleThicknessName).HasMaxLength(255);
             entity.Property(e => e.ShipNo).HasMaxLength(255);
             entity.Property(e => e.ShipType).HasMaxLength(255);
-            entity.Property(e => e.SleeveStandard).HasMaxLength(500);
-            entity.Property(e => e.Status).HasMaxLength(100);
-            entity.Property(e => e.TeeStandard).HasMaxLength(500);
-            entity.Property(e => e.WasherStandard).HasMaxLength(500);
         });
 
         OnModelCreatingPartial(modelBuilder);

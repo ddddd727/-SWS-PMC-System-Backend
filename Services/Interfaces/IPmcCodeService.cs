@@ -1,4 +1,5 @@
 using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Entities.PipeSpecConfig;
 
 namespace PMCSystem_Backend.Services.Interface
 {

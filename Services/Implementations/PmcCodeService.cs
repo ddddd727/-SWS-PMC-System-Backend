@@ -4,6 +4,7 @@ using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Entities.PipeSpecConfig;
 
 namespace PMCSystem_Backend.Services.Impletation
 {
@@ -343,12 +344,12 @@ namespace PMCSystem_Backend.Services.Impletation
             // 从外部接口获取船型船号，目前先暂时用模拟数据代替
             List<ShipInfo> shipInfos = new List<ShipInfo>
             {
-                new ShipInfo { ShipNumber = "H1508", ShipType = "邮轮" },
-                new ShipInfo { ShipNumber = "H1509", ShipType = "邮轮" },
-                new ShipInfo { ShipNumber = "H1403", ShipType = "民船" },
-                new ShipInfo { ShipNumber = "H1404", ShipType = "民船" },
-                new ShipInfo { ShipNumber = "H1301", ShipType = "货船" },
-                new ShipInfo { ShipNumber = "H1603", ShipType = "民船" }
+                new ShipInfo { shipNumber = "H1508", shipType = "邮轮" },
+                new ShipInfo { shipNumber = "H1509", shipType = "邮轮" },
+                new ShipInfo { shipNumber = "H1403", shipType = "民船" },
+                new ShipInfo { shipNumber = "H1404", shipType = "民船" },
+                new ShipInfo { shipNumber = "H1301", shipType = "货船" },
+                new ShipInfo { shipNumber = "H1603", shipType = "民船" }
             };
             return shipInfos;
         }
@@ -395,25 +396,6 @@ namespace PMCSystem_Backend.Services.Impletation
                     FlangeStandardName = src.FlangeStandardName,
                     PressureRatingName = src.PressureRatingName,
                     ScheduleThicknessName = src.ScheduleThicknessName,
-                    // 复制其他可能需要的字段
-                    PipeStandard = src.PipeStandard,
-                    ElbowStandard = src.ElbowStandard,
-                    RedStandard = src.RedStandard,
-                    TeeStandard = src.TeeStandard,
-                    SleeveStandard = src.SleeveStandard,
-                    BossesStandard = src.BossesStandard,
-                    SaddlesStandard = src.SaddlesStandard,
-                    CapsStandard = src.CapsStandard,
-                    OverpassStandard = src.OverpassStandard,
-                    AccessoriesStandard = src.AccessoriesStandard,
-                    FlangeStandard = src.FlangeStandard,
-                    BlindFlangeStandard = src.BlindFlangeStandard,
-                    GasketStandard = src.GasketStandard,
-                    BoltStandard = src.BoltStandard,
-                    NutStandard = src.NutStandard,
-                    WasherStandard = src.WasherStandard,
-                    Status = src.Status,
-                    JsonData = src.JsonData
                 }).ToList();
 
                 // 3. 批量插入
