@@ -4,16 +4,10 @@ using PMCSystem_Backend.Models;
 
 namespace PMCSystem_Backend.MappingProfiles
 {
-    public class ExampleProfile : Profile
+    public class S3dMappingProfile : Profile
     {
-        public ExampleProfile() 
+        public S3dMappingProfile() 
         {
-            // Entity -> Dto (查询时常用）
-            CreateMap<ExampleEntity, ExampleDto>();
-
-            // Dto -> Entity （新增/更新时常用）
-            CreateMap<ExampleDto, ExampleEntity>();
-
             // S3dRuleAb2b3c2 Mappings
             CreateMap<S3dRuleAb2b3c2, S3dRuleAb2b3c2Dto>().ReverseMap();
 
@@ -22,8 +16,6 @@ namespace PMCSystem_Backend.MappingProfiles
 
             // S3dRuleB1b2b3d Mappings
             CreateMap<S3dRuleB1b2b3d, S3dRuleB1b2b3dDto>().ReverseMap();
-
-
         } 
     }
 }

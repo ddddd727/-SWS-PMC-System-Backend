@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.Services.Implementations;
-using PMCSystem_Backend.Services.Interface;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
@@ -34,7 +33,6 @@ try
     // Add services to the container.
 
     // 注册自定义服务（Scoped生命周期： 每次请求创建一个实例）
-    builder.Services.AddScoped<IExampleService, ExampleService>();
     builder.Services.AddScoped<IS3dRuleAb2b3c2Service, S3dRuleAb2b3c2Service>();
     builder.Services.AddScoped<IS3dRuleC1c2Service, S3dRuleC1c2Service>();
     builder.Services.AddScoped<IS3dRuleB1b2b3dService, S3dRuleB1b2b3dService>();
@@ -61,11 +59,8 @@ try
         });
     });
 
-    // ���� DbContextע��
-    builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PmcConnection")));
-
-    builder.Services.AddDbContext<PmcContext>(options =>
+    //  DbContextע
+    builder.Services.AddDbContext<SpecContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PmcConnection")));
 
 
@@ -73,8 +68,8 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // ע�� AutoMapper
-    builder.Services.AddAutoMapper(typeof(ExampleProfile));
+    // ע AutoMapper
+    builder.Services.AddAutoMapper(typeof(S3dMappingProfile));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>

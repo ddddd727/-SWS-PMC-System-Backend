@@ -10,9 +10,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCodeMaterialsCategoryPipingStandardService : IS3dCodeMaterialsCategoryPipingStandardService
     {
-        private readonly PmcContext _context;
+        private readonly SpecContext _context;
 
-        public S3dCodeMaterialsCategoryPipingStandardService(PmcContext context)
+        public S3dCodeMaterialsCategoryPipingStandardService(SpecContext context)
         {
             _context = context;
         }

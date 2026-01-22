@@ -10,9 +10,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCodeMaterialsCategoryScheduleThicknessService : IS3dCodeMaterialsCategoryScheduleThicknessService
     {
-        private readonly PmcContext _context;
+        private readonly SpecContext _context;
 
-        public S3dCodeMaterialsCategoryScheduleThicknessService(PmcContext context)
+        public S3dCodeMaterialsCategoryScheduleThicknessService(SpecContext context)
         {
             _context = context;
         }
