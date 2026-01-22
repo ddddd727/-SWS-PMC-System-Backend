@@ -8,10 +8,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PipingBendParameterCodeConvertedService : IPipingBendParameterCodeConvertedService
     {
-        private readonly PmcContext _context;
+        private readonly PmcContextCky _context;
         private readonly IMapper _mapper;
 
-        public PipingBendParameterCodeConvertedService(PmcContext context, IMapper mapper)
+        public PipingBendParameterCodeConvertedService(PmcContextCky context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

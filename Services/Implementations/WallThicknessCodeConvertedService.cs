@@ -8,10 +8,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class WallThicknessCodeConvertedService : IWallThicknessCodeConvertedService
     {
-        private readonly PmcContext _context;
+        private readonly PmcContextCky _context;
         private readonly IMapper _mapper;
 
-        public WallThicknessCodeConvertedService(PmcContext context, IMapper mapper)
+        public WallThicknessCodeConvertedService(PmcContextCky context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
