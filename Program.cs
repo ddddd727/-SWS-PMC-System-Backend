@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.Common.Middelswares;
@@ -41,6 +40,10 @@ try
     builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
+    // 注册服务层的接口与实现
+    // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
+    builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
+    builder.Services.AddScoped<ICodelistService, CodelistService>();
 
     builder.Services.AddControllers();
 
@@ -58,9 +61,13 @@ try
         });
     });
 
-    // 注册 DbContext (使用 PmcTestContext 作为主上下文)
+    // 注册多个 DbContext
     builder.Services.AddDbContext<PmcContextCky>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddDbContext<PmcContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 
     // Swagger配置，API文档
@@ -68,7 +75,7 @@ try
     builder.Services.AddSwaggerGen();
 
     // 注册 AutoMapper
-    builder.Services.AddAutoMapper(typeof(PmcProfile));
+    builder.Services.AddAutoMapper(typeof(PmcProfile), typeof(PmcSpecRuleProfile));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>
