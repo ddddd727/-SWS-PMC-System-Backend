@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PMCSystem_Backend.Entities;
+namespace PMCSystem_Backend.Entities.PipeSpecConfig;
 
 public partial class S3dDictPipingComponentType
 {
