@@ -19,13 +19,13 @@ namespace PMCSystem_Backend.Common.Models
         /// 响应信息
         /// </summary>
         [JsonPropertyName("message")]
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         /// <summary>
         ///  响应数据
         /// </summary>
         [JsonPropertyName("data")]
-        public T Data { get; set; }
+        public T? Data { get; set; }
 
         /// <summary>
         /// 响应时间戳
@@ -37,7 +37,7 @@ namespace PMCSystem_Backend.Common.Models
         /// 追踪ID（用于日志追踪）
         /// </summary>
         [JsonPropertyName("traceId")]
-        public string TraceId   { get; set; }
+        public string? TraceId   { get; set; }
 
         // 成功响应快捷方法
         public static ApiResponse<T> Success(T data, string message = "操作成功")
@@ -51,7 +51,7 @@ namespace PMCSystem_Backend.Common.Models
         }
 
         // 失败响应快捷方法
-        public static ApiResponse<T> Fail(int code, string message, T data = default)
+        public static ApiResponse<T> Fail(int code, string message, T? data = default)
         {
             return new ApiResponse<T>
             {
@@ -74,13 +74,13 @@ namespace PMCSystem_Backend.Common.Models
         public int Code { get; set; }
 
         [JsonPropertyName("message")]
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         [JsonPropertyName("timestamp")]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         [JsonPropertyName("traceId")]
-        public string TraceId { get; set; }
+        public string? TraceId { get; set; }
 
         public static ApiResponse Success(string message = "操作成功")
         {

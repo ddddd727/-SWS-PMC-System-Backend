@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
-using PMCSystem_Backend.Services.Impletation;
-using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
 using System.Text.Json;
+using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Services.Implementations;
+using PMCSystem_Backend.Services.Impletation;
+using PMCSystem_Backend.Services.Interface;
 
-// ����Serilog
+
+// 初始化Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
@@ -18,24 +21,37 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("�������� Web Ӧ�ó�������...");
+    Log.Information("正在启动 Web 应用程序...");
 
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
-        .ReadFrom.Configuration(context.Configuration) // �������ļ���ȡ
-        .ReadFrom.Services(services) // ������DI����ע�����Sink��Enricher
+        .ReadFrom.Configuration(context.Configuration) // 从配置文件读取
+        .ReadFrom.Services(services) // 从DI容器注入配置的Sink和Enricher
         .Enrich.FromLogContext()
         .WriteTo.Console()
         .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
     // Add services to the container.
+    // 注册业务服务已移动到下方
 
     // עԶScopedڣ ÿ󴴽һʵ
     builder.Services.AddScoped<IPipeLimitRuleService, PipeLimitRuleService>();
     builder.Services.AddScoped<IMainMaterialRuleService, MainMaterialRuleService>();
     builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
     builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
+    // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
+    builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
+    builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
+    builder.Services.AddScoped<IPipingBendParameterCodeConvertedService, PipingBendParameterCodeConvertedService>();
+    builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
+    builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
+    builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
+    // 注册服务层的接口与实现
+    // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
+    builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
+    builder.Services.AddScoped<ICodelistService, CodelistService>();
 
     builder.Services.AddControllers();
 
@@ -43,18 +59,29 @@ try
     {
         options.AddPolicy("AllowVueFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+            policy.WithOrigins(
+                "http://localhost:5173",   // Vite 默认端口
+                "http://localhost:3000",   // 一些前端工具默认端口
+                "http://localhost:8080"    // Vue 
+                // CLI 默认端口
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
         });
     });
 
-    //  DbContextע
-    builder.Services.AddDbContext<PmcContextLr>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0120")));
+    // 注册多个 DbContext
+    builder.Services.AddDbContext<PmcContextCky>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddDbContext<PmcContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddDbContext<PmcContextLr>();
 
 
-    // SwaggerãAPIĵ
+
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
@@ -67,39 +94,39 @@ try
         options.Filters.Add(new ProducesAttribute("application/json"));
     });
 
-    // ����JSON���л�
+    // 配置JSON序列化
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
-            // ͳһʹ��С�շ�����
+            // 统一使用小驼峰命名
             options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            // ���Կ�ֵ����ѡ��
+            // 空值属性可选
             options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-            // ʱ���ʽ
+            // 时间格式
             options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         });
 
-    // ע���쳣�м������ķ���
+    // 注册日志服务
     builder.Services.AddLogging();
 
 
     var app = builder.Build();
 
-    
+
 
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            // ����Swagger UI �ĸ�·��Ϊ /swagger
+            // 设置Swagger UI 的根路径为 /swagger
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            options.RoutePrefix = "swagger";        // ����http://localhost:xxxx/swagger ���ɴ�UI
+            options.RoutePrefix = "swagger";        // 访问http://localhost:xxxx/swagger 即可打开UI
         });
     }
     else
     {
-        // ���������ɹرջ������Ʒ���
+        // 生产环境也可以开启，根据需求关闭或限制访问
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
@@ -107,11 +134,17 @@ try
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
         });
     }
-    // ����ע������
+    // 配置中间件
 
     // Configure the HTTP request pipeline.
 
-    app.UseHttpsRedirection();
+    // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
+    app.UseMiddleware<ExceptionMiddleware>();
+
+    // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
+    app.UseMiddleware<ExceptionMiddleware>();
+
+    // app.UseHttpsRedirection();
 
     app.UseCors("AllowVueFrontend");
 
@@ -121,23 +154,11 @@ try
 
     app.Run();
 }
-catch(Exception ex)
+catch (Exception ex)
 {
-    Log.Fatal(ex, "Ӧ�ó�������ʧ��");
+    Log.Fatal(ex, "应用程序启动失败");
 }
 finally
 {
     Log.CloseAndFlush();
 }
-
-
-
-
-
-
-
-
-
-
-
-
