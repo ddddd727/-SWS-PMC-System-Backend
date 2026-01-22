@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Configuration;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Models;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,7 @@ public partial class PmcContext : DbContext
 
     public virtual DbSet<S3dCommonCodeListHierarchy> S3dCommonCodeListHierarchies { get; set; }
 
-    public virtual DbSet<S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
+    public virtual DbSet<PMCSystem_Backend.Entities.S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
 
     public virtual DbSet<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; }
 
@@ -300,7 +301,7 @@ public partial class PmcContext : DbContext
                 .HasConstraintName("DSP_CodeListHierarchy_DSP_CodeListTable_FK");
         });
 
-        modelBuilder.Entity<S3dCommonCodeListTable>(entity =>
+        modelBuilder.Entity<PMCSystem_Backend.Entities.PipeSpecConfig.S3dCommonCodeListTable>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__UD_CodeL__3214EC27484123D6");
 

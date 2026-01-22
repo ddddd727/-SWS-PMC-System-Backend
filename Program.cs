@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
@@ -30,6 +30,16 @@ try
     //builder.Services.AddSerilog();
 
     // Add services to the container.
+    // 注册业务服务已移动到下方
+
+    // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
+    builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
+    builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
+    builder.Services.AddScoped<IPipingBendParameterCodeConvertedService, PipingBendParameterCodeConvertedService>();
+    builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
+    builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
+    builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
     // 注册服务层的接口与实现
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
@@ -41,13 +51,20 @@ try
     {
         options.AddPolicy("AllowVueFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:3000")     // Vue默认端口，部署时替换为实际前端URL
+            policy.WithOrigins(
+                "http://localhost:5173",   // Vite 默认端口
+                "http://localhost:3000",   // 一些前端工具默认端口
+                "http://localhost:8080"    // Vue CLI 默认端口
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
         });
     });
 
-    // 注册 DbContext
+    // 注册多个 DbContext
+    builder.Services.AddDbContext<PmcContextCky>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
     builder.Services.AddDbContext<PmcContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -58,7 +75,7 @@ try
     builder.Services.AddSwaggerGen();
 
     // 注册 AutoMapper
-    builder.Services.AddAutoMapper(typeof(PmcSpecRuleProfile));
+    builder.Services.AddAutoMapper(typeof(PmcProfile), typeof(PmcSpecRuleProfile));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>
