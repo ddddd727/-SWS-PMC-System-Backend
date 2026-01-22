@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class VwFlangeStandPressureRating
+public partial class S3dCodeFlangeStandPressureRating
 {
     public string FlangeStandardCode { get; set; } = null!;
 

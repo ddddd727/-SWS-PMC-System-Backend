@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
-    public class VwMaterialsCategoryPipingStandardService : IVwMaterialsCategoryPipingStandardService
+    public class S3dCodeMaterialsCategoryPipingStandardService : IS3dCodeMaterialsCategoryPipingStandardService
     {
         private readonly PmcContext _context;
 
-        public VwMaterialsCategoryPipingStandardService(PmcContext context)
+        public S3dCodeMaterialsCategoryPipingStandardService(PmcContext context)
         {
             _context = context;
         }
 
         public async Task<IEnumerable<MaterialsCategoryDto>> GetUniqueMaterialsCategoriesAsync()
         {
-            return await _context.VwMaterialsCategoryPipingStandards
+            return await _context.S3dCodeMaterialsCategoryPipingStandards
                 .Select(x => new MaterialsCategoryDto
                 {
                     MaterialsCategoryCode = x.MaterialsCategoryCode,
@@ -32,7 +32,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<IEnumerable<PipingStandardDto>> GetPipingStandardsByCategoryClAsync(int materialsCategoryCl)
         {
-            return await _context.VwMaterialsCategoryPipingStandards
+            return await _context.S3dCodeMaterialsCategoryPipingStandards
                 .Where(x => x.MaterialsCategoryCl == materialsCategoryCl)
                 .Select(x => new PipingStandardDto
                 {
@@ -40,7 +40,7 @@ namespace PMCSystem_Backend.Services.Implementations
                     PipeStandDesc = x.PipeStandDesc,
                     GeometricIndustryStandardCl = x.GeometricIndustryStandardCl
                 })
-                .Distinct() // Adding Distinct here as well in case there are duplicates for the same standard within the category
+                .Distinct() 
                 .ToListAsync();
         }
     }

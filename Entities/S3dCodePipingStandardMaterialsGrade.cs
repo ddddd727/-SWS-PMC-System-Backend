@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class VwPipingStandardMaterialsGrade
+public partial class S3dCodePipingStandardMaterialsGrade
 {
     public string? PipingStandardCode { get; set; }
 

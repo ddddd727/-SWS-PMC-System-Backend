@@ -8,11 +8,11 @@ namespace PMCSystem_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VwPipingStandardPressureRatingController : ControllerBase
+    public class S3dCodePipingStandardMaterialsGradeController : ControllerBase
     {
-        private readonly IVwPipingStandardPressureRatingService _service;
+        private readonly IS3dCodePipingStandardMaterialsGradeService _service;
 
-        public VwPipingStandardPressureRatingController(IVwPipingStandardPressureRatingService service)
+        public S3dCodePipingStandardMaterialsGradeController(IS3dCodePipingStandardMaterialsGradeService service)
         {
             _service = service;
         }
@@ -24,10 +24,10 @@ namespace PMCSystem_Backend.Controllers
             return Ok(result);
         }
 
-        [HttpGet("pressure-ratings/{geometricIndustryStandardCl}")]
-        public async Task<ActionResult<IEnumerable<PressureRatingDto>>> GetPressureRatings(int geometricIndustryStandardCl)
+        [HttpGet("materials-grades/{geometricIndustryStandardCl}")]
+        public async Task<ActionResult<IEnumerable<MaterialsGradeDto>>> GetMaterialsGrades(int geometricIndustryStandardCl)
         {
-            var result = await _service.GetPressureRatingsByPipingClAsync(geometricIndustryStandardCl);
+            var result = await _service.GetMaterialsGradesByPipingClAsync(geometricIndustryStandardCl);
             return Ok(result);
         }
     }

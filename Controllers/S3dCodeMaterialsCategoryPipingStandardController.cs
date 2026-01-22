@@ -8,11 +8,11 @@ namespace PMCSystem_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VwMaterialsCategoryPipingStandardController : ControllerBase
+    public class S3dCodeMaterialsCategoryPipingStandardController : ControllerBase
     {
-        private readonly IVwMaterialsCategoryPipingStandardService _service;
+        private readonly IS3dCodeMaterialsCategoryPipingStandardService _service;
 
-        public VwMaterialsCategoryPipingStandardController(IVwMaterialsCategoryPipingStandardService service)
+        public S3dCodeMaterialsCategoryPipingStandardController(IS3dCodeMaterialsCategoryPipingStandardService service)
         {
             _service = service;
         }

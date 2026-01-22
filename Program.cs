@@ -42,11 +42,11 @@ try
     builder.Services.AddScoped<IS3dCodeB1b2b3dViewService, S3dCodeB1b2b3dViewService>();
     builder.Services.AddScoped<IS3dCodeC1c2ViewService, S3dCodeC1c2ViewService>();
     builder.Services.AddScoped<IS3dCodePipingClassViewService, S3dCodePipingClassViewService>();
-    builder.Services.AddScoped<IVwMaterialsCategoryPipingStandardService, VwMaterialsCategoryPipingStandardService>();
-    builder.Services.AddScoped<IVwMaterialsCategoryScheduleThicknessService, VwMaterialsCategoryScheduleThicknessService>();
-    builder.Services.AddScoped<IVwFlangeStandPressureRatingService, VwFlangeStandPressureRatingService>();
-    builder.Services.AddScoped<IVwPipingStandardMaterialsGradeService, VwPipingStandardMaterialsGradeService>();
-    builder.Services.AddScoped<IVwPipingStandardPressureRatingService, VwPipingStandardPressureRatingService>();
+    builder.Services.AddScoped<IS3dCodeMaterialsCategoryPipingStandardService, S3dCodeMaterialsCategoryPipingStandardService>();
+    builder.Services.AddScoped<IS3dCodeMaterialsCategoryScheduleThicknessService, S3dCodeMaterialsCategoryScheduleThicknessService>();
+    builder.Services.AddScoped<IS3dCodeFlangeStandPressureRatingService, S3dCodeFlangeStandPressureRatingService>();
+    builder.Services.AddScoped<IS3dCodePipingStandardMaterialsGradeService, S3dCodePipingStandardMaterialsGradeService>();
+    builder.Services.AddScoped<IS3dCodePipingStandardPressureRatingService, S3dCodePipingStandardPressureRatingService>();
     // Dsp services removed
 
     builder.Services.AddControllers();

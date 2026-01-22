@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {
-    public interface IVwPipingStandardMaterialsGradeService
+    public interface IS3dCodePipingStandardPressureRatingService
     {
         Task<IEnumerable<PipingStandardDto>> GetUniquePipingStandardsAsync();
-        Task<IEnumerable<MaterialsGradeDto>> GetMaterialsGradesByPipingClAsync(int geometricIndustryStandardCl);
+        Task<IEnumerable<PressureRatingDto>> GetPressureRatingsByPipingClAsync(int geometricIndustryStandardCl);
     }
 }

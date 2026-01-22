@@ -8,31 +8,31 @@ using System.Threading.Tasks;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
-    public class VwPipingStandardPressureRatingService : IVwPipingStandardPressureRatingService
+    public class S3dCodeFlangeStandPressureRatingService : IS3dCodeFlangeStandPressureRatingService
     {
         private readonly PmcContext _context;
 
-        public VwPipingStandardPressureRatingService(PmcContext context)
+        public S3dCodeFlangeStandPressureRatingService(PmcContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<PipingStandardDto>> GetUniquePipingStandardsAsync()
+        public async Task<IEnumerable<FlangeStandardDto>> GetUniqueFlangeStandardsAsync()
         {
-            return await _context.VwPipingStandardPressureRatings
-                .Select(x => new PipingStandardDto
+            return await _context.S3dCodeFlangeStandPressureRatings
+                .Select(x => new FlangeStandardDto
                 {
-                    PipingStandardCode = x.PipingStandardCode,
-                    PipeStandDesc = x.PipingStandardDesc, // Mapping PipingStandardDesc to PipeStandDesc
+                    FlangeStandardCode = x.FlangeStandardCode,
+                    FlangeStandDesc = x.FlangeStandDesc,
                     GeometricIndustryStandardCl = x.GeometricIndustryStandardCl
                 })
                 .Distinct()
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<PressureRatingDto>> GetPressureRatingsByPipingClAsync(int geometricIndustryStandardCl)
+        public async Task<IEnumerable<PressureRatingDto>> GetPressureRatingsByFlangeClAsync(int geometricIndustryStandardCl)
         {
-            return await _context.VwPipingStandardPressureRatings
+            return await _context.S3dCodeFlangeStandPressureRatings
                 .Where(x => x.GeometricIndustryStandardCl == geometricIndustryStandardCl)
                 .Select(x => new PressureRatingDto
                 {

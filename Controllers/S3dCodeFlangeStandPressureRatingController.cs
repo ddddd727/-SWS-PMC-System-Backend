@@ -8,11 +8,11 @@ namespace PMCSystem_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VwFlangeStandPressureRatingController : ControllerBase
+    public class S3dCodeFlangeStandPressureRatingController : ControllerBase
     {
-        private readonly IVwFlangeStandPressureRatingService _service;
+        private readonly IS3dCodeFlangeStandPressureRatingService _service;
 
-        public VwFlangeStandPressureRatingController(IVwFlangeStandPressureRatingService service)
+        public S3dCodeFlangeStandPressureRatingController(IS3dCodeFlangeStandPressureRatingService service)
         {
             _service = service;
         }

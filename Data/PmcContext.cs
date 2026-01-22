@@ -190,15 +190,15 @@ public partial class PmcContext : DbContext
 
     public virtual DbSet<S3dRuleWeldTypeRule> S3dRuleWeldTypeRules { get; set; }
 
-    public virtual DbSet<VwFlangeStandPressureRating> VwFlangeStandPressureRatings { get; set; }
+    public virtual DbSet<S3dCodeFlangeStandPressureRating> S3dCodeFlangeStandPressureRatings { get; set; }
 
-    public virtual DbSet<VwMaterialsCategoryPipingStandard> VwMaterialsCategoryPipingStandards { get; set; }
+    public virtual DbSet<S3dCodeMaterialsCategoryPipingStandard> S3dCodeMaterialsCategoryPipingStandards { get; set; }
     
-    public virtual DbSet<VwMaterialsCategoryScheduleThickness> VwMaterialsCategoryScheduleThicknesses { get; set; }
+    public virtual DbSet<S3dCodeMaterialsCategoryScheduleThickness> S3dCodeMaterialsCategoryScheduleThicknesses { get; set; }
     
-    public virtual DbSet<VwPipingStandardMaterialsGrade> VwPipingStandardMaterialsGrades { get; set; }
+    public virtual DbSet<S3dCodePipingStandardMaterialsGrade> S3dCodePipingStandardMaterialsGrades { get; set; }
     
-    public virtual DbSet<VwPipingStandardPressureRating> VwPipingStandardPressureRatings { get; set; }
+    public virtual DbSet<S3dCodePipingStandardPressureRating> S3dCodePipingStandardPressureRatings { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -1962,7 +1962,7 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.WeldType).HasMaxLength(50);
         });
 
-        modelBuilder.Entity<VwFlangeStandPressureRating>(entity =>
+        modelBuilder.Entity<S3dCodeFlangeStandPressureRating>(entity =>
         {
             entity
                 .HasNoKey()
@@ -1976,7 +1976,7 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.PressureRatingDesc).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<VwMaterialsCategoryPipingStandard>(entity =>
+        modelBuilder.Entity<S3dCodeMaterialsCategoryPipingStandard>(entity =>
         {
             entity
                 .HasNoKey()
@@ -1990,7 +1990,7 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.PipingStandardCode).HasMaxLength(100);
         });
 
-        modelBuilder.Entity<VwMaterialsCategoryScheduleThickness>(entity =>
+        modelBuilder.Entity<S3dCodeMaterialsCategoryScheduleThickness>(entity =>
         {
             entity
                 .HasNoKey()
@@ -2002,7 +2002,7 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.ScheduleThicknessDesc).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<VwPipingStandardMaterialsGrade>(entity =>
+        modelBuilder.Entity<S3dCodePipingStandardMaterialsGrade>(entity =>
         {
             entity
                 .HasNoKey()
@@ -2016,7 +2016,7 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.PipingStandardCode).HasMaxLength(100);
         });
 
-        modelBuilder.Entity<VwPipingStandardPressureRating>(entity =>
+        modelBuilder.Entity<S3dCodePipingStandardPressureRating>(entity =>
         {
             entity
                 .HasNoKey()

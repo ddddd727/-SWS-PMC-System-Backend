@@ -8,31 +8,31 @@ using System.Threading.Tasks;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
-    public class VwFlangeStandPressureRatingService : IVwFlangeStandPressureRatingService
+    public class S3dCodePipingStandardPressureRatingService : IS3dCodePipingStandardPressureRatingService
     {
         private readonly PmcContext _context;
 
-        public VwFlangeStandPressureRatingService(PmcContext context)
+        public S3dCodePipingStandardPressureRatingService(PmcContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<FlangeStandardDto>> GetUniqueFlangeStandardsAsync()
+        public async Task<IEnumerable<PipingStandardDto>> GetUniquePipingStandardsAsync()
         {
-            return await _context.VwFlangeStandPressureRatings
-                .Select(x => new FlangeStandardDto
+            return await _context.S3dCodePipingStandardPressureRatings
+                .Select(x => new PipingStandardDto
                 {
-                    FlangeStandardCode = x.FlangeStandardCode,
-                    FlangeStandDesc = x.FlangeStandDesc,
+                    PipingStandardCode = x.PipingStandardCode,
+                    PipeStandDesc = x.PipingStandardDesc, 
                     GeometricIndustryStandardCl = x.GeometricIndustryStandardCl
                 })
                 .Distinct()
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<PressureRatingDto>> GetPressureRatingsByFlangeClAsync(int geometricIndustryStandardCl)
+        public async Task<IEnumerable<PressureRatingDto>> GetPressureRatingsByPipingClAsync(int geometricIndustryStandardCl)
         {
-            return await _context.VwFlangeStandPressureRatings
+            return await _context.S3dCodePipingStandardPressureRatings
                 .Where(x => x.GeometricIndustryStandardCl == geometricIndustryStandardCl)
                 .Select(x => new PressureRatingDto
                 {

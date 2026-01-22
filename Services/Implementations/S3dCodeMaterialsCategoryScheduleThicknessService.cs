@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
-    public class VwMaterialsCategoryScheduleThicknessService : IVwMaterialsCategoryScheduleThicknessService
+    public class S3dCodeMaterialsCategoryScheduleThicknessService : IS3dCodeMaterialsCategoryScheduleThicknessService
     {
         private readonly PmcContext _context;
 
-        public VwMaterialsCategoryScheduleThicknessService(PmcContext context)
+        public S3dCodeMaterialsCategoryScheduleThicknessService(PmcContext context)
         {
             _context = context;
         }
 
         public async Task<IEnumerable<ScheduleThicknessDto>> GetScheduleThicknessesByMaterialsCategoryClAsync(int materialsCategoryCl)
         {
-            return await _context.VwMaterialsCategoryScheduleThicknesses
+            return await _context.S3dCodeMaterialsCategoryScheduleThicknesses
                 .Where(x => x.MaterialsCategoryCl == materialsCategoryCl)
                 .Select(x => new ScheduleThicknessDto
                 {
@@ -32,4 +32,3 @@ namespace PMCSystem_Backend.Services.Implementations
         }
     }
 }
-

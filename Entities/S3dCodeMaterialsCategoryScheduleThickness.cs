@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class VwMaterialsCategoryScheduleThickness
+public partial class S3dCodeMaterialsCategoryScheduleThickness
 {
     public int MaterialsCategoryCl { get; set; }
 
@@ -13,4 +13,3 @@ public partial class VwMaterialsCategoryScheduleThickness
 
     public int ScheduleThicknessCl { get; set; }
 }
-

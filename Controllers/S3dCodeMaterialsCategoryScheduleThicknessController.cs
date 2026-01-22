@@ -8,11 +8,11 @@ namespace PMCSystem_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VwMaterialsCategoryScheduleThicknessController : ControllerBase
+    public class S3dCodeMaterialsCategoryScheduleThicknessController : ControllerBase
     {
-        private readonly IVwMaterialsCategoryScheduleThicknessService _service;
+        private readonly IS3dCodeMaterialsCategoryScheduleThicknessService _service;
 
-        public VwMaterialsCategoryScheduleThicknessController(IVwMaterialsCategoryScheduleThicknessService service)
+        public S3dCodeMaterialsCategoryScheduleThicknessController(IS3dCodeMaterialsCategoryScheduleThicknessService service)
         {
             _service = service;
         }
@@ -25,4 +25,3 @@ namespace PMCSystem_Backend.Controllers
         }
     }
 }
-

@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
-    public class VwPipingStandardMaterialsGradeService : IVwPipingStandardMaterialsGradeService
+    public class S3dCodePipingStandardMaterialsGradeService : IS3dCodePipingStandardMaterialsGradeService
     {
         private readonly PmcContext _context;
 
-        public VwPipingStandardMaterialsGradeService(PmcContext context)
+        public S3dCodePipingStandardMaterialsGradeService(PmcContext context)
         {
             _context = context;
         }
 
         public async Task<IEnumerable<PipingStandardDto>> GetUniquePipingStandardsAsync()
         {
-            return await _context.VwPipingStandardMaterialsGrades
+            return await _context.S3dCodePipingStandardMaterialsGrades
                 .Select(x => new PipingStandardDto
                 {
                     PipingStandardCode = x.PipingStandardCode,
@@ -32,7 +32,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<IEnumerable<MaterialsGradeDto>> GetMaterialsGradesByPipingClAsync(int geometricIndustryStandardCl)
         {
-            return await _context.VwPipingStandardMaterialsGrades
+            return await _context.S3dCodePipingStandardMaterialsGrades
                 .Where(x => x.GeometricIndustryStandardCl == geometricIndustryStandardCl)
                 .Select(x => new MaterialsGradeDto
                 {

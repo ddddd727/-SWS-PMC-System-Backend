@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class VwPipingStandardPressureRating
+public partial class S3dCodePipingStandardPressureRating
 {
     public string? PipingStandardCode { get; set; }
 
