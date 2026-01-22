@@ -9,9 +9,9 @@ namespace PMCSystem_Backend.Services.Impletation
 {
     public class FlangeRuleService : IFlangeRuleService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContextLr _context;
 
-        public FlangeRuleService(PmcTestContext context)
+        public FlangeRuleService(PmcContextLr context)
         {
             _context = context;
         }

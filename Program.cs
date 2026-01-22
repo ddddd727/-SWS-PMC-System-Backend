@@ -5,7 +5,6 @@ using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.Services.Impletation;
 using PMCSystem_Backend.Services.Interface;
-using PMCSystem_Backend.Data;
 using Serilog;
 using System.Text.Json;
 
@@ -32,8 +31,7 @@ try
 
     // Add services to the container.
 
-    // ע���Զ������Scoped�������ڣ� ÿ�����󴴽�һ����ʵ����
-    builder.Services.AddScoped<IExampleService, ExampleService>();
+    // עԶScopedڣ ÿ󴴽һʵ
     builder.Services.AddScoped<IPipeLimitRuleService, PipeLimitRuleService>();
     builder.Services.AddScoped<IMainMaterialRuleService, MainMaterialRuleService>();
     builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
@@ -51,19 +49,17 @@ try
         });
     });
 
-    // ���� DbContextע��
-    builder.Services.AddDbContext<MyDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    builder.Services.AddDbContext<PmcTestContext>(options =>
+    //  DbContextע
+    builder.Services.AddDbContext<PmcContextLr>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PMC0120")));
 
 
-    // Swagger���ã�API�ĵ���
+    // SwaggerãAPIĵ
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // ע�� AutoMapper
-    builder.Services.AddAutoMapper(typeof(ExampleProfile), typeof(RuleProfiles));
+    // ע AutoMapper
+    builder.Services.AddAutoMapper(typeof(RuleProfiles));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>

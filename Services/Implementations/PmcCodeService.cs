@@ -9,10 +9,10 @@ namespace PMCSystem_Backend.Services.Impletation
 {
     public class PmcCodeService : IPmcCodeService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContextLr _context;
         private readonly ILogger<PmcCodeService> _logger;
 
-        public PmcCodeService(PmcTestContext context, ILogger<PmcCodeService> logger)
+        public PmcCodeService(PmcContextLr context, ILogger<PmcCodeService> logger)
         {
             _context = context;
             _logger = logger;

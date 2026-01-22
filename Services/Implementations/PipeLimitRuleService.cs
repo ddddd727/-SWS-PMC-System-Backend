@@ -9,10 +9,10 @@ namespace PMCSystem_Backend.Services.Impletation
 {
     public class PipeLimitRuleService : IPipeLimitRuleService
     {
-        private readonly PmcTestContext _context;
+        private readonly PmcContextLr _context;
         private readonly IMapper _mapper;
 
-        public PipeLimitRuleService(PmcTestContext context, IMapper mapper)
+        public PipeLimitRuleService(PmcContextLr context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
