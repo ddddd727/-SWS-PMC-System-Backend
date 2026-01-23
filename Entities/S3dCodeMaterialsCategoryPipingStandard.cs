@@ -15,5 +15,5 @@ public partial class S3dCodeMaterialsCategoryPipingStandard
 
     public string PipeStandDesc { get; set; } = null!;
 
-    public int? GeometricIndustryStandardCl { get; set; }
+    public int GeometricIndustryStandardCl { get; set; }
 }

@@ -27,4 +27,3 @@ public partial class S3dCodeAb2b3c2
 
     public string? PressureRatingCode { get; set; }
 }
-

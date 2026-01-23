@@ -27,4 +27,3 @@ public partial class S3dCodeB1b2b3d
 
     public string? ScheduleThicknessCode { get; set; }
 }
-
