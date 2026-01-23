@@ -77,7 +77,8 @@ try
     builder.Services.AddDbContext<PmcContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    builder.Services.AddDbContext<PmcContextLr>();
+    builder.Services.AddDbContext<PmcContextLr>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 

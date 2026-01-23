@@ -38,7 +38,7 @@ public partial class PmcContextLr : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseSqlServer("Data Source=RICK;Initial Catalog=PMC0120;Integrated Security=True;TrustServerCertificate=True");
+            // optionsBuilder.UseSqlServer("Data Source=RICK;Initial Catalog=PMC0120;Integrated Security=True;TrustServerCertificate=True");
         }
     }
 
