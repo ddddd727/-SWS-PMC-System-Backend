@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PMCSystem_Backend.Common.Enums;
 using PMCSystem_Backend.Common.Models;
-using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Controllers
@@ -66,7 +66,6 @@ namespace PMCSystem_Backend.Controllers
             {
                 return Fail(ApiErrorCode.ResourceNotFound, $"船号 {shipNumber} 下暂无PMC编码数据");
             }
-
             return Success(pmcRules, $"成功获取船号 {shipNumber} 的PMC编码信息");
         }
 
@@ -192,6 +191,63 @@ namespace PMCSystem_Backend.Controllers
             catch (Exception ex)
             {
                 return Fail(ApiErrorCode.BusinessRuleViolation, $"查询失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存规格书配置信息
+        /// </summary>
+        /// <param name="request">保存规格书配置请求，包含PMC编码和标准信息列表</param>
+        /// <returns>保存结果</returns>
+        /// <response code="200">保存成功</response>
+        /// <response code="400">请求参数错误或保存失败</response>
+        [HttpPost("SpecRules")]
+        [ProducesResponseType(typeof(ApiResponse), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 400)]
+        public IActionResult SaveSpecRules([FromBody] SaveSpecRulesRequest request)
+        {
+            // 参数验证
+            if (AutoValidate() is IActionResult validationResult)
+            {
+                return validationResult;
+            }
+
+            if (request == null)
+            {
+                return Fail(ApiErrorCode.ValidationError, "请求参数不能为空");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.PmcCode))
+            {
+                return Fail(ApiErrorCode.ValidationError, "PMC编码不能为空");
+            }
+
+            if (request.StandardInfos == null || request.StandardInfos.Count == 0)
+            {
+                return Fail(ApiErrorCode.ValidationError, "标准信息列表不能为空");
+            }
+
+            try
+            {
+                // 调用服务层方法保存规格书配置
+                var result = _pmcSpecService.SaveSpecRules(request.PmcCode, request.StandardInfos);
+
+                if (result)
+                {
+                    return Success("规格书配置保存成功");
+                }
+                else
+                {
+                    return Fail(ApiErrorCode.BusinessRuleViolation, "规格书配置保存失败");
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                return Fail(ApiErrorCode.ValidationError, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return Fail(ApiErrorCode.BusinessRuleViolation, $"保存失败: {ex.Message}");
             }
         }
 

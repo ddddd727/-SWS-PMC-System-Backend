@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
@@ -34,6 +34,7 @@ try
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
     builder.Services.AddScoped<ICodelistService, CodelistService>();
+    builder.Services.AddScoped<IS3dRulePmcDataService, S3dRulePmcDataService>();
     builder.Services.AddScoped<ITemplatePreviewService>(provider =>
     {
         var templateBasePath = builder.Configuration.GetValue<string>("TemplateBasePath") ?? "Templates";

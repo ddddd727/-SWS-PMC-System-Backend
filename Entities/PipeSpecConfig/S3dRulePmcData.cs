@@ -1,8 +1,8 @@
-﻿using PMCSystem_Backend.Models;
+﻿using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using System;
 using System.Collections.Generic;
 
-namespace PMCSystem_Backend.Entities;
+namespace PMCSystem_Backend.Entities.PipeSpecConfig;
 
 public partial class S3dRulePmcData
 {

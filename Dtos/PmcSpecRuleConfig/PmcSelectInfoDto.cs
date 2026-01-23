@@ -1,4 +1,4 @@
-﻿namespace PMCSystem_Backend.Models
+﻿namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
 {
     /// <summary>
     /// 用于根据船号选择对应PMC编码的数据传输

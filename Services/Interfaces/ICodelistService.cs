@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Models;
+﻿using PMCSystem_Backend.Dtos.CodelistTable;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {

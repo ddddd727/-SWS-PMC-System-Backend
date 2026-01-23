@@ -1,4 +1,4 @@
-﻿namespace PMCSystem_Backend.Models
+﻿namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
 {
     /// <summary>
     /// 用于标准配置页面的选择的标准和材料信息

@@ -2,10 +2,10 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using PMCSystem_Backend.MappingProfiles;
-using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
