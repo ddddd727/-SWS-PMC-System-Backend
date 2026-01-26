@@ -7,6 +7,9 @@ using Serilog;
 using System.Text.Json;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Services.Implementations;
+using PMCSystem_Backend.Services.Impletation;
+using PMCSystem_Backend.Services.Interface;
+
 
 // 初始化Serilog
 Log.Logger = new LoggerConfiguration()
@@ -32,6 +35,11 @@ try
     // Add services to the container.
     // 注册业务服务已移动到下方
 
+    // עԶScopedڣ ÿ󴴽һʵ
+    builder.Services.AddScoped<IPipeLimitRuleService, PipeLimitRuleService>();
+    builder.Services.AddScoped<IMainMaterialRuleService, MainMaterialRuleService>();
+    builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
+    builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
     builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
@@ -54,7 +62,8 @@ try
             policy.WithOrigins(
                 "http://localhost:5173",   // Vite 默认端口
                 "http://localhost:3000",   // 一些前端工具默认端口
-                "http://localhost:8080"    // Vue CLI 默认端口
+                "http://localhost:8080"    // Vue 
+                // CLI 默认端口
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -68,14 +77,17 @@ try
     builder.Services.AddDbContext<PmcContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+    builder.Services.AddDbContext<PmcContextLr>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-    // Swagger配置，API文档
+
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // 注册 AutoMapper
-    builder.Services.AddAutoMapper(typeof(PmcProfile), typeof(PmcSpecRuleProfile));
+    // ע AutoMapper
+    builder.Services.AddAutoMapper(typeof(RuleProfiles));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>
@@ -130,7 +142,10 @@ try
     // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
     app.UseMiddleware<ExceptionMiddleware>();
 
-    app.UseHttpsRedirection();
+    // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
+    app.UseMiddleware<ExceptionMiddleware>();
+
+    // app.UseHttpsRedirection();
 
     app.UseCors("AllowVueFrontend");
 
