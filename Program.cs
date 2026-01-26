@@ -7,6 +7,10 @@ using Serilog;
 using System.Text.Json;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Services.Implementations;
+using OfficeOpenXml;
+
+// 设置 EPPlus 许可证上下文（必须在创建任何 ExcelPackage 之前设置）
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业用途，如果是商业用途请使用 LicenseContext.Commercial
 
 // 初始化Serilog
 Log.Logger = new LoggerConfiguration()

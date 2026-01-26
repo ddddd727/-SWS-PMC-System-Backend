@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using PMCSystem_Backend.Common.Enums;
 using PMCSystem_Backend.Services.Interfaces;
 
@@ -8,9 +8,9 @@ namespace PMCSystem_Backend.Controllers
     [Route("api/template-preview")]
     public class TemplatePreviewController : ApiControllerBase
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<TemplatePreviewController> _logger;
         private readonly ITemplatePreviewService _templatePreviewService;
-        public TemplatePreviewController(ITemplatePreviewService templatePreviewService, ILogger logger)
+        public TemplatePreviewController(ITemplatePreviewService templatePreviewService, ILogger<TemplatePreviewController> logger)
         {
             _templatePreviewService = templatePreviewService;
             _logger = logger;

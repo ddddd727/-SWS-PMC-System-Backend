@@ -1,4 +1,4 @@
-﻿using AutoMapper.Execution;
+using AutoMapper.Execution;
 using PMCSystem_Backend.Dtos.TemplatePreview;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Text.RegularExpressions;
@@ -17,37 +17,51 @@ namespace PMCSystem_Backend.Services.Implementations
         public TemplatePreviewResponse GetTemplatePreview(string templateId, Dictionary<string, string> parameters)
         {
             // 1. 验证templateId
+            if (string.IsNullOrWhiteSpace(templateId))
+            {
+                throw new ArgumentException("TemplateId cannot be null or empty", nameof(templateId));
+            }
             if (!Regex.IsMatch(templateId, "^[a-zA-Z0-9_-]+$"))
             {
                 throw new ArgumentException("Invalid templateId format", nameof(templateId));
             }
 
-            // 2. 构建文件路径
+            // 2. 验证parameters
+            parameters ??= new Dictionary<string, string>();
+
+            // 3. 构建文件路径
             string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException("Template file not found", filePath);
             }
 
-            // 3. 解析Excel
+            // 4. 解析Excel
             using var package = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
+            if (package.Workbook.Worksheets.Count == 0)
+            {
+                throw new InvalidOperationException("Excel file contains no worksheets");
+            }
             var sheet = package.Workbook.Worksheets[0];
             var dim = sheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
 
-            // 4. 提取合并单元格
+            // 5. 提取合并单元格
             var mergedCells = new List<MergedCell>();
-            foreach (var mergedCellAddress in sheet.MergedCells)
+            if (sheet.MergedCells != null)
             {
-                var range = sheet.Cells[mergedCellAddress];
-                mergedCells.Add(new MergedCell
+                foreach (var mergedCellAddress in sheet.MergedCells)
                 {
-                    StartRow = range.Start.Row - 1,
-                    StartColumn = range.Start.Column - 1,
-                    EndRow = range.End.Row - 1,
-                    EndColumn = range.End.Column - 1,
-                    Value = range.Text,
-                    Style = ExtractCellStyle(range)
-                });
+                    var range = sheet.Cells[mergedCellAddress];
+                    mergedCells.Add(new MergedCell
+                    {
+                        StartRow = range.Start.Row - 1,
+                        StartColumn = range.Start.Column - 1,
+                        EndRow = range.End.Row - 1,
+                        EndColumn = range.End.Column - 1,
+                        Value = range.Text,
+                        Style = ExtractCellStyle(range)
+                    });
+                }
             }
 
             // 5. 跳过被合并覆盖的单元格
@@ -76,7 +90,10 @@ namespace PMCSystem_Backend.Services.Implementations
                     // 替换参数
                     foreach (var param in parameters)
                     {
-                        cellValue = cellValue.Replace($"{{{{{param.Key}}}}}", param.Value);
+                        if (param.Key != null && param.Value != null)
+                        {
+                            cellValue = cellValue.Replace($"{{{{{param.Key}}}}}", param.Value);
+                        }
                     }
                     cells.Add(new PreviewCell
                     {
@@ -93,16 +110,31 @@ namespace PMCSystem_Backend.Services.Implementations
 
             // 7. 注入动态数据
             var businessData = GetBusinessData(parameters);
-            foreach (var cell in cells)
+            if (businessData != null && businessData.Count > 0)
             {
-                if (cell.Field?.StartsWith("material") == true)
-                    cell.Value = businessData[0];
+                foreach (var cell in cells)
+                {
+                    if (cell.Field?.StartsWith("material") == true)
+                        cell.Value = businessData[0];
+                }
+            }
+
+            // 8. 安全获取标题
+            string title = string.Empty;
+            try
+            {
+                title = sheet.Cells["A1"]?.Text ?? string.Empty;
+            }
+            catch
+            {
+                // 如果A1单元格不存在，使用空字符串
+                title = string.Empty;
             }
 
             return new TemplatePreviewResponse
             {
                 TemplateId = templateId,
-                Title = sheet.Cells["A1"].Text,
+                Title = title,
                 Grid = new GridInfo
                 {
                     RowCount = dim.Rows,
@@ -122,20 +154,31 @@ namespace PMCSystem_Backend.Services.Implementations
         public byte[] ExportTemplate(string templateId, Dictionary<string, string> parameters)
         {
             // 1. 验证templateId
+            if (string.IsNullOrWhiteSpace(templateId))
+            {
+                throw new ArgumentException("TemplateId cannot be null or empty", nameof(templateId));
+            }
             if (!Regex.IsMatch(templateId, "^[a-zA-Z0-9_-]+$"))
             {
                 throw new ArgumentException("Invalid templateId format", nameof(templateId));
             }
 
-            // 2. 构建文件路径
+            // 2. 验证parameters
+            parameters ??= new Dictionary<string, string>();
+
+            // 3. 构建文件路径
             string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException("Template file not found", filePath);
             }
 
-            // 3. 读取原始Excel模板
+            // 4. 读取原始Excel模板
             using var sourcePackage = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
+            if (sourcePackage.Workbook.Worksheets.Count == 0)
+            {
+                throw new InvalidOperationException("Excel file contains no worksheets");
+            }
             var sourceSheet = sourcePackage.Workbook.Worksheets[0];
             var dim = sourceSheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
 
@@ -158,6 +201,9 @@ namespace PMCSystem_Backend.Services.Implementations
         /// </summary>
         private void CopySheetContent(OfficeOpenXml.ExcelWorksheet sourceSheet, OfficeOpenXml.ExcelWorksheet exportSheet, OfficeOpenXml.ExcelAddress dim, Dictionary<string, string> parameters)
         {
+            // 确保parameters不为null
+            parameters ??= new Dictionary<string, string>();
+
             // 复制普通单元格内容和样式
             for (int r = 1; r <= dim.Rows; r++)
             {
@@ -170,7 +216,10 @@ namespace PMCSystem_Backend.Services.Implementations
                     var cellValue = sourceCell.Text;
                     foreach (var param in parameters)
                     {
-                        cellValue = cellValue.Replace($"{{{{{param.Key}}}}}", param.Value);
+                        if (param.Key != null && param.Value != null)
+                        {
+                            cellValue = cellValue.Replace($"{{{{{param.Key}}}}}", param.Value);
+                        }
                     }
                     exportCell.Value = cellValue;
 
@@ -180,9 +229,12 @@ namespace PMCSystem_Backend.Services.Implementations
             }
 
             // 复制合并单元格
-            foreach (var mergedCell in sourceSheet.MergedCells.ToList())
+            if (sourceSheet.MergedCells != null)
             {
-                exportSheet.Cells[mergedCell].Merge = true;
+                foreach (var mergedCell in sourceSheet.MergedCells.ToList())
+                {
+                    exportSheet.Cells[mergedCell].Merge = true;
+                }
             }
 
             // 复制列宽
@@ -257,7 +309,7 @@ namespace PMCSystem_Backend.Services.Implementations
             // }
         }
 
-        private CellStyle ExtractCellStyle(OfficeOpenXml.ExcelRange cell)
+        private CellStyle? ExtractCellStyle(OfficeOpenXml.ExcelRange cell)
         {
             var rgb = cell.Style.Fill.BackgroundColor?.Rgb;
             string? hex = rgb != null && rgb.Length == 8 ? $"#{rgb[2..]}" : null;
@@ -266,7 +318,14 @@ namespace PMCSystem_Backend.Services.Implementations
 
             var weight = cell.Style.Font.Bold ? "bold" : "normal";
 
-            return (hex == null && align == "left" && weight == "normal") ? null : new CellStyle(hex, align, weight); 
+            // 如果所有样式都是默认值，返回 null
+            if (hex == null && align == "left" && weight == "normal")
+            {
+                return null;
+            }
+
+            // CellStyle 构造函数接受可空参数，所以可以安全传递 null
+            return new CellStyle(hex, align, weight);
         }
 
         // 业务数据模拟（实际项目需要替换）
