@@ -48,6 +48,21 @@ try
     builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
+    
+    // 补全缺失的服务注册
+    builder.Services.AddScoped<IS3dCodeAb2b3c2ViewService, S3dCodeAb2b3c2ViewService>();
+    builder.Services.AddScoped<IS3dCodeB1b2b3dViewService, S3dCodeB1b2b3dViewService>();
+    builder.Services.AddScoped<IS3dCodeC1c2ViewService, S3dCodeC1c2ViewService>();
+    builder.Services.AddScoped<IS3dCodeFlangeStandPressureRatingService, S3dCodeFlangeStandPressureRatingService>();
+    builder.Services.AddScoped<IS3dCodeMaterialsCategoryPipingStandardService, S3dCodeMaterialsCategoryPipingStandardService>();
+    builder.Services.AddScoped<IS3dCodeMaterialsCategoryScheduleThicknessService, S3dCodeMaterialsCategoryScheduleThicknessService>();
+    builder.Services.AddScoped<IS3dCodePipingClassViewService, S3dCodePipingClassViewService>();
+    builder.Services.AddScoped<IS3dCodePipingStandardMaterialsGradeService, S3dCodePipingStandardMaterialsGradeService>();
+    builder.Services.AddScoped<IS3dCodePipingStandardPressureRatingService, S3dCodePipingStandardPressureRatingService>();
+    builder.Services.AddScoped<IS3dRuleAb2b3c2Service, S3dRuleAb2b3c2Service>();
+    builder.Services.AddScoped<IS3dRuleB1b2b3dService, S3dRuleB1b2b3dService>();
+    builder.Services.AddScoped<IS3dRuleC1c2Service, S3dRuleC1c2Service>();
+
     // 注册服务层的接口与实现
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
@@ -70,6 +85,9 @@ try
         });
     });
 
+    //  DbContextע
+    builder.Services.AddDbContext<SpecContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     // 注册多个 DbContext
     builder.Services.AddDbContext<PmcContextCky>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -146,6 +164,8 @@ try
     app.UseMiddleware<ExceptionMiddleware>();
 
     // app.UseHttpsRedirection();
+
+    app.UseMiddleware<ExceptionMiddleware>();
 
     app.UseCors("AllowVueFrontend");
 

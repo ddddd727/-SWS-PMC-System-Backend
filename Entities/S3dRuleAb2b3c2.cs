@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
 
-public partial class S3dCodeAb2b3c2
+public partial class S3dRuleAb2b3c2
 {
     public int Id { get; set; }
 
@@ -18,12 +18,4 @@ public partial class S3dCodeAb2b3c2
     public string? RuleName { get; set; }
 
     public bool Status { get; set; }
-
-    public string? PipingClassCode { get; set; }
-
-    public string? PipingStandardCode { get; set; }
-
-    public string? MaterialsGradeCode { get; set; }
-
-    public string? PressureRatingCode { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
@@ -13,3 +13,4 @@ public partial class S3dCodePipingClass
 
     public int CodeListNumber { get; set; }
 }
+
