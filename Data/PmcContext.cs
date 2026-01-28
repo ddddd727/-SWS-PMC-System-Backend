@@ -39,7 +39,7 @@ public partial class PmcContext : DbContext
 
     public virtual DbSet<S3dCommonCodeListHierarchy> S3dCommonCodeListHierarchies { get; set; }
 
-    public virtual DbSet<PMCSystem_Backend.Entities.S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
+    public virtual DbSet<S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
 
     public virtual DbSet<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; }
 
