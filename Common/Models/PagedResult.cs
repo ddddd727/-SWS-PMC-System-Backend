@@ -4,7 +4,7 @@ namespace PMCSystem_Backend.Common.Models
 {
     public class PagedResult<T>
     {
-        public List<T> Items { get; set; }
+        public List<T>? Items { get; set; }
         public int TotalCount { get; set; }
         public int PageIndex { get; set; }
         public int PageSize { get; set; }
@@ -28,10 +28,10 @@ namespace PMCSystem_Backend.Common.Models
         [Range(1, 100, ErrorMessage ="每页数量必须在1-100之间")]
         public int PageSize { get; set; } = 20;
 
-        public string SortBy { get; set; }
+        public string? SortBy { get; set; }
 
         public bool IsDescending { get; set; } = true;
 
-        public string Keyword { get; set; }
+        public string? Keyword { get; set; }
     }
 }
