@@ -1,4 +1,4 @@
-﻿namespace PMCSystem_Backend.Models
+﻿namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
 {
     /// <summary>
     /// 7位编码PMC未进行附件添加时的基础信息

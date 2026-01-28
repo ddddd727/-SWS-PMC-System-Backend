@@ -1,4 +1,4 @@
-﻿namespace PMCSystem_Backend.Models
+﻿namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
 {
     public class PmcSpecInfoDto
     {

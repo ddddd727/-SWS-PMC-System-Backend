@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/PMCSystem_Backend.csproj",
+                "${workspaceFolder}/PMCSystem_Backend.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/PMCSystem_Backend.csproj",
+                "${workspaceFolder}/PMCSystem_Backend.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/PMCSystem_Backend.csproj"
+                "${workspaceFolder}/PMCSystem_Backend.sln"
             ],
             "problemMatcher": "$msCompile"
         }

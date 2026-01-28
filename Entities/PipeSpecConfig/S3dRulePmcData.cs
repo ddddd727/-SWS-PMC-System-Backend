@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Models;
+﻿using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using System;
 using System.Collections.Generic;
 

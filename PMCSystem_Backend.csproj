@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>264639e5-e10a-4749-8542-30945cb1e00b</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,11 +25,15 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+    <PackageReference Include="EPPlus" Version=" 7.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Entities\TempEntities\" />
-    <Folder Include="Migrations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="appsettings.Development.json" />
   </ItemGroup>
 
 </Project>
