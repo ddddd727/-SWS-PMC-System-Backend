@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Dtos.TemplatePreview;
+using PMCSystem_Backend.Dtos.TemplatePreview;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {
@@ -12,6 +12,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <param name="templateId">模板ID</param>
         /// <param name="parameters">模板参数</param>
         /// <returns>Excel文件的字节流</returns>
-        byte[] ExportTemplate(string templateId, Dictionary<string, string> parameters);
+        byte[] ExportTemplate(string templateId, Dictionary<string, string>? parameters);
     }
 }

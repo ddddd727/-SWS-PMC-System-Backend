@@ -151,7 +151,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <param name="templateId">模板ID</param>
         /// <param name="parameters">模板参数</param>
         /// <returns>Excel文件的字节流</returns>
-        public byte[] ExportTemplate(string templateId, Dictionary<string, string> parameters)
+        public byte[] ExportTemplate(string templateId, Dictionary<string, string>? parameters)
         {
             // 1. 验证templateId
             if (string.IsNullOrWhiteSpace(templateId))
@@ -173,117 +173,68 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new FileNotFoundException("Template file not found", filePath);
             }
 
-            // 4. 读取原始Excel模板
-            using var sourcePackage = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
-            if (sourcePackage.Workbook.Worksheets.Count == 0)
+            // 4. 读取模板并就地修改（不新建工作簿复制，避免样式/合并复制导致文件损坏）
+            using var package = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
+            if (package.Workbook.Worksheets.Count == 0)
             {
                 throw new InvalidOperationException("Excel file contains no worksheets");
             }
-            var sourceSheet = sourcePackage.Workbook.Worksheets[0];
-            var dim = sourceSheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
+            var sheet = package.Workbook.Worksheets[0];
+            var dim = sheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
 
-            // 4. 创建新的Excel包用于导出
-            using var exportPackage = new OfficeOpenXml.ExcelPackage();
-            var exportSheet = exportPackage.Workbook.Worksheets.Add("Export");
+            // 5. 合并区域中非左上角单元格视为“幽灵”，不写入避免破坏合并
+            var ghostSet = BuildGhostCellSet(sheet);
 
-            // 5. 复制所有单元格内容、样式和合并信息
-            CopySheetContent(sourceSheet, exportSheet, dim, parameters);
-
-            // 6. 填充业务数据
-            FillBusinessData(exportSheet, parameters);
-
-            // 7. 生成Excel文件并返回字节流
-            return exportPackage.GetAsByteArray();
-        }
-
-        /// <summary>
-        /// 复制Excel表格内容、样式和格式
-        /// </summary>
-        private void CopySheetContent(OfficeOpenXml.ExcelWorksheet sourceSheet, OfficeOpenXml.ExcelWorksheet exportSheet, OfficeOpenXml.ExcelAddress dim, Dictionary<string, string> parameters)
-        {
-            // 确保parameters不为null
-            parameters ??= new Dictionary<string, string>();
-
-            // 复制普通单元格内容和样式
+            // 6. 替换模板参数（仅修改非幽灵单元格）
             for (int r = 1; r <= dim.Rows; r++)
             {
                 for (int c = 1; c <= dim.Columns; c++)
                 {
-                    var sourceCell = sourceSheet.Cells[r, c];
-                    var exportCell = exportSheet.Cells[r, c];
-
-                    // 复制值并替换参数
-                    var cellValue = sourceCell.Text;
-                    foreach (var param in parameters)
+                    if (ghostSet.Contains((r, c))) continue;
+                    var cell = sheet.Cells[r, c];
+                    var cellValue = cell.Text ?? string.Empty;
+                    foreach (var p in parameters)
                     {
-                        if (param.Key != null && param.Value != null)
+                        if (p.Key != null && p.Value != null)
                         {
-                            cellValue = cellValue.Replace($"{{{{{param.Key}}}}}", param.Value);
+                            cellValue = cellValue.Replace($"{{{{{p.Key}}}}}", p.Value);
                         }
                     }
-                    exportCell.Value = cellValue;
-
-                    // 复制样式
-                    CopyCellStyle(sourceCell, exportCell);
+                    cell.Value = cellValue;
                 }
             }
 
-            // 复制合并单元格
-            if (sourceSheet.MergedCells != null)
-            {
-                foreach (var mergedCell in sourceSheet.MergedCells.ToList())
-                {
-                    exportSheet.Cells[mergedCell].Merge = true;
-                }
-            }
+            // 7. 填充业务数据
+            FillBusinessData(sheet, parameters);
 
-            // 复制列宽
-            for (int c = 1; c <= dim.Columns; c++)
-            {
-                exportSheet.Column(c).Width = sourceSheet.Column(c).Width;
-            }
-
-            // 复制行高
-            for (int r = 1; r <= dim.Rows; r++)
-            {
-                exportSheet.Row(r).Height = sourceSheet.Row(r).Height;
-            }
+            // 8. 使用 MemoryStream + SaveAs 替代 GetAsByteArray，避免已知的文件损坏问题
+            using var ms = new MemoryStream();
+            package.SaveAs(ms);
+            ms.Position = 0;
+            return ms.ToArray();
         }
 
         /// <summary>
-        /// 复制单元格样式
+        /// 构建合并区域内“幽灵”单元格集合（除每个合并区左上角外的单元格）。写入这些单元格会破坏合并结构。
         /// </summary>
-        private void CopyCellStyle(OfficeOpenXml.ExcelRange sourceCell, OfficeOpenXml.ExcelRange exportCell)
+        private static HashSet<(int Row, int Col)> BuildGhostCellSet(OfficeOpenXml.ExcelWorksheet sheet)
         {
-            // 复制字体
-            exportCell.Style.Font.Name = sourceCell.Style.Font.Name;
-            exportCell.Style.Font.Size = sourceCell.Style.Font.Size;
-            exportCell.Style.Font.Bold = sourceCell.Style.Font.Bold;
-            exportCell.Style.Font.Italic = sourceCell.Style.Font.Italic;
-
-            // 复制背景颜色
-            if (sourceCell.Style.Fill.BackgroundColor?.Rgb != null)
+            var set = new HashSet<(int, int)>();
+            if (sheet.MergedCells == null) return set;
+            foreach (var addr in sheet.MergedCells)
             {
-                exportCell.Style.Fill.PatternType = sourceCell.Style.Fill.PatternType;
-                try
+                var range = sheet.Cells[addr];
+                int sr = range.Start.Row, sc = range.Start.Column, er = range.End.Row, ec = range.End.Column;
+                for (int r = sr; r <= er; r++)
                 {
-                    exportCell.Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml($"#{sourceCell.Style.Fill.BackgroundColor.Rgb[2..]}"));
-                }
-                catch
-                {
-                    // 如果颜色转换失败，跳过颜色复制
+                    for (int c = sc; c <= ec; c++)
+                    {
+                        if (r != sr || c != sc)
+                            set.Add((r, c));
+                    }
                 }
             }
-
-            // 复制对齐方式
-            exportCell.Style.HorizontalAlignment = sourceCell.Style.HorizontalAlignment;
-            exportCell.Style.VerticalAlignment = sourceCell.Style.VerticalAlignment;
-
-            // 复制边框
-            exportCell.Style.Border.Left.Style = sourceCell.Style.Border.Left.Style;
-            exportCell.Style.Border.Right.Style = sourceCell.Style.Border.Right.Style;
-            exportCell.Style.Border.Top.Style = sourceCell.Style.Border.Top.Style;
-            exportCell.Style.Border.Bottom.Style = sourceCell.Style.Border.Bottom.Style;
+            return set;
         }
 
         /// <summary>
