@@ -1,4 +1,4 @@
-﻿namespace PMCSystem_Backend.Entities.PipeSpecConfig
+namespace PMCSystem_Backend.Entities.PipeSpecConfig
 {
     /// <summary>
     ///  船型船号信息（模拟，最终信息会从DSP中接口获取）

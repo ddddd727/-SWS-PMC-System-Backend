@@ -7,6 +7,12 @@ using Serilog;
 using System.Text.Json;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Services.Implementations;
+using PMCSystem_Backend.Services.Impletation;
+using PMCSystem_Backend.Services.Interface;
+using OfficeOpenXml;
+
+// 设置 EPPlus 许可证上下文（必须在创建任何 ExcelPackage 之前设置）
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业用途，如果是商业用途请使用 LicenseContext.Commercial
 
 // 初始化Serilog
 Log.Logger = new LoggerConfiguration()
@@ -32,6 +38,36 @@ try
     builder.Services.AddScoped<IDictService, DictService>();
 
     // Add services to the container.
+    // 注册业务服务已移动到下方
+
+    // עԶScopedڣ ÿ󴴽һʵ
+    builder.Services.AddScoped<IPipeLimitRuleService, PipeLimitRuleService>();
+    builder.Services.AddScoped<IMainMaterialRuleService, MainMaterialRuleService>();
+    builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
+    builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
+    // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
+    builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
+    builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
+    builder.Services.AddScoped<IPipingBendParameterCodeConvertedService, PipingBendParameterCodeConvertedService>();
+    builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
+    builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
+    builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
+    
+    // 补全缺失的服务注册
+    builder.Services.AddScoped<IS3dCodeAb2b3c2ViewService, S3dCodeAb2b3c2ViewService>();
+    builder.Services.AddScoped<IS3dCodeB1b2b3dViewService, S3dCodeB1b2b3dViewService>();
+    builder.Services.AddScoped<IS3dCodeC1c2ViewService, S3dCodeC1c2ViewService>();
+    builder.Services.AddScoped<IS3dCodeFlangeStandPressureRatingService, S3dCodeFlangeStandPressureRatingService>();
+    builder.Services.AddScoped<IS3dCodeMaterialsCategoryPipingStandardService, S3dCodeMaterialsCategoryPipingStandardService>();
+    builder.Services.AddScoped<IS3dCodeMaterialsCategoryScheduleThicknessService, S3dCodeMaterialsCategoryScheduleThicknessService>();
+    builder.Services.AddScoped<IS3dCodePipingClassViewService, S3dCodePipingClassViewService>();
+    builder.Services.AddScoped<IS3dCodePipingStandardMaterialsGradeService, S3dCodePipingStandardMaterialsGradeService>();
+    builder.Services.AddScoped<IS3dCodePipingStandardPressureRatingService, S3dCodePipingStandardPressureRatingService>();
+    builder.Services.AddScoped<IS3dRuleAb2b3c2Service, S3dRuleAb2b3c2Service>();
+    builder.Services.AddScoped<IS3dRuleB1b2b3dService, S3dRuleB1b2b3dService>();
+    builder.Services.AddScoped<IS3dRuleC1c2Service, S3dRuleC1c2Service>();
+
     // 注册服务层的接口与实现
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
     builder.Services.AddScoped<IPmcSpecService, PmcSpecService>();
@@ -49,24 +85,38 @@ try
     {
         options.AddPolicy("AllowVueFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:3000")     // Vue默认端口，部署时替换为实际前端URL
+            policy.WithOrigins(
+                "http://localhost:5173",   // Vite 默认端口
+                "http://localhost:3000",   // 一些前端工具默认端口
+                "http://localhost:8080"    // Vue 
+                // CLI 默认端口
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
         });
     });
 
-    // 注册 DbContext
+    //  DbContextע
+    builder.Services.AddDbContext<SpecContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    // 注册多个 DbContext
+    builder.Services.AddDbContext<PmcContextCky>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
     builder.Services.AddDbContext<PmcContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddDbContext<PmcContextLr>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 
-    // Swagger配置，API文档
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // 注册 AutoMapper
-    builder.Services.AddAutoMapper(typeof(PmcSpecRuleProfile));
+    // ע AutoMapper
+    builder.Services.AddAutoMapper(typeof(RuleProfiles));
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>
@@ -123,7 +173,12 @@ try
     // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
     app.UseMiddleware<ExceptionMiddleware>();
 
-    app.UseHttpsRedirection();
+    // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
+    app.UseMiddleware<ExceptionMiddleware>();
+
+    // app.UseHttpsRedirection();
+
+    app.UseMiddleware<ExceptionMiddleware>();
 
     app.UseCors("AllowVueFrontend");
 

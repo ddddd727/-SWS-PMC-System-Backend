@@ -1,11 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Configuration;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
-using System;
-using System.Collections.Generic;
-using System.Text.Json;
+using PMCSystem_Backend.Models;
 
 namespace PMCSystem_Backend.Data;
 
@@ -300,7 +302,7 @@ public partial class PmcContext : DbContext
                 .HasConstraintName("DSP_CodeListHierarchy_DSP_CodeListTable_FK");
         });
 
-        modelBuilder.Entity<S3dCommonCodeListTable>(entity =>
+        modelBuilder.Entity<PMCSystem_Backend.Entities.PipeSpecConfig.S3dCommonCodeListTable>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__UD_CodeL__3214EC27484123D6");
 

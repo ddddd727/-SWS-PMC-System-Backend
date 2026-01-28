@@ -66,6 +66,8 @@ dotnet build            # 构建检查
 dotnet ef database update
 
 dotnet run              # 或在 Visual Studio 按 F5
+dotnet run --launch-profile http
+http://localhost:5022/swagger/index.html
 ```
 
 运行成功后，浏览器自动打开 **Swagger UI**：`https://localhost:{端口}/swagger`

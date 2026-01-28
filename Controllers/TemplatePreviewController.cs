@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using PMCSystem_Backend.Common.Enums;
 using PMCSystem_Backend.Services.Interfaces;
 
@@ -8,16 +8,16 @@ namespace PMCSystem_Backend.Controllers
     [Route("api/template-preview")]
     public class TemplatePreviewController : ApiControllerBase
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<TemplatePreviewController> _logger;
         private readonly ITemplatePreviewService _templatePreviewService;
-        public TemplatePreviewController(ITemplatePreviewService templatePreviewService, ILogger logger)
+        public TemplatePreviewController(ITemplatePreviewService templatePreviewService, ILogger<TemplatePreviewController> logger)
         {
             _templatePreviewService = templatePreviewService;
             _logger = logger;
         }
 
         [HttpGet("{templateId}")]
-        public IActionResult GetPreview([FromQuery] string templateId, [FromQuery] Dictionary<string, string> parameters)
+        public IActionResult GetPreview([FromRoute] string templateId, [FromQuery] Dictionary<string, string>? parameters)
         {
             try
             {
@@ -27,12 +27,12 @@ namespace PMCSystem_Backend.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting template preview for templateId: {TemplateId}", templateId);
-                return Fail(ApiErrorCode.SystemError,"Internal server error");
+                return Fail(ApiErrorCode.SystemError, "Internal server error");
             }
         }
 
         [HttpPost("export/{templateId}")]
-        public IActionResult Export(string templateId, [FromQuery] Dictionary<string, string> parameters)
+        public IActionResult Export([FromRoute] string templateId, [FromQuery] Dictionary<string, string>? parameters)
         {
             try
             {

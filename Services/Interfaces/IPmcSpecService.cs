@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using System.Net;
@@ -14,7 +14,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// 获取所有船型船号信息
         /// </summary>
         /// <returns>船型信息</returns>
-        List<ShipInfo> GetShipInfos();
+        List<PMCSystem_Backend.Entities.PipeSpecConfig.ShipInfo> GetShipInfos();
 
 
         /// <summary>

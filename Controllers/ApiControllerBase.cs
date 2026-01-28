@@ -57,7 +57,7 @@ namespace PMCSystem_Backend.Controllers
         /// <summary>
         /// 失败响应
         /// </summary>
-        protected IActionResult Fail(ApiErrorCode errorCode, string message = null)
+        protected IActionResult Fail(ApiErrorCode errorCode, string? message = null)
         {
             var errorMessage = message ?? GetDefaultErrorMessage(errorCode);
             var response = ApiResponse.Fail((int)errorCode, errorMessage);
@@ -79,11 +79,11 @@ namespace PMCSystem_Backend.Controllers
         protected IActionResult ValidationFailed()
         {
             var errors = ModelState
-                .Where(e => e.Value.Errors.Count > 0)
+                .Where(e => e.Value?.Errors.Count > 0)
                 .Select(e => new ApiError
                 {
                     Field = e.Key,
-                    Message = e.Value.Errors.First().ErrorMessage,
+                    Message = e.Value?.Errors.First().ErrorMessage,
                     ErrorCode = "VALIDATION_ERROR"
                 }).ToList();
 
@@ -100,7 +100,7 @@ namespace PMCSystem_Backend.Controllers
         /// <summary>
         /// 自定义错误响应
         /// </summary>
-        protected IActionResult Error<T>(ApiErrorCode errorCode, T data, string message = null)
+        protected IActionResult Error<T>(ApiErrorCode errorCode, T data, string? message = null)
         {
             var errorMessage = message ?? GetDefaultErrorMessage(errorCode);
             var response = ApiResponse<T>.Fail((int)errorCode, errorMessage, data);
@@ -126,7 +126,7 @@ namespace PMCSystem_Backend.Controllers
         /// <summary>
         /// 自动处理ModelState验证
         /// </summary>
-        protected IActionResult AutoValidate()
+        protected IActionResult? AutoValidate()
         {
             if (!ModelState.IsValid)
             {
