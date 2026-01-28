@@ -29,6 +29,8 @@ try
         .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
+    builder.Services.AddScoped<IDictService, DictService>();
+
     // Add services to the container.
     // 注册服务层的接口与实现
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
@@ -71,7 +73,8 @@ try
     {
         options.Filters.Add(new ProducesAttribute("application/json"));
     });
-   
+
+    builder.Configuration.AddJsonFile("Configs/dicts.json", optional: true, reloadOnChange: true);
 
     // 配置JSON序列化
     builder.Services.AddControllers()
