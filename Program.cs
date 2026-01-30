@@ -35,6 +35,8 @@ try
         .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
+    builder.Services.AddScoped<IDictService, DictService>();
+
     // Add services to the container.
     // 注册业务服务已移动到下方
 
@@ -121,7 +123,8 @@ try
     {
         options.Filters.Add(new ProducesAttribute("application/json"));
     });
-   
+
+    builder.Configuration.AddJsonFile("Configs/dicts.json", optional: true, reloadOnChange: true);
 
     // 配置JSON序列化
     builder.Services.AddControllers()
