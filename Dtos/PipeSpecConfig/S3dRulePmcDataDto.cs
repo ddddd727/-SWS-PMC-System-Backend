@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
+namespace PMCSystem_Backend.Dtos.PipeSpecConfig
 {
     /// <summary>
     /// S3dRulePmcData 响应DTO

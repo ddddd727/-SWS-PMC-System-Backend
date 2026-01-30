@@ -1,4 +1,4 @@
-namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
+namespace PMCSystem_Backend.Dtos.PipeSpecConfig
 {
     public class ComponentTypeInfoDto
     {

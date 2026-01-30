@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
+namespace PMCSystem_Backend.Dtos.PipeSpecConfig
 {
     /// <summary>
     /// 保存规格书配置请求

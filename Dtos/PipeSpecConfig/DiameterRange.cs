@@ -1,4 +1,4 @@
-﻿namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
+﻿namespace PMCSystem_Backend.Dtos.PipeSpecConfig
 {
     /// <summary>
     /// 通径范围内容

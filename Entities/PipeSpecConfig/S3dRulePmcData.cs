@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+﻿using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using System;
 using System.Collections.Generic;
 
