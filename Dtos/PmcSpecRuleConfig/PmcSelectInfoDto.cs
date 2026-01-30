@@ -15,7 +15,7 @@
         public string Material { get; set; }
 
         // 管材标准
-        public string PipeStadard { get; set; }
+        public string PipeStandard { get; set; }
 
         // PMC 编码状态
         public string status { get; set; }

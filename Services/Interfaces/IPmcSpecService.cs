@@ -1,3 +1,4 @@
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
@@ -15,6 +16,12 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <returns>船型信息</returns>
         List<PMCSystem_Backend.Entities.PipeSpecConfig.ShipInfo> GetShipInfos();
+
+        /// <summary>
+        /// 获取所有部件类型信息
+        /// </summary>
+        /// <returns>部件类型列表</returns>
+        List<ComponentTypeInfoDto> GetComponentTypes();
 
 
         /// <summary>

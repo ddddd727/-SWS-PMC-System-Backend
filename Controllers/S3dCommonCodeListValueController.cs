@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Dtos.DesignRules;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Controllers

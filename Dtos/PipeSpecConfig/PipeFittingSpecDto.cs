@@ -1,4 +1,4 @@
-﻿namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
+﻿namespace PMCSystem_Backend.Dtos.PipeSpecConfig
 {
     /// <summary>
     /// 用于标准配置页面的选择的标准和材料信息

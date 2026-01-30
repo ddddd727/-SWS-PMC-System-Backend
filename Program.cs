@@ -40,7 +40,7 @@ try
     // Add services to the container.
     // 注册业务服务已移动到下方
 
-    // עԶScopedڣ ÿ󴴽һʵ
+
     builder.Services.AddScoped<IPipeLimitRuleService, PipeLimitRuleService>();
     builder.Services.AddScoped<IMainMaterialRuleService, MainMaterialRuleService>();
     builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
@@ -96,7 +96,7 @@ try
         });
     });
 
-    //  DbContextע
+    //  DbContext
     builder.Services.AddDbContext<SpecContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     // 注册多个 DbContext

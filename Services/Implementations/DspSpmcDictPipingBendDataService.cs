@@ -1,8 +1,8 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Dtos.DesignRules;
 using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations

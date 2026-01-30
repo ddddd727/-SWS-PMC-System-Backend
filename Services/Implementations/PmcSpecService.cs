@@ -1,7 +1,8 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
@@ -13,16 +14,20 @@ namespace PMCSystem_Backend.Services.Implementations
     public class PmcSpecService : IPmcSpecService
     {
         private readonly PmcContext _context;
+
+        // 暂时采用不同的PmcContext进行，防止冲突
+        private readonly PmcContextCky _ckyContext;
         private readonly IMapper _mapper;
         private readonly ICodelistService _codelistService;
         private readonly ILogger<PmcSpecService> _logger;
 
-        public PmcSpecService(PmcContext context, IMapper mapper, ICodelistService codelistService, ILogger<PmcSpecService> logger)
+        public PmcSpecService(PmcContext context, IMapper mapper, ICodelistService codelistService, ILogger<PmcSpecService> logger, PmcContextCky pmcContextCky)
         {
             _context = context;
             _mapper = mapper;
             _codelistService = codelistService;
             _logger = logger;
+            _ckyContext = pmcContextCky;
         }
 
         /// <summary>
@@ -67,7 +72,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 PipingClass = entity.PipingClassName,
                 MaterialGrade = entity.MaterialsGradeName,
                 PressureRating = entity.PressureRatingName,
-                PipeStandard = entity.PipingStandardName[0].StandardName,
+                PipeStandard = entity.PipingStandardName,
                 MaterialCategory = entity.MaterialsCategoryName,
                 WallThickness = entity.ScheduleThicknessName
             };
@@ -90,19 +95,24 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("端面标准和壁厚系列不能为空");
             }
 
-            // 将字符串参数转换为 int（假设参数是代码值的字符串形式）
-            // 如果转换失败，可能需要通过 CodeList 表查找对应的 CodeListNumber
-            if (!int.TryParse(EndStandard, out int endStandardCl) || !int.TryParse(Schedule, out int scheduleCl))
-            {
-                _logger.LogError("端面标准或壁厚系列格式不正确，无法转换为整数值");
-                throw new ArgumentException("端面标准或壁厚系列格式不正确，无法转换为整数值");
-            }
-
             // 查询数据库中符合条件的数据
-            var queryResult = _context.S3dCommonPlainPipingGenericData
-                .Where(x => x.EndStandardCl == endStandardCl && x.ScheduleCl == scheduleCl)
-                .AsNoTracking()
-                .ToList();
+            //var queryResult = _context.S3dCommonPlainPipingGenericData
+            //    .Where(x => x.EndStandardCl == endStandardCl && x.ScheduleCl == scheduleCl)
+            //    .AsNoTracking()
+            //    .ToList();
+
+            // 更改当前的NPD通径范围的获取路径
+            //var queryResult = _ckyContext.S3dCodeWallThicknesses
+            //                    .Where(x => x.EndStandard == EndStandard && x.ScheduleThickness == Schedule)
+            //                    .AsNoTracking()
+            //                    .ToList();
+
+            // 从S3d_WallThickness_Info视图中获取通径范围信息
+            var queryResult = _context.S3dWallThicknessInfo
+                                .Where(x => x.GeometricIndustryStandard == EndStandard && x.ScheduleThickness == Schedule)
+                                .AsNoTracking()
+                                .ToList();
+
 
             // 构建返回结果
             var result = new SpecNPDInfoDto
@@ -110,20 +120,20 @@ namespace PMCSystem_Backend.Services.Implementations
                 EndStandard = EndStandard,
                 Schedule = Schedule,
                 NPD = queryResult
-                    .Where(x => x.NominalPipingDiameter > 0)
-                    .Select(x => (double)x.NominalPipingDiameter)
+                    .Where(x => x.NormalDiameter > 0)
+                    .Select(x => (double)x.NormalDiameter)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList(),
                 OutsideDiameter = queryResult
-                    .Where(x => x.PipingOutsideDiameter.HasValue && x.PipingOutsideDiameter.Value > 0)
-                    .Select(x => (double)x.PipingOutsideDiameter!.Value)
+                    .Where(x => x.PipingOutsideDiameter > 0)
+                    .Select(x => (double)x.PipingOutsideDiameter)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList(),
                 WallThickness = queryResult
-                    .Where(x => x.WallThickness.HasValue && x.WallThickness.Value > 0)
-                    .Select(x => (double)x.WallThickness!.Value)
+                    .Where(x => x.WallThickness > 0)
+                    .Select(x => (double)x.WallThickness)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList()
@@ -210,8 +220,16 @@ namespace PMCSystem_Backend.Services.Implementations
                     }
                 }
 
+                // 如果查找均为将code转换为对应的短描述，则说明未成功查询到符合条件的标准
+                if (standardName == code.ToString())
+                {
+                    return new List<PipeFittingSpecDto>();
+                }
+
                 // 通过 GetMaterialListByStandard 方法获取材料列表，不进行 commodityType 过滤
                 List<string> materialList = new List<string>();
+                
+
                 try
                 {
                     materialList = GetMaterialListByStandard(standardName, compnentType, string.Empty);
@@ -269,6 +287,25 @@ namespace PMCSystem_Backend.Services.Implementations
                 new ShipInfo {shipNumber = "H1603", shipType = "民船" }
             };
             return shipInfos;
+        }
+
+        /// <summary>
+        /// 获取所有部件类型信息
+        /// </summary>
+        /// <returns>部件类型列表</returns>
+        public List<ComponentTypeInfoDto> GetComponentTypes()
+        {
+            var componentTypes = _context.S3dDictPipingComponentTypes
+                .AsNoTracking()
+                .Select(x => new ComponentTypeInfoDto
+                {
+                    ComponentTypeName = x.ComponentTypeName,
+                    ComponentTypeDescription = x.ComponentTypeDescription
+                })
+                .OrderBy(x => x.ComponentTypeName)
+                .ToList();
+
+            return componentTypes;
         }
 
 
@@ -444,52 +481,53 @@ namespace PMCSystem_Backend.Services.Implementations
                     switch (standardType)
                     {
                         case "Elbow":
-                            existingEntity.ElbowStandard = MergeStandardList(existingEntity.ElbowStandard, standards);
+                            // existingEntity.ElbowStandard = MergeStandardList(existingEntity.ElbowStandard, standards);
+                            existingEntity.ElbowStandard = standards;
                             break;
                         case "Reducer":
-                            existingEntity.RedStandard = MergeStandardList(existingEntity.RedStandard, standards);
+                            existingEntity.RedStandard = standards;
                             break;
                         case "Tee":
-                            existingEntity.TeeStandard = MergeStandardList(existingEntity.TeeStandard, standards);
+                            existingEntity.TeeStandard = standards;
                             break;
                         case "Sleeve":
-                            existingEntity.SleeveStandard = MergeStandardList(existingEntity.SleeveStandard, standards);
+                            existingEntity.SleeveStandard = standards;
                             break;
                         case "Bosses":
-                            existingEntity.BossesStandard = MergeStandardList(existingEntity.BossesStandard, standards);
+                            existingEntity.BossesStandard = standards;
                             break;
                         case "Saddles":
-                            existingEntity.SaddlesStandard = MergeStandardList(existingEntity.SaddlesStandard, standards);
+                            existingEntity.SaddlesStandard = standards;
                             break;
                         case "Caps":
-                            existingEntity.CapsStandard = MergeStandardList(existingEntity.CapsStandard, standards);
+                            existingEntity.CapsStandard = standards;
                             break;
                         case "Overpass":
-                            existingEntity.OverpassStandard = MergeStandardList(existingEntity.OverpassStandard, standards);
+                            existingEntity.OverpassStandard = standards;
                             break;
                         case "Accessories":
-                            existingEntity.AccessoriesStandard = MergeStandardList(existingEntity.AccessoriesStandard, standards);
+                            existingEntity.AccessoriesStandard = standards;
                             break;
                         case "Flange":
-                            existingEntity.FlangeStandard = MergeStandardList(existingEntity.FlangeStandard, standards);
+                            existingEntity.FlangeStandard = standards;
                             break;
                         case "BlindFlange":
-                            existingEntity.BlindFlangeStandard = MergeStandardList(existingEntity.BlindFlangeStandard, standards);
+                            existingEntity.BlindFlangeStandard = standards;
                             break;
                         case "Gasket":
-                            existingEntity.GasketStandard = MergeStandardList(existingEntity.GasketStandard, standards);
+                            existingEntity.GasketStandard = standards;
                             break;
                         case "Bolt":
-                            existingEntity.BoltStandard = MergeStandardList(existingEntity.BoltStandard, standards);
+                            existingEntity.BoltStandard = standards;
                             break;
                         case "Nut":
-                            existingEntity.NutStandard = MergeStandardList(existingEntity.NutStandard, standards);
+                            existingEntity.NutStandard = standards;
                             break;
                         case "Washer":
-                            existingEntity.WasherStandard = MergeStandardList(existingEntity.WasherStandard, standards);
+                            existingEntity.WasherStandard = standards;
                             break;
                         case "Pipe":
-                            existingEntity.PipeStandard = MergeStandardList(existingEntity.PipeStandard, standards);
+                            existingEntity.PipeStandard = standards;
                             break;
                         default:
                             _logger.LogWarning("未知的部件类型: {StandardType}", standardType);

@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using PMCSystem_Backend.Common.Enums;
 using PMCSystem_Backend.Common.Models;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Services.Interfaces;
 
@@ -31,6 +32,23 @@ namespace PMCSystem_Backend.Controllers
                 return Fail(ApiErrorCode.ResourceNotFound, "获取船型船号信息失败");
             }
             return Success(shipInfos, "获取船型船号信息成功");
+        }
+
+        /// <summary>
+        /// 获取所有部件类型信息
+        /// </summary>
+        /// <returns>部件类型列表</returns>
+        [HttpGet("ComponentTypes")]
+        [ProducesResponseType(typeof(ApiResponse<List<ComponentTypeInfoDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 404)]
+        public IActionResult GetComponentTypes()
+        {
+            var componentTypes = _pmcSpecService.GetComponentTypes();
+            if (componentTypes == null || componentTypes.Count == 0)
+            {
+                return Fail(ApiErrorCode.ResourceNotFound, "获取部件类型列表失败");
+            }
+            return Success(componentTypes, "获取部件类型列表成功");
         }
 
         /// <summary>

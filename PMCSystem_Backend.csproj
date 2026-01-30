@@ -30,11 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\TempEntities\" />
+    <None Include="appsettings.Development.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="appsettings.Development.json" />
+    <Folder Include="Entities\TempEntities\" />
   </ItemGroup>
 
 </Project>
