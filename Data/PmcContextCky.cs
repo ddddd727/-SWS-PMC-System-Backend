@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Entities;
+using PMCSystem_Backend.Entities.PipeSpecConfig;
 
 namespace PMCSystem_Backend.Data;
 

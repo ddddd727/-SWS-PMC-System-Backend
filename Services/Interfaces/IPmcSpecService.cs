@@ -16,6 +16,12 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <returns>船型信息</returns>
         List<PMCSystem_Backend.Entities.PipeSpecConfig.ShipInfo> GetShipInfos();
 
+        /// <summary>
+        /// 获取所有部件类型信息
+        /// </summary>
+        /// <returns>部件类型列表</returns>
+        List<ComponentTypeInfoDto> GetComponentTypes();
+
 
         /// <summary>
         /// 根据船号选择，获取PMC编码信息

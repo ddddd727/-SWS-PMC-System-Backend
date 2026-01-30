@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Configuration;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
+using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Entities.TempEntities;
 using PMCSystem_Backend.Models;
 using System;
 using System.Collections.Generic;
@@ -39,13 +41,15 @@ public partial class PmcContext : DbContext
 
     public virtual DbSet<S3dCommonCodeListHierarchy> S3dCommonCodeListHierarchies { get; set; }
 
-    public virtual DbSet<PMCSystem_Backend.Entities.S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
+    public virtual DbSet<S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
 
     public virtual DbSet<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; }
 
     public virtual DbSet<S3dDictPipingComponentType> S3dDictPipingComponentTypes { get; set; }
 
     public virtual DbSet<S3dRuleComponentTypeHierarchyRule> S3dRuleComponentTypeHierarchyRules { get; set; }
+
+    public virtual DbSet<S3dWallThicknessInfo> S3dWallThicknessInfo { get; set; }
 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -204,12 +208,7 @@ public partial class PmcContext : DbContext
                     listPmcStandardInfoComparer)
                   .HasMaxLength(500).HasColumnName("PipeStandard");
             entity.Property(e => e.PipingClassName).HasMaxLength(255);
-            entity.Property(e => e.PipingStandardName)
-                  .HasConversion(
-                    v => JsonSerializer.Serialize(v, jsonOptions),
-                    v => JsonSerializer.Deserialize<List<PmcStandardInfo>>(v, jsonOptions),
-                    listPmcStandardInfoComparer)
-                  .HasMaxLength(255).HasColumnName("PipingStandardName");
+            entity.Property(e => e.PipingStandardName).HasMaxLength(255).HasColumnName("PipingStandardName");
             entity.Property(e => e.Pmccode)
                 .HasMaxLength(255)
                 .HasColumnName("PMCCode");
@@ -294,14 +293,9 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.CodeListTableId).HasColumnName("CodeListTableID");
             entity.Property(e => e.ParentCodeListTableId).HasColumnName("ParentCodeListTableID");
-
-            entity.HasOne(d => d.CodeListTable).WithOne(p => p.S3dCommonCodeListHierarchy)
-                .HasForeignKey<S3dCommonCodeListHierarchy>(d => d.CodeListTableId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("DSP_CodeListHierarchy_DSP_CodeListTable_FK");
         });
 
-        modelBuilder.Entity<PMCSystem_Backend.Entities.PipeSpecConfig.S3dCommonCodeListTable>(entity =>
+        modelBuilder.Entity<S3dCommonCodeListTable>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__UD_CodeL__3214EC27484123D6");
 
@@ -364,6 +358,24 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.ComponentTypeId).HasColumnName("ComponentTypeID");
             entity.Property(e => e.PipingCommoditySubClassCl).HasColumnName("PipingCommoditySubClass_CL");
             entity.Property(e => e.Status).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<S3dWallThicknessInfo>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("S3D_WallThickness_Info");
+
+            entity.Property(e => e.GeometricIndustryStandard).HasMaxLength(255);
+            entity.Property(e => e.GeometricIndustryStandardCl).HasColumnName("GeometricIndustryStandard_CL");
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.NormalDiameter).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.PipingOutsideDiameter).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.ScheduleThickness).HasMaxLength(255);
+            entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
+            entity.Property(e => e.UnitType).HasMaxLength(100);
+            entity.Property(e => e.Version).HasMaxLength(100);
+            entity.Property(e => e.WallThickness).HasColumnType("decimal(10, 3)");
         });
 
         OnModelCreatingPartial(modelBuilder);
