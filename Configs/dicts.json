@@ -9,49 +9,56 @@
     },
     "DictConfiguration": {
 
-        // ==========================================
-        // 1. 标准系列 (std-series)
-        // ==========================================
         "std-series": {
             "DisplayName": "标准系列",
-            "TableName": "View_Dict_GeometricIndustryPractice",
+            "ViewName": "View_Dict_GeometricIndustryPractice",
+            "PhysicalTableName": "S3D_Dict_GeometricIndustryPractice",
+            "CodeListTableName": "GeometricIndustryPractice",
             "Columns": [
                 {
                     "DbField": "ID",
+                    "Title": "ID",
                     "IsPrimaryKey": true,
                     "IsHidden": true
                 },
                 {
                     "DbField": "GeometricIndustryPractice_CL",
                     "Title": "Value(CL)",
+                    "UiType": "Input",
                     "IsHidden": true
+                },
+                {
+                    "DbField": "GeometricIndustryPractice_Short",
+                    "Title": "系列代码",
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/std-series",
+                        "LabelField": "Short",
+                        "ValueField": "Short",
+                        "ValueMapping": {
+                            "Value": "GeometricIndustryPractice_CL",
+                            "Long": "GeometricIndustryPractice_Long"
+                        }
+                    }
+                },
+                {
+                    "DbField": "GeometricIndustryPractice_Long",
+                    "Title": "系列描述",
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/std-series",
+                        "LabelField": "Long",
+                        "ValueField": "Long",
+                        "ValueMapping": {
+                            "Value": "GeometricIndustryPractice_CL",
+                            "Short": "GeometricIndustryPractice_Short"
+                        }
+                    }
                 },
                 {
                     "DbField": "JsonData",
                     "Title": "扩展数据",
                     "UiType": "JsonInput",
-                    "IsHidden": true
-                },
-
-                {
-                    "DbField": "GeometricIndustryPractice_Short",
-                    "Title": "系列代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                // 修正: Desc -> Long
-                {
-                    "DbField": "GeometricIndustryPractice_Long",
-                    "Title": "系列描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "GeometricIndustryPractice_IsUserDefine",
-                    "Title": "自定义",
-                    "UiType": "Switch",
-                    "IsReadOnly": true,
                     "IsHidden": true
                 },
                 {
@@ -62,49 +69,56 @@
             ]
         },
 
-        // ==========================================
-        // 2. A-管材等级 (piping-class)
-        // ==========================================
         "piping-class": {
-            "DisplayName": "A-管材等级",
-            "TableName": "View_Dict_PipingClass",
+            "DisplayName": "管材等级",
+            "ViewName": "View_Dict_PipingClass",
+            "PhysicalTableName": "S3D_Dict_PipingClass",
+            "CodeListTableName": "PipingClass",
             "Columns": [
                 {
                     "DbField": "ID",
+                    "Title": "ID",
                     "IsPrimaryKey": true,
                     "IsHidden": true
                 },
                 {
                     "DbField": "PipingClass_CL",
                     "Title": "Value(CL)",
+                    "UiType": "Input",
                     "IsHidden": true
+                },
+                {
+                    "DbField": "PipingClass_Short",
+                    "Title": "等级代码",
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/piping-class",
+                        "LabelField": "Short",
+                        "ValueField": "Short",
+                        "ValueMapping": {
+                            "Value": "PipingClass_CL",
+                            "Long": "PipingClass_Long"
+                        }
+                    }
+                },
+                {
+                    "DbField": "PipingClass_Long",
+                    "Title": "等级描述",
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/piping-class",
+                        "LabelField": "Long",
+                        "ValueField": "Long",
+                        "ValueMapping": {
+                            "Value": "PipingClass_CL",
+                            "Short": "PipingClass_Short"
+                        }
+                    }
                 },
                 {
                     "DbField": "JsonData",
                     "Title": "扩展数据",
                     "UiType": "JsonInput",
-                    "IsHidden": true
-                },
-
-                {
-                    "DbField": "PipingClass_Short",
-                    "Title": "等级代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                // 修正: Desc -> Long
-                {
-                    "DbField": "PipingClass_Long",
-                    "Title": "等级描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "PipingClass_IsUserDefine",
-                    "Title": "自定义",
-                    "UiType": "Switch",
-                    "IsReadOnly": true,
                     "IsHidden": true
                 },
                 {
@@ -115,22 +129,51 @@
             ]
         },
 
-        // ==========================================
-        // 3. B1-主材料 (mat-category)
-        // ==========================================
         "mat-category": {
-            "DisplayName": "B1-主材料",
-            "TableName": "View_Dict_MaterialsCategory",
+            "DisplayName": "主材料",
+            "ViewName": "View_Dict_MaterialsCategory",
+            "PhysicalTableName": "S3D_Dict_MaterialsCategory",
+            "CodeListTableName": "MaterialsCategory",
             "Columns": [
                 {
                     "DbField": "ID",
+                    "Title": "ID",
                     "IsPrimaryKey": true,
                     "IsHidden": true
                 },
                 {
                     "DbField": "MaterialsCategory_CL",
                     "Title": "Value(CL)",
+                    "UiType": "Input",
                     "IsHidden": true
+                },
+                {
+                    "DbField": "MaterialsCategory_Short",
+                    "Title": "材料代码",
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/mat-category",
+                        "LabelField": "Short",
+                        "ValueField": "Short",
+                        "ValueMapping": {
+                            "Value": "MaterialsCategory_CL",
+                            "Long": "MaterialsCategory_Long"
+                        }
+                    }
+                },
+                {
+                    "DbField": "MaterialsCategory_Long",
+                    "Title": "材料描述",
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/mat-category",
+                        "LabelField": "Long",
+                        "ValueField": "Long",
+                        "ValueMapping": {
+                            "Value": "MaterialsCategory_CL",
+                            "Short": "MaterialsCategory_Short"
+                        }
+                    }
                 },
                 {
                     "DbField": "JsonData",
@@ -138,28 +181,6 @@
                     "UiType": "JsonInput",
                     "IsHidden": true
                 },
-
-                {
-                    "DbField": "MaterialsCategory_Short",
-                    "Title": "材料代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                // 修正: Desc -> Long
-                {
-                    "DbField": "MaterialsCategory_Long",
-                    "Title": "材料描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "MaterialsCategory_IsUserDefine",
-                    "Title": "自定义",
-                    "UiType": "Switch",
-                    "IsReadOnly": true,
-                    "IsHidden": true
-                },
                 {
                     "DbField": "Status",
                     "Title": "状态",
@@ -168,197 +189,51 @@
             ]
         },
 
-        // ==========================================
-        // 4. B2-管材标准 (piping-standard)
-        // ==========================================
         "piping-standard": {
-            "DisplayName": "B2-管材标准",
-            "TableName": "View_Dict_PipingStandard",
+            "DisplayName": "管材标准",
+            "ViewName": "View_Dict_PipingStandard",
+            "PhysicalTableName": "S3D_Dict_PipingStandard",
+            "CodeListTableName": "PipingStandard",
             "Columns": [
                 {
                     "DbField": "ID",
+                    "Title": "ID",
                     "IsPrimaryKey": true,
                     "IsHidden": true
                 },
                 {
                     "DbField": "GeometricIndustryStandard_CL",
                     "Title": "Value(CL)",
+                    "UiType": "Input",
                     "IsHidden": true
                 },
-                {
-                    "DbField": "JsonData",
-                    "Title": "扩展属性(动态)",
-                    "UiType": "JsonInput",
-                    "IsHidden": true
-                },
-
-                // 注意：这里使用 GeometricIndustryStandard 前缀，因为 ID=4
                 {
                     "DbField": "GeometricIndustryStandard_Short",
                     "Title": "标准代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                // 修正: Desc -> Long
-                {
-                    "DbField": "GeometricIndustryStandard_Long",
-                    "Title": "标准描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "GeometricIndustryStandard_IsUserDefine",
-                    "Title": "自定义",
-                    "UiType": "Switch",
-                    "IsReadOnly": true,
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "Status",
-                    "Title": "状态",
-                    "UiType": "Switch"
-                }
-            ]
-        },
-
-        // ==========================================
-        // 5. B3-牌号 (mat-grade)
-        // ==========================================
-        "mat-grade": {
-            "DisplayName": "B3-牌号",
-            "TableName": "View_Dict_MaterialsGrade",
-            "Columns": [
-                {
-                    "DbField": "ID",
-                    "IsPrimaryKey": true,
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "MaterialsGrade_CL",
-                    "Title": "Value(CL)",
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "JsonData",
-                    "Title": "扩展属性(动态)",
-                    "UiType": "JsonInput",
-                    "IsHidden": true
-                },
-
-                {
-                    "DbField": "MaterialsGrade_Short",
-                    "Title": "牌号代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                // 修正: Desc -> Long
-                {
-                    "DbField": "MaterialsGrade_Long",
-                    "Title": "牌号描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "MaterialsGrade_Parent",
-                    "Title": "所属大类(Parent)",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "MaterialsGrade_IsUserDefine",
-                    "Title": "自定义",
-                    "UiType": "Switch",
-                    "IsReadOnly": true,
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "Status",
-                    "Title": "状态",
-                    "UiType": "Switch"
-                }
-            ]
-        },
-
-        // ==========================================
-        // 6. 法兰标准 (flange-standard) - 双字典
-        // ==========================================
-        "flange-standard": {
-            "DisplayName": "法兰标准",
-            "TableName": "View_Dict_FlangeStandard",
-            "Columns": [
-                {
-                    "DbField": "ID",
-                    "IsPrimaryKey": true,
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "JsonData",
-                    "Title": "扩展属性",
-                    "UiType": "JsonInput",
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "FlangeStandardCode",
-                    "Title": "法兰编码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                // 字典1: 标准
-                {
-                    "DbField": "GeometricIndustryStandard_Short",
-                    "Title": "标准代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/piping-standard",
+                        "LabelField": "Short",
+                        "ValueField": "Short",
+                        "ValueMapping": {
+                            "Value": "GeometricIndustryStandard_CL",
+                            "Long": "GeometricIndustryStandard_Long"
+                        }
+                    }
                 },
                 {
                     "DbField": "GeometricIndustryStandard_Long",
                     "Title": "标准描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                // 字典2: 系列
-                {
-                    "DbField": "GeometricIndustryPractice_Short",
-                    "Title": "所属系列",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                {
-                    "DbField": "GeometricIndustryPractice_Long",
-                    "Title": "系列描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "Status",
-                    "Title": "状态",
-                    "UiType": "Switch"
-                }
-            ]
-        },
-
-        // ==========================================
-        // 7. 压力等级 (pressure-rating)
-        // ==========================================
-        "pressure-rating": {
-            "DisplayName": "压力等级",
-            "TableName": "View_Dict_PressureRating",
-            "Columns": [
-                {
-                    "DbField": "ID",
-                    "IsPrimaryKey": true,
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "PressureRating_CL",
-                    "Title": "Value(CL)",
-                    "IsHidden": true
+                    "UiType": "Select",
+                    "DataSource": {
+                        "Url": "/api/dict/options/piping-standard",
+                        "LabelField": "Long",
+                        "ValueField": "Long",
+                        "ValueMapping": {
+                            "Value": "GeometricIndustryStandard_CL",
+                            "Short": "GeometricIndustryStandard_Short"
+                        }
+                    }
                 },
                 {
                     "DbField": "JsonData",
@@ -366,110 +241,6 @@
                     "UiType": "JsonInput",
                     "IsHidden": true
                 },
-
-                {
-                    "DbField": "PressureRating_Short",
-                    "Title": "等级代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                {
-                    "DbField": "PressureRating_Long",
-                    "Title": "等级描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "Status",
-                    "Title": "状态",
-                    "UiType": "Switch"
-                }
-            ]
-        },
-
-        // ==========================================
-        // 8. 壁厚等级 (schedule)
-        // ==========================================
-        "schedule": {
-            "DisplayName": "壁厚等级",
-            "TableName": "View_Dict_ScheduleThickness",
-            "Columns": [
-                {
-                    "DbField": "ID",
-                    "IsPrimaryKey": true,
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "ScheduleThickness_CL",
-                    "Title": "Value(CL)",
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "JsonData",
-                    "Title": "扩展属性",
-                    "UiType": "JsonInput",
-                    "IsHidden": true
-                },
-
-                {
-                    "DbField": "ScheduleThickness_Short",
-                    "Title": "壁厚代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                {
-                    "DbField": "ScheduleThickness_Long",
-                    "Title": "壁厚描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
-                {
-                    "DbField": "Status",
-                    "Title": "状态",
-                    "UiType": "Switch"
-                }
-            ]
-        },
-
-        // ==========================================
-        // 9. 端面处理 (end-prep)
-        // ==========================================
-        "end-prep": {
-            "DisplayName": "端面处理",
-            "TableName": "View_Dict_EndPreparation",
-            "Columns": [
-                {
-                    "DbField": "ID",
-                    "IsPrimaryKey": true,
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "EndPreparation_CL",
-                    "Title": "Value(CL)",
-                    "IsHidden": true
-                },
-                {
-                    "DbField": "JsonData",
-                    "Title": "扩展属性",
-                    "UiType": "JsonInput",
-                    "IsHidden": true
-                },
-
-                {
-                    "DbField": "EndPreparation_Short",
-                    "Title": "端面代码",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-                {
-                    "DbField": "EndPreparation_Long",
-                    "Title": "端面描述",
-                    "UiType": "Input",
-                    "IsReadOnly": true
-                },
-
                 {
                     "DbField": "Status",
                     "Title": "状态",
@@ -477,5 +248,3 @@
                 }
             ]
         }
-    }
-}

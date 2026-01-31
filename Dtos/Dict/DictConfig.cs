@@ -9,8 +9,17 @@
     // 对应每个具体的字典配置（例如 "UserDict", "RoleDict"）
     public class DictItemConfig
     {
-        public string TableName { get; set; } = string.Empty;
-        public List<DictColumnConfig> Columns { get; set; } = new();
+        public string DisplayName { get; set; }
+
+        public string ViewName { get; set; }
+
+        public string PhysicalTableName { get; set; }
+
+        public string CodeListTableName { get; set; }
+
+
+        public string TableName { get; set; } 
+        public List<DictColumnConfig> Columns { get; set; }
     }
 
     // 对应每一列的详细配置
