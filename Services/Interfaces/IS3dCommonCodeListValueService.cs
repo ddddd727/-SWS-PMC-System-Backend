@@ -9,5 +9,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         Task<IEnumerable<S3dCommonCodeListValueDto>> GetEndStandardAsync();
         Task<IEnumerable<S3dCommonCodeListValueDto>> GetGeometricIndustryStandardAsync();
         Task<IEnumerable<S3dCommonCodeListValueDto>> GetMaterialsGradeAsync();
+        Task<IEnumerable<S3dCommonCodeListValueDto>> GetShortCodeHierarchyClassAsync();
     }
 }

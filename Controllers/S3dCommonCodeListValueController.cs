@@ -49,5 +49,12 @@ namespace PMCSystem_Backend.Controllers
             var result = await _service.GetMaterialsGradeAsync();
             return Ok(result);
         }
+
+        [HttpGet("ShortCodeHierarchyClass")]
+        public async Task<ActionResult<IEnumerable<S3dCommonCodeListValueDto>>> GetShortCodeHierarchyClass()
+        {
+            var result = await _service.GetShortCodeHierarchyClassAsync();
+            return Ok(result);
+        }
     }
 }

@@ -39,6 +39,11 @@ namespace PMCSystem_Backend.Services.Implementations
             return await GetByTableNameAsync("MaterialsGrade");
         }
 
+        public async Task<IEnumerable<S3dCommonCodeListValueDto>> GetShortCodeHierarchyClassAsync()
+        {
+            return await GetByTableNameAsync("ShortCodeHierarchyClass");
+        }
+
         private async Task<IEnumerable<S3dCommonCodeListValueDto>> GetByTableNameAsync(string tableName)
         {
             // 1. Find the ID from S3D_Common_CodeListTable where CodeListTableName matches
