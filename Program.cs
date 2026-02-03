@@ -51,6 +51,9 @@ try
     builder.Services.AddScoped<IS3dCodePipingBendParameterService, S3dCodePipingBendParameterService>();
     builder.Services.AddScoped<IS3dDictPipingBendDataService, S3dDictPipingBendDataService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
+    builder.Services.AddScoped<IS3dCodeShortCodeMapService, S3dCodeShortCodeMapService>();
+    builder.Services.AddScoped<IS3dRuleShortCodeMapService, S3dRuleShortCodeMapService>();
+    builder.Services.AddScoped<IS3dDictPipingComponentTypeService, S3dDictPipingComponentTypeService>();
     
     // 补全缺失的服务注册
     builder.Services.AddScoped<IS3dCodeAb2b3c2ViewService, S3dCodeAb2b3c2ViewService>();

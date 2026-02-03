@@ -14,6 +14,12 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<UpdateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
             CreateMap<S3dCodeWallThickness, S3dCodeWallThicknessDto>();
             CreateMap<S3dCodePipingBendParameter, S3dCodePipingBendParameterDto>();
+            CreateMap<S3dCodeShortCodeMap, S3dCodeShortCodeMapDto>();
+            CreateMap<PMCSystem_Backend.Entities.PipeSpecConfig.S3dDictPipingComponentType, S3dDictPipingComponentTypeDto>().ReverseMap();
+
+            CreateMap<S3dRuleShortCodeMap, S3dRuleShortCodeMapDto>().ReverseMap();
+            CreateMap<CreateS3dRuleShortCodeMapDto, S3dRuleShortCodeMap>();
+            CreateMap<UpdateS3dRuleShortCodeMapDto, S3dRuleShortCodeMap>();
 
             CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();
             CreateMap<CreateS3dDictWallThicknessDto, S3dDictWallThickness>();

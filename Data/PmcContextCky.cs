@@ -21,7 +21,11 @@ public partial class PmcContextCky : DbContext
 
     public virtual DbSet<S3dCodePipingBendParameter> S3dCodePipingBendParameters { get; set; }
 
-    public virtual DbSet<S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
+    public virtual DbSet<S3dCodeShortCodeMap> S3dCodeShortCodeMaps { get; set; }
+
+        public virtual DbSet<PMCSystem_Backend.Entities.S3dRuleShortCodeMap> S3dRuleShortCodeMaps { get; set; }
+
+        public virtual DbSet<S3dCommonCodeListTable> S3dCommonCodeListTables { get; set; }
 
     public virtual DbSet<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; }
 
@@ -30,6 +34,8 @@ public partial class PmcContextCky : DbContext
     public virtual DbSet<S3dDictWallThickness> S3dDictWallThicknesses { get; set; }
 
     public virtual DbSet<S3dRulePipingBendParameter> S3dRulePipingBendParameters { get; set; }
+
+    public virtual DbSet<S3dDictPipingComponentType> S3dDictPipingComponentTypes { get; set; }
 
     public virtual DbSet<S3dRuleShortCodeHierarchyRule> S3dRuleShortCodeHierarchyRules { get; set; }
 
@@ -184,6 +190,47 @@ public partial class PmcContextCky : DbContext
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.ShortCode).HasMaxLength(50);
             entity.Property(e => e.ShortCodeHierarchyType).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<S3dCodeShortCodeMap>(entity =>
+        {
+            entity.HasNoKey().ToView("S3D_Code_ShortCodeMap");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.ComponentTypeId).HasColumnName("ComponentTypeID");
+            entity.Property(e => e.ComponentTypeName).HasMaxLength(255);
+            entity.Property(e => e.ShortCode).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<PMCSystem_Backend.Entities.S3dRuleShortCodeMap>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("S3D_Rule_ShortCodeMap");
+
+            entity.HasIndex(e => new { e.ComponentTypeId, e.ShortCode }, "UQ_ShortCodeMap_ID_Code").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.ComponentTypeId).HasColumnName("ComponentTypeID");
+            entity.Property(e => e.ShortCode).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<S3dDictPipingComponentType>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("S3D_Dict_PipingComponentType");
+
+            entity.HasIndex(e => e.ComponentTypeName, "UQ_PipingComponentType_Name").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.ComponentTypeName).HasMaxLength(255);
+            entity.Property(e => e.ComponentTypeDescription).HasMaxLength(255);
+            entity.Property(e => e.Status).HasDefaultValue(true);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100).HasDefaultValueSql("(suser_sname())");
+            entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.ModifiedDate).HasDefaultValueSql("(getdate())");
         });
 
         OnModelCreatingPartial(modelBuilder);
