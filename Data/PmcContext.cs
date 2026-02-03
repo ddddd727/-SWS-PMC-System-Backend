@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Configuration;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
@@ -254,6 +254,9 @@ public partial class PmcContext : DbContext
                     v => JsonSerializer.Deserialize<List<PmcStandardInfo>>(v, jsonOptions),
                     listPmcStandardInfoComparer)
                   .HasMaxLength(500).HasColumnName("WasherStandard");
+
+            entity.Property(e => e.IsByRule).HasDefaultValue(true);
+            entity.Property(e => e.VersionNum).HasDefaultValue(1);
         });
 
         modelBuilder.Entity<S3dRuleShortCodeMap>(entity =>

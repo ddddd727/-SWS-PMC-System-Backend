@@ -63,6 +63,10 @@ namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
 
         public string? Status { get; set; }
 
+        public int VersionNum { get; set; }
+
+        public bool IsByRule { get; set; }
+
         public string? JsonData { get; set; }
     }
 
@@ -140,6 +144,10 @@ namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
         [MaxLength(100, ErrorMessage = "状态长度不能超过100个字符")]
         public string? Status { get; set; }
 
+        public int? VersionNum { get; set; }
+
+        public bool? IsByRule { get; set; }
+
         public string? JsonData { get; set; }
     }
 
@@ -211,6 +219,10 @@ namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
 
         [MaxLength(100, ErrorMessage = "状态长度不能超过100个字符")]
         public string? Status { get; set; }
+
+        public int? VersionNum { get; set; }
+
+        public bool? IsByRule { get; set; }
 
         public string? JsonData { get; set; }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities;
@@ -27,4 +27,5 @@ public partial class S3dRulePmcdatum
 
     public string ScheduleThicknessName { get; set; } = null!;
 
+    public bool IsByRule { get; set; }
 }
