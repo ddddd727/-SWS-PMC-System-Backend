@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Dtos.PipeSpecConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using PMCSystem_Backend.MappingProfiles;
+using PMCSystem_Backend.MappingProfiles.PipeSpecMappers;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
@@ -20,14 +22,22 @@ namespace PMCSystem_Backend.Services.Implementations
         private readonly IMapper _mapper;
         private readonly ICodelistService _codelistService;
         private readonly ILogger<PmcSpecService> _logger;
+        private readonly IPipeSpecConfigMapper _pipeSpecConfigMapper;
 
-        public PmcSpecService(PmcContext context, IMapper mapper, ICodelistService codelistService, ILogger<PmcSpecService> logger, PmcContextCky pmcContextCky)
+        public PmcSpecService(
+            PmcContext context,
+            IMapper mapper,
+            ICodelistService codelistService,
+            ILogger<PmcSpecService> logger,
+            PmcContextCky pmcContextCky,
+            IPipeSpecConfigMapper pipeSpecConfigMapper)
         {
             _context = context;
             _mapper = mapper;
             _codelistService = codelistService;
             _logger = logger;
             _ckyContext = pmcContextCky;
+            _pipeSpecConfigMapper = pipeSpecConfigMapper;
         }
 
         /// <summary>
@@ -228,7 +238,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
                 // 通过 GetMaterialListByStandard 方法获取材料列表，不进行 commodityType 过滤
                 List<string> materialList = new List<string>();
-                
+
 
                 try
                 {
@@ -439,37 +449,35 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 保存PMC管系规格书中的标准规格
         /// </summary>
-        /// <param name="pmcCode">PMC编码</param>
-        /// <param name="standardInfos">标准信息列表</param>
+        /// <param name="request">管系规格书保存请求</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public bool SaveSpecRules(string pmcCode, List<PmcStandardInfo> standardInfos)
+        public bool SaveSpecRules(SavePipeSpecRequest request)
         {
-            if (string.IsNullOrWhiteSpace(pmcCode))
+            // 使用Mapper进行验证
+            var (isValid, errorMessage) = _pipeSpecConfigMapper.ValidateRequest(request);
+            if (!isValid)
             {
-                _logger.LogError("PMC编码不能为空");
-                throw new ArgumentException("PMC编码不能为空");
-            }
-
-            if (standardInfos == null || !standardInfos.Any())
-            {
-                _logger.LogError("标准信息列表不能为空");
-                throw new ArgumentException("标准信息列表不能为空");
+                _logger.LogError(errorMessage);
+                throw new ArgumentException(errorMessage);
             }
 
             try
             {
                 // 查询现有的PMC数据
                 var existingEntity = _context.S3dRulePmcdata
-                    .FirstOrDefault(x => x.Pmccode == pmcCode);
+                    .FirstOrDefault(x => x.Pmccode == request.PmcCode);
 
                 if (existingEntity == null)
                 {
-                    _logger.LogError("未找到PMC编码 {PmcCode} 对应的数据，无法更新规则", pmcCode);
-                    throw new Exception($"未找到PMC编码 {pmcCode} 对应的数据");
+                    _logger.LogError("未找到PMC编码 {PmcCode} 对应的数据，无法更新规则", request.PmcCode);
+                    throw new Exception($"未找到PMC编码 {request.PmcCode} 对应的数据");
                 }
 
-                // 根据 StandardType 将标准信息分组
+                // 使用Mapper转换DTO结构为标准信息列表格式
+                var standardInfos = _pipeSpecConfigMapper.MapToStandardInfos(request.Configurations);
+
+                // 根据 StandardType 将标准信息分组并更新实体
                 var groupedStandards = standardInfos.GroupBy(x => x.StandardType);
 
                 foreach (var group in groupedStandards)
@@ -481,7 +489,6 @@ namespace PMCSystem_Backend.Services.Implementations
                     switch (standardType)
                     {
                         case "Elbow":
-                            // existingEntity.ElbowStandard = MergeStandardList(existingEntity.ElbowStandard, standards);
                             existingEntity.ElbowStandard = standards;
                             break;
                         case "Reducer":
@@ -535,18 +542,22 @@ namespace PMCSystem_Backend.Services.Implementations
                     }
                 }
 
+                // 更新船型和船号信息
+                existingEntity.ShipType = request.ShipType;
+                existingEntity.ShipNo = request.ShipNumber;
+
                 // 更新状态为已配置
                 existingEntity.Status = "已配置";
 
                 // 保存更改
                 _context.SaveChanges();
 
-                _logger.LogInformation("成功保存PMC编码 {PmcCode} 的规格规则", pmcCode);
+                _logger.LogInformation("成功保存PMC编码 {PmcCode} 的规格规则", request.PmcCode);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "保存PMC编码 {PmcCode} 的规格规则时发生错误", pmcCode);
+                _logger.LogError(ex, "保存PMC编码 {PmcCode} 的规格规则时发生错误", request.PmcCode);
                 throw;
             }
         }

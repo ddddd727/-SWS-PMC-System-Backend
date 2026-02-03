@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
+using PMCSystem_Backend.MappingProfiles.PipeSpecMappers;
 using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
 using System.Text.Json;
@@ -53,7 +54,7 @@ try
     builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
-    
+
     // 补全缺失的服务注册
     builder.Services.AddScoped<IS3dCodeAb2b3c2ViewService, S3dCodeAb2b3c2ViewService>();
     builder.Services.AddScoped<IS3dCodeB1b2b3dViewService, S3dCodeB1b2b3dViewService>();
@@ -79,6 +80,9 @@ try
         return new TemplatePreviewService(templateBasePath);
     });
 
+    // 注册管系规格配置映射器
+    builder.Services.AddScoped<IPipeSpecConfigMapper, PipeSpecConfigMapper>();
+
     builder.Services.AddControllers();
 
     builder.Services.AddCors(options =>
@@ -89,7 +93,7 @@ try
                 "http://localhost:5173",   // Vite 默认端口
                 "http://localhost:3000",   // 一些前端工具默认端口
                 "http://localhost:8080"    // Vue 
-                // CLI 默认端口
+                                           // CLI 默认端口
             )
             .AllowAnyHeader()
             .AllowAnyMethod();

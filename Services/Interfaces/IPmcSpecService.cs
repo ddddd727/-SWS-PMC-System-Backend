@@ -1,4 +1,5 @@
 using PMCSystem_Backend.Dtos.PipeSpecConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
@@ -60,10 +61,9 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <summary>
         /// 保存页面配置的管系规格书信息
         /// </summary>
-        /// <param name="pmcCode">PMC编码</param>
-        /// <param name="standardInfos">配置的标准信息列表</param>
+        /// <param name="request">管系规格书保存请求</param>
         /// <returns></returns>
-        bool SaveSpecRules(string pmcCode, List<PmcStandardInfo> standardInfos);
+        bool SaveSpecRules(SavePipeSpecRequest request);
 
 
         /// <summary>
