@@ -8,9 +8,9 @@ namespace PMCSystem_Backend.MappingProfiles
     {
         public PmcProfile()
         {
-            CreateMap<S3dDictPipingBendData, DspSpmcDictPipingBendDataDto>().ReverseMap();
-            CreateMap<CreateDspSpmcDictPipingBendDataDto, S3dDictPipingBendData>();
-            CreateMap<UpdateDspSpmcDictPipingBendDataDto, S3dDictPipingBendData>();
+            CreateMap<S3dDictPipingBendData, S3dDictPipingBendDataDto>().ReverseMap();
+            CreateMap<CreateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
+            CreateMap<UpdateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
             CreateMap<S3dCodeWallThickness, WallThicknessCodeConvertedDto>();
             CreateMap<S3dCodePipingBendParameter, PipingBendParameterCodeConvertedDto>();
 

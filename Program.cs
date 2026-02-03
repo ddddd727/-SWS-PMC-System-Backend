@@ -44,7 +44,7 @@ try
     builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
     builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
-    builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
+    builder.Services.AddScoped<IS3dDictPipingBendDataService, S3dDictPipingBendDataService>();
     builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
     builder.Services.AddScoped<IPipingBendParameterCodeConvertedService, PipingBendParameterCodeConvertedService>();
     builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();

@@ -7,36 +7,36 @@ using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
-    public class DspSpmcDictPipingBendDataService : IDspSpmcDictPipingBendDataService
+    public class S3dDictPipingBendDataService : IS3dDictPipingBendDataService
     {
         private readonly PmcContextCky _context;
         private readonly IMapper _mapper;
+        private readonly IS3dCommonCodeListValueService _codeListService;
 
-        public DspSpmcDictPipingBendDataService(PmcContextCky context, IMapper mapper)
+        public S3dDictPipingBendDataService(PmcContextCky context, IMapper mapper, IS3dCommonCodeListValueService codeListService)
         {
             _context = context;
             _mapper = mapper;
+            _codeListService = codeListService;
         }
 
-        public async Task<DspSpmcDictPipingBendDataDto> CreateAsync(CreateDspSpmcDictPipingBendDataDto dto)
+        public async Task<S3dDictPipingBendDataDto> CreateAsync(CreateS3dDictPipingBendDataDto dto)
         {
             var entity = _mapper.Map<S3dDictPipingBendData>(dto);
             entity.Status = dto.Status ?? true;
-            var maxId = await _context.S3dDictPipingBendData.MaxAsync(e => (int?)e.Id) ?? 0;
-            entity.Id = maxId + 1;
 
             _context.S3dDictPipingBendData.Add(entity);
             await _context.SaveChangesAsync();
-            return _mapper.Map<DspSpmcDictPipingBendDataDto>(entity);
+            return _mapper.Map<S3dDictPipingBendDataDto>(entity);
         }
 
-        public async Task<List<DspSpmcDictPipingBendDataDto>> GetAllListAsync()
+        public async Task<List<S3dDictPipingBendDataDto>> GetAllListAsync()
         {
             var data = await _context.S3dDictPipingBendData.ToListAsync();
-            return _mapper.Map<List<DspSpmcDictPipingBendDataDto>>(data);
+            return _mapper.Map<List<S3dDictPipingBendDataDto>>(data);
         }
 
-        public async Task<bool> UpdateAsync(UpdateDspSpmcDictPipingBendDataDto dto)
+        public async Task<bool> UpdateAsync(UpdateS3dDictPipingBendDataDto dto)
         {
             var entity = await _context.S3dDictPipingBendData.FindAsync(dto.Id);
             if (entity == null) return false;
