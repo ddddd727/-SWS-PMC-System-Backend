@@ -44,12 +44,12 @@ try
     builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
     builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
-    builder.Services.AddScoped<IS3dDictPipingBendDataService, S3dDictPipingBendDataService>();
     builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
-    builder.Services.AddScoped<IPipingBendParameterCodeConvertedService, PipingBendParameterCodeConvertedService>();
     builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
     builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dCodePipingBendParameterService, S3dCodePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dDictPipingBendDataService, S3dDictPipingBendDataService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
     
     // 补全缺失的服务注册

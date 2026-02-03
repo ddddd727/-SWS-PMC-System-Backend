@@ -1,6 +1,7 @@
 using AutoMapper;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 
 namespace PMCSystem_Backend.MappingProfiles
 {
@@ -12,7 +13,7 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<CreateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
             CreateMap<UpdateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
             CreateMap<S3dCodeWallThickness, WallThicknessCodeConvertedDto>();
-            CreateMap<S3dCodePipingBendParameter, PipingBendParameterCodeConvertedDto>();
+            CreateMap<S3dCodePipingBendParameter, S3dCodePipingBendParameterDto>();
 
             CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();
             CreateMap<CreateS3dDictWallThicknessDto, S3dDictWallThickness>();
@@ -24,6 +25,7 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dRulePipingBendParameter, S3dRulePipingBendParameterDto>().ReverseMap();
             CreateMap<CreateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
             CreateMap<UpdateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
+            CreateMap<S3dRulePipingBendParameter, UpdateS3dRulePipingBendParameterDto>();
         }
     }
 }

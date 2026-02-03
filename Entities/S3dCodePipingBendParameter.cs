@@ -11,13 +11,21 @@ public partial class S3dCodePipingBendParameter
 
     public string MaterialsCategory { get; set; } = null!;
 
-    public decimal NormalDiameter { get; set; }
+    public int? GeometricIndustryStandardCl { get; set; }
+
+    public string? GeometricIndustryStandard { get; set; }
+
+    public int? MaterialsGradeCl { get; set; }
+
+    public string? MaterialsGrade { get; set; }
+
+    public double NormalDiameter { get; set; }
 
     public string UnitType { get; set; } = null!;
 
-    public int ScheduleThicknessCl { get; set; }
+    public string? WallThicknessFrom { get; set; }
 
-    public string ScheduleThickness { get; set; } = null!;
+    public string? WallThicknessTo { get; set; }
 
     public decimal BendRadiusMultiplier { get; set; }
 

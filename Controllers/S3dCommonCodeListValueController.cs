@@ -35,5 +35,19 @@ namespace PMCSystem_Backend.Controllers
             var result = await _service.GetEndStandardAsync();
             return Ok(result);
         }
+
+        [HttpGet("OPGeometricIndustryStandard")]
+        public async Task<ActionResult<IEnumerable<S3dCommonCodeListValueDto>>> GetGeometricIndustryStandard()
+        {
+            var result = await _service.GetGeometricIndustryStandardAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("OPMaterialsGrade")]
+        public async Task<ActionResult<IEnumerable<S3dCommonCodeListValueDto>>> GetMaterialsGrade()
+        {
+            var result = await _service.GetMaterialsGradeAsync();
+            return Ok(result);
+        }
     }
 }

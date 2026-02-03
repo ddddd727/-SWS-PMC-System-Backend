@@ -29,6 +29,16 @@ namespace PMCSystem_Backend.Services.Implementations
             return await GetByTableNameAsync("EndStandard");
         }
 
+        public async Task<IEnumerable<S3dCommonCodeListValueDto>> GetGeometricIndustryStandardAsync()
+        {
+            return await GetByTableNameAsync("GeometricIndustryStandard");
+        }
+
+        public async Task<IEnumerable<S3dCommonCodeListValueDto>> GetMaterialsGradeAsync()
+        {
+            return await GetByTableNameAsync("MaterialsGrade");
+        }
+
         private async Task<IEnumerable<S3dCommonCodeListValueDto>> GetByTableNameAsync(string tableName)
         {
             // 1. Find the ID from S3D_Common_CodeListTable where CodeListTableName matches

@@ -29,22 +29,8 @@ namespace PMCSystem_Backend.Services.Implementations
             var entity = _mapper.Map<S3dRulePipingBendParameter>(dto);
             entity.Status = dto.Status ?? true;
 
-            var maxId = await _context.S3dRulePipingBendParameters.MaxAsync(e => (int?)e.Id) ?? 0;
-            entity.Id = maxId + 1;
-
             _context.S3dRulePipingBendParameters.Add(entity);
-
-            await _context.Database.OpenConnectionAsync();
-            try
-            {
-                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT S3D_Rule_PipingBendParameter ON");
-                await _context.SaveChangesAsync();
-                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT S3D_Rule_PipingBendParameter OFF");
-            }
-            finally
-            {
-                await _context.Database.CloseConnectionAsync();
-            }
+            await _context.SaveChangesAsync();
 
             return _mapper.Map<S3dRulePipingBendParameterDto>(entity);
         }
