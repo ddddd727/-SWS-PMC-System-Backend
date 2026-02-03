@@ -28,7 +28,7 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig.Models
         /// <summary>
         /// NPD范围 [最小NPD, 最大NPD]
         /// </summary>
-        public object[]? NpdRange { get; set; }
+        public string[]? NpdRange { get; set; }
 
         /// <summary>
         /// 弯管半径倍数（string, number 或 null）

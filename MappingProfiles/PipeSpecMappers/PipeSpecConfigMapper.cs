@@ -61,8 +61,8 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
                     Material = stdConfig.MaterialName,
                     DiameterRange = new DiameterRange
                     {
-                        MinNpdValue = stdConfig.MinNpdValue,
-                        MaxNpdValue = stdConfig.MaxNpdValue
+                        MinNpdValue = (double)stdConfig.NpdRange[0],
+                        MaxNpdValue = (double)stdConfig.NpdRange[1],
                     },
                     IsDefault = false,
                     OverlapRange = null

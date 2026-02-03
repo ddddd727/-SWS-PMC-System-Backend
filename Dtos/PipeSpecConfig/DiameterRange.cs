@@ -24,24 +24,5 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig
         /// 标准文件（可选）
         /// </summary>
         public object? StandardFile { get; set; }
-
-        // 保留向后兼容的属性
-        /// <summary>
-        /// 最小通径（兼容旧字段）
-        /// </summary>
-        public double DiameterMin
-        {
-            get => MinNpdValue;
-            set => MinNpdValue = value;
-        }
-
-        /// <summary>
-        /// 最大通径（兼容旧字段）
-        /// </summary>
-        public double DiameterMax
-        {
-            get => MaxNpdValue;
-            set => MaxNpdValue = value;
-        }
     }
 }
