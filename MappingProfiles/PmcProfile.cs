@@ -12,7 +12,7 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dDictPipingBendData, S3dDictPipingBendDataDto>().ReverseMap();
             CreateMap<CreateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
             CreateMap<UpdateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
-            CreateMap<S3dCodeWallThickness, WallThicknessCodeConvertedDto>();
+            CreateMap<S3dCodeWallThickness, S3dCodeWallThicknessDto>();
             CreateMap<S3dCodePipingBendParameter, S3dCodePipingBendParameterDto>();
 
             CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();

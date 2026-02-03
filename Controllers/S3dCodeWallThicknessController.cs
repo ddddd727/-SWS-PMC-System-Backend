@@ -1,15 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
+using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class WallThicknessCodeConvertedController : ApiControllerBase
+    public class S3dCodeWallThicknessController : ApiControllerBase
     {
-        private readonly IWallThicknessCodeConvertedService _service;
+        private readonly IS3dCodeWallThicknessService _service;
 
-        public WallThicknessCodeConvertedController(IWallThicknessCodeConvertedService service)
+        public S3dCodeWallThicknessController(IS3dCodeWallThicknessService service)
         {
             _service = service;
         }
