@@ -306,6 +306,8 @@ interface PipeFittingSpec {
 
 ### 3.7 SavePipeSpecRequest - 保存规格书请求
 
+**当前模块简化配置约定：** 必填项为**标准名称、部件类型、材料信息**；通径相关字段（`npdRange` / `minNpdValue` / `maxNpdValue`）为**可选**。若提供通径则一并保存，供后续「标准+通径范围→管系」模块使用。
+
 ```typescript
 interface SavePipeSpecRequest {
   shipType: string;                           // 船型（必填）
@@ -330,21 +332,22 @@ interface ComponentFullConfiguration {
   duplicateRangeDefaults?: DuplicateRangeDefault[]; // 重复范围默认配置
 }
 
-/** 标准文件配置（简化版），当使用 standardFileConfigs 时采用此结构 */
+/** 标准文件配置（简化版），当使用 standardFileConfigs 时采用此结构。当前简化配置下仅需 standardFile、material；通径可选 */
 interface StandardFileConfig {
-  standardFile?: any;        // 标准文件ID或名称
-  material?: any;            // 材料ID或名称
-  minNpdValue?: number;      // 最小NPD值
-  maxNpdValue?: number;      // 最大NPD值
+  standardFile?: any;        // 标准文件ID或名称（必填）
+  material?: any;            // 材料ID或名称（必填）
+  minNpdValue?: number;      // 最小NPD值（可选，供后续标准+通径→管系模块使用）
+  maxNpdValue?: number;      // 最大NPD值（可选，供后续标准+通径→管系模块使用）
   bendRadiusMultiple?: any;  // 弯管半径倍数
 }
 
+/** 标准文件配置（完整版）。当前简化配置下必填：standardFileName、材料；通径可选 */
 interface StandardFileConfiguration {
   standardFileId?: any;      // 标准文件ID
-  standardFileName?: string; // 标准文件名称
+  standardFileName?: string; // 标准文件名称（必填）
   materialId?: any;          // 材料ID
-  materialName?: string;     // 材料名称
-  npdRange?: [number, number] | [string, string]; // NPD范围 [最小值, 最大值]，支持 number 或 string
+  materialName?: string;     // 材料名称（必填）
+  npdRange?: [number, number] | [string, string]; // NPD范围 [最小值, 最大值]（可选），支持 number 或 string，供后续标准+通径→管系模块使用
   bendRadiusMultiple?: any;  // 弯管半径倍数
 }
 
@@ -365,7 +368,7 @@ interface DiameterRange {
 }
 ```
 
-**完整示例：**
+**完整示例（含通径范围）：**
 
 ```json
 {
@@ -395,6 +398,29 @@ interface DiameterRange {
     "source": "web",
     "operator": "admin"
   }
+}
+```
+
+**简化配置示例（仅标准名、类型、材料，不传通径）：**
+
+```json
+{
+  "shipType": "散货船",
+  "shipNumber": "H1234",
+  "pmcCode": "A1B2C3D",
+  "configurations": [
+    {
+      "componentType": "Elbow",
+      "fullConfig": {
+        "configurations": [
+          {
+            "standardFileName": "ASME B16.9",
+            "materialName": "Carbon Steel"
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
@@ -1511,9 +1537,9 @@ export interface SavePipeSpecRequest {
 
 ### B. 更新日志
 
-| 版本 | 日期       | 修改内容                                                     | 修改人       |
-| ---- | ---------- | ------------------------------------------------------------ | ------------ |
-| v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                 | AI Assistant |
+| 版本 | 日期       | 修改内容                                                                                                                                                                                 | 修改人       |
+| ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                                                                                                                                             | AI Assistant |
 | v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则 | AI Assistant |
 
 ---

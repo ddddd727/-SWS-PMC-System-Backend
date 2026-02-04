@@ -48,15 +48,12 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
         {
             var standardInfos = new List<PmcStandardInfo>();
 
-            // 1. 处理完整版 configurations
+            // 1. 处理完整版 configurations（当前模块简化：通径范围可选，无范围时 DiameterRange 为 null，供后续「标准+通径→管系」模块使用）
             if (config.FullConfig?.Configurations != null)
             {
                 foreach (var stdConfig in config.FullConfig.Configurations)
                 {
                     var range = ParseNpdRange(stdConfig.NpdRange);
-                    if (range == null)
-                        continue; // 跳过无效的NPD范围
-
                     standardInfos.Add(new PmcStandardInfo
                     {
                         StandardType = NormalizeComponentType(config.ComponentType),
@@ -69,24 +66,27 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
                 }
             }
 
-            // 2. 处理简化版 standardFileConfigs（兼容前端可能发送的格式）
+            // 2. 处理简化版 standardFileConfigs（通径可选：有 min/max 时写入 DiameterRange，无则 null）
             if (config.FullConfig?.StandardFileConfigs != null)
             {
                 foreach (var stdConfig in config.FullConfig.StandardFileConfigs)
                 {
-                    if (stdConfig.MinNpdValue == null || stdConfig.MaxNpdValue == null)
-                        continue;
+                    DiameterRange? range = null;
+                    if (stdConfig.MinNpdValue != null && stdConfig.MaxNpdValue != null)
+                    {
+                        range = new DiameterRange
+                        {
+                            MinNpdValue = stdConfig.MinNpdValue.Value,
+                            MaxNpdValue = stdConfig.MaxNpdValue.Value
+                        };
+                    }
 
                     standardInfos.Add(new PmcStandardInfo
                     {
                         StandardType = NormalizeComponentType(config.ComponentType),
                         StandardName = stdConfig.StandardFile?.ToString() ?? string.Empty,
                         Material = stdConfig.Material?.ToString(),
-                        DiameterRange = new DiameterRange
-                        {
-                            MinNpdValue = stdConfig.MinNpdValue.Value,
-                            MaxNpdValue = stdConfig.MaxNpdValue.Value
-                        },
+                        DiameterRange = range,
                         IsDefault = false,
                         OverlapRange = null
                     });
