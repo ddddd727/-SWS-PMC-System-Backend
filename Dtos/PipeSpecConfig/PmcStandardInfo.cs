@@ -1,26 +1,26 @@
-﻿namespace PMCSystem_Backend.Dtos.PipeSpecConfig
+namespace PMCSystem_Backend.Dtos.PipeSpecConfig
 {
     /// <summary>
     /// Pmc标准配置信息
     /// </summary>
     public class PmcStandardInfo
     {
-        // 标准名称
+        /// <summary>标准名称</summary>
         public string? StandardName { get; set; }
 
-        // 标准类型（ComponentType）
+        /// <summary>标准类型（ComponentType）</summary>
         public string? StandardType { get; set; }
 
-        // 通径范围
+        /// <summary>通径范围</summary>
         public DiameterRange? DiameterRange { get; set; }
 
-        // 部件材料
+        /// <summary>部件材料</summary>
         public string? Material { get; set; }
 
-        // 是否是默认匹配
+        /// <summary>是否是默认匹配</summary>
         public bool? IsDefault { get; set; }
 
-        // 默认匹配的重叠通径范围
+        /// <summary>默认匹配的重叠通径范围</summary>
         public List<DiameterRange>? OverlapRange { get; set; }
     }
 }

@@ -164,7 +164,9 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig
         [MaxLength(255, ErrorMessage = "材料类别名称长度不能超过255个字符")]
         public string? MaterialsCategoryName { get; set; }
 
-
+        /// <summary>
+        /// 管系标准名称（与实体存储一致，为字符串；创建/响应使用列表）
+        /// </summary>
         public string? PipingStandardName { get; set; }
 
         [MaxLength(255, ErrorMessage = "材料等级名称长度不能超过255个字符")]

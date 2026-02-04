@@ -1,3 +1,5 @@
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
+
 namespace PMCSystem_Backend.Dtos.PipeSpecConfig.Models
 {
     /// <summary>
