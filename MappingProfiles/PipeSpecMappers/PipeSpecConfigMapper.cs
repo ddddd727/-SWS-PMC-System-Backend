@@ -1,3 +1,4 @@
+using System.Text.Json;
 using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Dtos.PipeSpecConfig.Models;
 using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
@@ -39,7 +40,7 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
         }
 
         /// <summary>
-        /// 映射标准文件配置
+        /// 映射标准文件配置（完整版 Configurations + 简化版 StandardFileConfigs）
         /// </summary>
         /// <param name="config">部件类型配置</param>
         /// <returns>标准信息列表</returns>
@@ -47,31 +48,104 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
         {
             var standardInfos = new List<PmcStandardInfo>();
 
-            if (config.FullConfig?.Configurations == null)
+            // 1. 处理完整版 configurations
+            if (config.FullConfig?.Configurations != null)
             {
-                return standardInfos;
+                foreach (var stdConfig in config.FullConfig.Configurations)
+                {
+                    var range = ParseNpdRange(stdConfig.NpdRange);
+                    if (range == null)
+                        continue; // 跳过无效的NPD范围
+
+                    standardInfos.Add(new PmcStandardInfo
+                    {
+                        StandardType = NormalizeComponentType(config.ComponentType),
+                        StandardName = stdConfig.StandardFileName ?? string.Empty,
+                        Material = stdConfig.MaterialName,
+                        DiameterRange = range,
+                        IsDefault = false,
+                        OverlapRange = null
+                    });
+                }
             }
 
-            foreach (var stdConfig in config.FullConfig.Configurations)
+            // 2. 处理简化版 standardFileConfigs（兼容前端可能发送的格式）
+            if (config.FullConfig?.StandardFileConfigs != null)
             {
-                var standardInfo = new PmcStandardInfo
+                foreach (var stdConfig in config.FullConfig.StandardFileConfigs)
                 {
-                    StandardType = config.ComponentType,
-                    StandardName = stdConfig.StandardFileName,
-                    Material = stdConfig.MaterialName,
-                    DiameterRange = new DiameterRange
-                    {
-                        MinNpdValue = (double)stdConfig.NpdRange[0],
-                        MaxNpdValue = (double)stdConfig.NpdRange[1],
-                    },
-                    IsDefault = false,
-                    OverlapRange = null
-                };
+                    if (stdConfig.MinNpdValue == null || stdConfig.MaxNpdValue == null)
+                        continue;
 
-                standardInfos.Add(standardInfo);
+                    standardInfos.Add(new PmcStandardInfo
+                    {
+                        StandardType = NormalizeComponentType(config.ComponentType),
+                        StandardName = stdConfig.StandardFile?.ToString() ?? string.Empty,
+                        Material = stdConfig.Material?.ToString(),
+                        DiameterRange = new DiameterRange
+                        {
+                            MinNpdValue = stdConfig.MinNpdValue.Value,
+                            MaxNpdValue = stdConfig.MaxNpdValue.Value
+                        },
+                        IsDefault = false,
+                        OverlapRange = null
+                    });
+                }
             }
 
             return standardInfos;
+        }
+
+        /// <summary>
+        /// 安全解析NPD范围，支持 object[]/string[]/number[]/JsonElement[] 等 JSON 反序列化结果
+        /// </summary>
+        private static DiameterRange? ParseNpdRange(object[]? npdRange)
+        {
+            if (npdRange == null || npdRange.Length < 2)
+                return null;
+
+            try
+            {
+                var min = ToDouble(npdRange[0]);
+                var max = ToDouble(npdRange[1]);
+                if (min == null || max == null)
+                    return null;
+                return new DiameterRange { MinNpdValue = min.Value, MaxNpdValue = max.Value };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 将 JSON 反序列化后的各种类型安全转换为 double
+        /// </summary>
+        private static double? ToDouble(object? value)
+        {
+            if (value == null) return null;
+            if (value is JsonElement je)
+                return je.ValueKind == JsonValueKind.Number ? je.GetDouble() : null;
+            try
+            {
+                return Convert.ToDouble(value);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 规范化部件类型名称，确保与 S3dRulePmcData 实体字段映射一致
+        /// </summary>
+        private static string NormalizeComponentType(string componentType)
+        {
+            if (string.IsNullOrWhiteSpace(componentType))
+                return string.Empty;
+
+            // 保持首字母大写，其余小写，与 PmcSpecService.SaveSpecRules 中的 switch 匹配
+            return char.ToUpperInvariant(componentType[0]) + componentType[1..].ToLowerInvariant();
         }
 
         /// <summary>
@@ -92,7 +166,7 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
             {
                 var standardInfo = new PmcStandardInfo
                 {
-                    StandardType = config.ComponentType,
+                    StandardType = NormalizeComponentType(config.ComponentType),
                     StandardName = duplicateDefault.DefaultStandardFileName,
                     Material = null, // 重复范围默认配置通常没有材料信息
                     DiameterRange = new DiameterRange

@@ -316,16 +316,27 @@ interface SavePipeSpecRequest {
 }
 
 interface ComponentTypeConfiguration {
-  componentType: string;                     // 部件类型（必填）
+  componentType: string;                     // 部件类型（必填），支持首字母大写规范化，如 "elbow"→"Elbow"
+                                            // 支持: Elbow, Reducer, Tee, Pipe, Sleeve, Bosses, Saddles, Caps,
+                                            //       Overpass, Accessories, Flange, BlindFlange, Gasket, Bolt, Nut, Washer
   configResult?: string;                     // 配置结果描述
   fullConfig?: ComponentFullConfiguration;   // 完整配置信息
 }
 
 interface ComponentFullConfiguration {
   standardFileIds?: any[];                   // 标准文件ID列表
-  standardFileConfigs?: StandardFileConfig[]; // 标准文件配置（简化版）
+  standardFileConfigs?: StandardFileConfig[]; // 标准文件配置（简化版），与 configurations 二选一或同时使用
   configurations?: StandardFileConfiguration[]; // 标准文件配置（完整版）
   duplicateRangeDefaults?: DuplicateRangeDefault[]; // 重复范围默认配置
+}
+
+/** 标准文件配置（简化版），当使用 standardFileConfigs 时采用此结构 */
+interface StandardFileConfig {
+  standardFile?: any;        // 标准文件ID或名称
+  material?: any;            // 材料ID或名称
+  minNpdValue?: number;      // 最小NPD值
+  maxNpdValue?: number;      // 最大NPD值
+  bendRadiusMultiple?: any;  // 弯管半径倍数
 }
 
 interface StandardFileConfiguration {
@@ -333,7 +344,7 @@ interface StandardFileConfiguration {
   standardFileName?: string; // 标准文件名称
   materialId?: any;          // 材料ID
   materialName?: string;     // 材料名称
-  npdRange?: [number, number]; // NPD范围 [最小值, 最大值]
+  npdRange?: [number, number] | [string, string]; // NPD范围 [最小值, 最大值]，支持 number 或 string
   bendRadiusMultiple?: any;  // 弯管半径倍数
 }
 
@@ -914,7 +925,7 @@ interface PipeFittingSpec {
 
 ### 4.7 保存规格书配置
 
-保存管系规格书的完整配置信息。
+保存管系规格书的完整配置信息。后端按 `(pmcCode, shipType, shipNumber)` 精确匹配数据库中已存在的记录进行更新，**请确保该组合对应的 PMC 数据已预先存在**。
 
 #### 基本信息
 
@@ -1057,16 +1068,18 @@ interface PipeFittingSpec {
 }
 ```
 
-**失败响应 (400) - 业务规则失败**
+**失败响应 (400) - 业务规则失败（如记录不存在）**
 
 ```json
 {
   "code": 400,
-  "message": "未找到PMC编码 A1B2C3D 对应的数据",
+  "message": "未找到PMC编码 A1B2C3D（船型: 散货船, 船号: H1234）对应的数据",
   "timestamp": "2026-02-03T10:30:00Z",
   "traceId": "0HMVD7K3QH1AJ"
 }
 ```
+
+> **说明**：后端按 `(pmcCode, shipType, shipNumber)` 精确查找记录，三者须与数据库中已存在的数据一致。
 
 #### TypeScript类型定义
 
@@ -1447,12 +1460,20 @@ export interface DiameterRange {
   standardFile?: any;
 }
 
+export interface StandardFileConfig {
+  standardFile?: any;
+  material?: any;
+  minNpdValue?: number;
+  maxNpdValue?: number;
+  bendRadiusMultiple?: any;
+}
+
 export interface StandardFileConfiguration {
   standardFileId?: any;
   standardFileName?: string;
   materialId?: any;
   materialName?: string;
-  npdRange?: [number, number];
+  npdRange?: [number, number] | [string, string];
   bendRadiusMultiple?: any;
 }
 
@@ -1468,7 +1489,7 @@ export interface DuplicateRangeDefault {
 
 export interface ComponentFullConfiguration {
   standardFileIds?: any[];
-  standardFileConfigs?: any[];
+  standardFileConfigs?: StandardFileConfig[];
   configurations?: StandardFileConfiguration[];
   duplicateRangeDefaults?: DuplicateRangeDefault[];
 }
@@ -1490,9 +1511,10 @@ export interface SavePipeSpecRequest {
 
 ### B. 更新日志
 
-| 版本 | 日期       | 修改内容                     | 修改人       |
-| ---- | ---------- | ---------------------------- | ------------ |
-| v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口 | AI Assistant |
+| 版本 | 日期       | 修改内容                                                     | 修改人       |
+| ---- | ---------- | ------------------------------------------------------------ | ------------ |
+| v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                 | AI Assistant |
+| v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则 | AI Assistant |
 
 ---
 

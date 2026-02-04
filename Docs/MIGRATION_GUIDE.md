@@ -95,6 +95,7 @@
 | `standardInfos[].material` | `configurations[].fullConfig.configurations[].materialName` | 嵌套层级改变 |
 | `standardInfos[].diameterRange.diameterMin` | `configurations[].fullConfig.configurations[].npdRange[0]` | 结构变更：对象→数组 |
 | `standardInfos[].diameterRange.diameterMax` | `configurations[].fullConfig.configurations[].npdRange[1]` | 结构变更：对象→数组 |
+| - | `configurations[].fullConfig.standardFileConfigs[]` | **可选**：标准文件配置（简化版），与 configurations 二选一或同时使用 |
 | - | `configurations[].fullConfig.duplicateRangeDefaults[]` | **新增**：重复范围默认配置 |
 | - | `metadata` | **新增可选**：元数据 |
 
@@ -136,6 +137,14 @@
 }
 ```
 
+### 业务规则失败 (400) - 记录不存在
+```json
+{
+  "code": 400,
+  "message": "未找到PMC编码 A1B2C3D（船型: 散货船, 船号: H1234）对应的数据"
+}
+```
+
 ---
 
 ## 前端适配建议
@@ -160,8 +169,17 @@ export interface ComponentTypeConfiguration {
 }
 
 export interface ComponentFullConfiguration {
-  configurations: StandardFileConfiguration[];
+  standardFileConfigs?: StandardFileConfig[];   // 标准文件配置（简化版）
+  configurations?: StandardFileConfiguration[];
   duplicateRangeDefaults?: DuplicateRangeDefault[];
+}
+
+export interface StandardFileConfig {
+  standardFile?: any;
+  material?: any;
+  minNpdValue?: number;
+  maxNpdValue?: number;
+  bendRadiusMultiple?: any;
 }
 
 export interface StandardFileConfiguration {
@@ -322,15 +340,18 @@ export function usePipeSpecForm() {
 ## 常见问题
 
 ### Q1: 为什么新增了 shipType 和 shipNumber 字段？
-**A**: 这些字段对于追溯和管理规格书配置至关重要，现在在保存时一并记录。
+**A**: 这些字段用于精确匹配数据库中的 PMC 记录。后端按 `(pmcCode, shipType, shipNumber)` 查找对应记录进行更新，三者须与已存在的数据一致。
 
 ### Q2: 旧的API还能用吗？
 **A**: 不能，旧的请求格式已废弃。请尽快迁移到新格式。
 
 ### Q3: npdRange 为什么从对象变成了数组？
-**A**: 数组格式更简洁，前端处理更方便。`[min, max]` 的形式也更符合范围的语义。
+**A**: 数组格式更简洁，前端处理更方便。`[min, max]` 的形式也更符合范围的语义。后端同时支持 `[number, number]` 和 `[string, string]` 格式。
 
-### Q4: 如果我的前端代码已经使用了旧格式怎么办？
+### Q4: 业务规则失败时错误消息的格式是什么？
+**A**: 当未找到对应记录时，返回格式为 `"未找到PMC编码 {pmcCode}（船型: {shipType}, 船号: {shipNumber}）对应的数据"`，便于前端提示用户检查船型、船号和 PMC 编码的组合是否正确。
+
+### Q5: 如果我的前端代码已经使用了旧格式怎么办？
 **A**: 建议创建一个转换函数，将旧格式转换为新格式：
 
 ```typescript
@@ -363,4 +384,4 @@ function convertOldToNewFormat(oldRequest: any): SavePipeSpecRequest {
 
 如有疑问，请联系后端开发团队。
 
-**更新日期**: 2026-02-03
+**更新日期**: 2026-02-04

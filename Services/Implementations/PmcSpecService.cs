@@ -464,14 +464,17 @@ namespace PMCSystem_Backend.Services.Implementations
 
             try
             {
-                // 查询现有的PMC数据
+                // 查询现有的PMC数据：按 (Pmccode, ShipType, ShipNo) 精确匹配，与 S3D_Rule_PMCData 唯一约束一致
                 var existingEntity = _context.S3dRulePmcdata
-                    .FirstOrDefault(x => x.Pmccode == request.PmcCode);
+                    .FirstOrDefault(x => x.Pmccode == request.PmcCode
+                        && x.ShipType == request.ShipType
+                        && x.ShipNo == request.ShipNumber);
 
                 if (existingEntity == null)
                 {
-                    _logger.LogError("未找到PMC编码 {PmcCode} 对应的数据，无法更新规则", request.PmcCode);
-                    throw new Exception($"未找到PMC编码 {request.PmcCode} 对应的数据");
+                    _logger.LogError("未找到PMC编码 {PmcCode} 船型 {ShipType} 船号 {ShipNo} 对应的数据，无法更新规则",
+                        request.PmcCode, request.ShipType, request.ShipNumber);
+                    throw new Exception($"未找到PMC编码 {request.PmcCode}（船型: {request.ShipType}, 船号: {request.ShipNumber}）对应的数据");
                 }
 
                 // 使用Mapper转换DTO结构为标准信息列表格式
@@ -483,9 +486,15 @@ namespace PMCSystem_Backend.Services.Implementations
                 foreach (var group in groupedStandards)
                 {
                     var standardType = group.Key;
+                    if (string.IsNullOrWhiteSpace(standardType))
+                    {
+                        _logger.LogWarning("跳过 StandardType 为空的配置项");
+                        continue;
+                    }
+
                     var standards = group.ToList();
 
-                    // 根据部件类型分配到对应的实体字段
+                    // 根据部件类型分配到对应的实体字段（与 S3dRulePmcData 实体属性对应）
                     switch (standardType)
                     {
                         case "Elbow":
