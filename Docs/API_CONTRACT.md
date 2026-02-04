@@ -10,7 +10,7 @@
 | **协议**     | HTTP/HTTPS       |
 | **数据格式** | JSON             |
 | **字符编码** | UTF-8            |
-| **最后更新** | 2026-02-03       |
+| **最后更新** | 2026-02-04       |
 
 ---
 
@@ -310,9 +310,9 @@ interface PipeFittingSpec {
 
 ```typescript
 interface SavePipeSpecRequest {
-  shipType: string;                           // 船型（必填）
-  shipNumber: string;                         // 船号（必填）
-  pmcCode: string;                           // PMC编码（必填）
+  shipType: string;                           // 船型（必填，长度≤255）
+  shipNumber: string;                         // 船号（必填，长度≤255）
+  pmcCode: string;                           // PMC编码（必填，长度≤255）
   configurations: ComponentTypeConfiguration[]; // 部件类型配置列表（至少1个）
   metadata?: Record<string, any>;            // 可选元数据
 }
@@ -418,8 +418,8 @@ interface DiameterRange {
 
 ```typescript
 interface GetNPDInfoRequest {
-  endStandard: string;   // 端面标准（必填）
-  schedule: string;      // 壁厚系列（必填）
+  endStandard: string;   // 端面标准（必填，长度≤255）
+  schedule: string;      // 壁厚系列（必填，长度≤255）
 }
 ```
 
@@ -429,7 +429,7 @@ interface GetNPDInfoRequest {
 
 ```typescript
 interface GetPipeFittingSpecRequest {
-  componentTypeName: string;  // 部件类型名称（必填）
+  componentTypeName: string;  // 部件类型名称（必填，长度≤255）
 }
 ```
 
@@ -677,7 +677,7 @@ interface PmcSelectInfo {
 
 ### 4.4 解析PMC编码
 
-解析PMC 7位编码，获取详细的基础信息。
+解析PMC 7位编码，获取详细的基础信息。如果该PMC编码已配置过管系规格书，则同时返回配置信息；如果未配置，则只返回基础信息。
 
 #### 基本信息
 
@@ -700,22 +700,77 @@ GET /api/PmcSpec/Analyze/A1B2C3D
 
 #### 响应数据
 
-**成功响应 (200)**
+**成功响应 (200) - 已配置**
 
 ```json
 {
   "code": 200,
   "message": "解析成功",
   "data": {
-    "pmcCode": "A1B2C3D",
-    "shipNumber": "H1234",
-    "status": "已配置",
-    "pipingClass": "150#",
-    "materialGrade": "A105",
-    "pressureRating": "Class 150",
-    "pipeStandard": "ASME B36.10",
-    "materialCategory": "Carbon Steel",
-    "wallThickness": "Sch40"
+    "baseInfo": {
+      "pmcCode": "A1B2C3D",
+      "shipNumber": "H1234",
+      "status": "已配置",
+      "pipingClass": "150#",
+      "materialGrade": "A105",
+      "pressureRating": "Class 150",
+      "pipeStandard": "ASME B36.10",
+      "materialCategory": "Carbon Steel",
+      "wallThickness": "Sch40"
+    },
+    "configurations": [
+      {
+        "componentType": "Elbow",
+        "fullConfig": {
+          "standardFileConfigs": [
+            {
+              "standardFile": "ASME B16.9",
+              "material": "Carbon Steel"
+            }
+          ]
+        }
+      },
+      {
+        "componentType": "Tee",
+        "fullConfig": {
+          "standardFileConfigs": [
+            {
+              "standardFile": "ASME B16.9",
+              "material": "Stainless Steel 304"
+            }
+          ]
+        }
+      }
+    ],
+    "isConfigured": true
+  },
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A9"
+}
+```
+
+**注意：** 当前模块已简化配置，响应中仅包含标准名称和材料信息，不包含通径范围（`minNpdValue`、`maxNpdValue`）和重复范围默认配置（`duplicateRangeDefaults`）。
+
+**成功响应 (200) - 未配置**
+
+```json
+{
+  "code": 200,
+  "message": "解析成功",
+  "data": {
+    "baseInfo": {
+      "pmcCode": "A1B2C3D",
+      "shipNumber": "H1234",
+      "status": "未配置",
+      "pipingClass": "150#",
+      "materialGrade": "A105",
+      "pressureRating": "Class 150",
+      "pipeStandard": "ASME B36.10",
+      "materialCategory": "Carbon Steel",
+      "wallThickness": "Sch40"
+    },
+    "configurations": [],
+    "isConfigured": false
   },
   "timestamp": "2026-02-03T10:30:00Z",
   "traceId": "0HMVD7K3QH1A9"
@@ -736,7 +791,13 @@ GET /api/PmcSpec/Analyze/A1B2C3D
 #### TypeScript类型定义
 
 ```typescript
-type AnalyzePmcCodeResponse = ApiResponse<PmcBaseInfo>;
+type AnalyzePmcCodeResponse = ApiResponse<PmcInfoWithConfig>;
+
+interface PmcInfoWithConfig {
+  baseInfo: PmcBaseInfo;
+  configurations: ComponentTypeConfiguration[];
+  isConfigured: boolean;
+}
 
 interface PmcBaseInfo {
   pmcCode: string;
@@ -749,7 +810,31 @@ interface PmcBaseInfo {
   materialCategory?: string;
   wallThickness?: string;
 }
+
+interface ComponentTypeConfiguration {
+  componentType: string;
+  configResult?: string;
+  fullConfig?: ComponentFullConfiguration;
+}
+
+interface ComponentFullConfiguration {
+  standardFileIds?: any[];
+  standardFileConfigs?: StandardFileConfig[];
+  // 注意：duplicateRangeDefaults 在简化配置中不再返回
+}
+
+interface StandardFileConfig {
+  standardFile?: any;        // 标准文件ID或名称（必填）
+  material?: any;            // 材料ID或名称（必填）
+  // 注意：minNpdValue、maxNpdValue、bendRadiusMultiple 在简化配置中不再返回
+}
 ```
+
+**简化配置说明：**
+- 响应中仅包含标准名称（`standardFile`）和材料信息（`material`）
+- 不包含通径范围相关字段（`minNpdValue`、`maxNpdValue`）
+- 不包含重复范围默认配置（`duplicateRangeDefaults`）
+- 不包含弯管半径倍数（`bendRadiusMultiple`）
 
 ---
 
@@ -766,10 +851,10 @@ interface PmcBaseInfo {
 
 #### 请求参数
 
-| 参数名      | 类型   | 位置  | 必填 | 说明     | 示例       |
-| ----------- | ------ | ----- | ---- | -------- | ---------- |
-| endStandard | string | Query | 是   | 端面标准 | ASME B16.9 |
-| schedule    | string | Query | 是   | 壁厚系列 | Sch40      |
+| 参数名      | 类型   | 位置  | 必填 | 说明               | 示例       |
+| ----------- | ------ | ----- | ---- | ------------------ | ---------- |
+| endStandard | string | Query | 是   | 端面标准，长度≤255 | ASME B16.9 |
+| schedule    | string | Query | 是   | 壁厚系列，长度≤255 | Sch40      |
 
 #### 请求示例
 
@@ -855,9 +940,9 @@ interface SpecNPDInfo {
 
 #### 请求参数
 
-| 参数名            | 类型   | 位置  | 必填 | 说明         | 示例  |
-| ----------------- | ------ | ----- | ---- | ------------ | ----- |
-| componentTypeName | string | Query | 是   | 部件类型名称 | Elbow |
+| 参数名            | 类型   | 位置  | 必填 | 说明                   | 示例  |
+| ----------------- | ------ | ----- | ---- | ---------------------- | ----- |
+| componentTypeName | string | Query | 是   | 部件类型名称，长度≤255 | Elbow |
 
 #### 请求示例
 
@@ -952,9 +1037,9 @@ interface PipeFittingSpec {
 
 | 参数名         | 类型   | 位置 | 必填 | 说明                        |
 | -------------- | ------ | ---- | ---- | --------------------------- |
-| shipType       | string | Body | 是   | 船型                        |
-| shipNumber     | string | Body | 是   | 船号                        |
-| pmcCode        | string | Body | 是   | PMC编码                     |
+| shipType       | string | Body | 是   | 船型，长度≤255              |
+| shipNumber     | string | Body | 是   | 船号，长度≤255              |
+| pmcCode        | string | Body | 是   | PMC编码，长度≤255           |
 | configurations | array  | Body | 是   | 部件类型配置列表（至少1个） |
 | metadata       | object | Body | 否   | 可选元数据                  |
 
@@ -1101,9 +1186,9 @@ interface PipeFittingSpec {
 type SaveSpecRulesResponse = ApiResponse<null>;
 
 interface SavePipeSpecRequest {
-  shipType: string;
-  shipNumber: string;
-  pmcCode: string;
+  shipType: string;      // 长度≤255
+  shipNumber: string;    // 长度≤255
+  pmcCode: string;       // 长度≤255
   configurations: ComponentTypeConfiguration[];
   metadata?: Record<string, any>;
 }
@@ -1127,6 +1212,10 @@ interface SavePipeSpecRequest {
 
 #### 参数验证错误 (400)
 
+常见错误包括必填项为空、字符串超长等。字符串字段（如 shipType、shipNumber、pmcCode、endStandard、schedule、componentTypeName）长度不得超过 255 个字符。
+
+**示例 - 必填项为空：**
+
 ```json
 {
   "code": 400,
@@ -1135,6 +1224,22 @@ interface SavePipeSpecRequest {
     {
       "field": "shipType",
       "message": "船型不能为空",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ]
+}
+```
+
+**示例 - 长度超限：**
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "shipType",
+      "message": "船型长度不能超过255个字符",
       "errorCode": "VALIDATION_ERROR"
     }
   ]
@@ -1504,6 +1609,7 @@ export interface ComponentTypeConfiguration {
   fullConfig?: ComponentFullConfiguration;
 }
 
+/** 保存规格书请求；shipType、shipNumber、pmcCode 长度均≤255 */
 export interface SavePipeSpecRequest {
   shipType: string;
   shipNumber: string;
@@ -1520,6 +1626,7 @@ export interface SavePipeSpecRequest {
 | v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                                                                                                                                             | AI Assistant |
 | v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则 | AI Assistant |
 | v1.2 | 2026-02-04 | SaveSpecRules: 移除 StandardFileConfiguration，统一使用 StandardFileConfig 作为标准文件配置数据模型 | AI Assistant |
+| v1.3 | 2026-02-04 | 请求参数长度约束：SavePipeSpecRequest（shipType/shipNumber/pmcCode）、GetNPDInfoRequest（endStandard/schedule）、GetPipeFittingSpecRequest（componentTypeName）均增加长度≤255 的校验与契约说明 | AI Assistant |
 
 ---
 

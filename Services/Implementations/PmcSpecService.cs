@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Dtos.PipeSpecConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig.Models;
 using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
@@ -680,6 +681,96 @@ namespace PMCSystem_Backend.Services.Implementations
             }
         }
 
+        /// <summary>
+        /// 解析PMC编码并返回基础信息和配置信息
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <returns>包含基础信息和配置信息的DTO</returns>
+        public PmcInfoWithConfigDto AnalyzeCodeFromPMCWithConfig(string pmcCode)
+        {
+            // 先获取基础信息
+            var baseInfo = AnalyzeCodeFromPMC(pmcCode);
+
+            // 查询配置信息
+            var configurations = new List<ComponentTypeConfiguration>();
+            if (GetSpecRules(pmcCode, out var standardInfos) && standardInfos.Any())
+            {
+                // 将标准信息转换为配置格式
+                configurations = ConvertStandardInfosToConfigurations(standardInfos);
+            }
+
+            return new PmcInfoWithConfigDto
+            {
+                BaseInfo = baseInfo,
+                Configurations = configurations
+            };
+        }
+
+        /// <summary>
+        /// 将标准信息列表转换为部件类型配置列表（简化版：仅保留标准名称和材料信息，去除通径范围）
+        /// </summary>
+        /// <param name="standardInfos">标准信息列表</param>
+        /// <returns>部件类型配置列表</returns>
+        private List<ComponentTypeConfiguration> ConvertStandardInfosToConfigurations(List<PmcStandardInfo> standardInfos)
+        {
+            var configurations = new Dictionary<string, ComponentTypeConfiguration>();
+
+            foreach (var standardInfo in standardInfos)
+            {
+                // 跳过无效的标准信息
+                if (string.IsNullOrWhiteSpace(standardInfo.StandardType) || string.IsNullOrWhiteSpace(standardInfo.StandardName))
+                {
+                    continue;
+                }
+
+                // 跳过重复范围默认配置（IsDefault == true），因为涉及通径范围
+                if (standardInfo.IsDefault == true)
+                {
+                    continue;
+                }
+
+                // 获取或创建部件类型配置
+                if (!configurations.ContainsKey(standardInfo.StandardType))
+                {
+                    configurations[standardInfo.StandardType] = new ComponentTypeConfiguration
+                    {
+                        ComponentType = standardInfo.StandardType,
+                        FullConfig = new ComponentFullConfiguration
+                        {
+                            StandardFileConfigs = new List<StandardFileConfig>()
+                        }
+                    };
+                }
+
+                var config = configurations[standardInfo.StandardType];
+
+                // 确保StandardFileConfigs列表已初始化
+                if (config.FullConfig!.StandardFileConfigs == null)
+                {
+                    config.FullConfig.StandardFileConfigs = new List<StandardFileConfig>();
+                }
+
+                // 创建标准文件配置（仅包含标准名称和材料，不包含通径范围）
+                var stdConfig = new StandardFileConfig
+                {
+                    StandardFile = standardInfo.StandardName,
+                    Material = standardInfo.Material
+                    // 注意：不包含 MinNpdValue、MaxNpdValue 和 BendRadiusMultiple，因为已简化配置
+                };
+
+                // 检查是否已存在相同的标准+材料组合，避免重复添加
+                var exists = config.FullConfig.StandardFileConfigs.Any(x =>
+                    x.StandardFile?.ToString() == stdConfig.StandardFile?.ToString() &&
+                    x.Material?.ToString() == stdConfig.Material?.ToString());
+
+                if (!exists)
+                {
+                    config.FullConfig.StandardFileConfigs.Add(stdConfig);
+                }
+            }
+
+            return configurations.Values.ToList();
+        }
 
         /// <summary>
         /// 生成对应的管系规格书

@@ -41,6 +41,13 @@ namespace PMCSystem_Backend.Services.Interfaces
         PmcBaseInfoDto AnalyzeCodeFromPMC(string PmcCode);
 
         /// <summary>
+        /// 解析PMC编码并返回基础信息和配置信息
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <returns>包含基础信息和配置信息的DTO</returns>
+        PmcInfoWithConfigDto AnalyzeCodeFromPMCWithConfig(string pmcCode);
+
+        /// <summary>
         /// 根据PMC内包含的标准信息和壁厚系列获取对应的通径范围
         /// </summary>
         /// <param name="EndStandard"> 端面标准 </param>

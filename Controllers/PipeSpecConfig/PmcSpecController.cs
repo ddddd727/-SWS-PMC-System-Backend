@@ -130,14 +130,14 @@ namespace PMCSystem_Backend.Controllers
         }
 
         /// <summary>
-        /// 解析PMC编码基础信息
+        /// 解析PMC编码基础信息（包含配置信息）
         /// </summary>
         /// <param name="pmcCode">PMC 7位编码</param>
-        /// <returns>PMC基础信息</returns>
-        /// <response code="200">解析成功，返回PMC基础信息</response>
+        /// <returns>PMC基础信息和配置信息（如果已配置）</returns>
+        /// <response code="200">解析成功，返回PMC基础信息和配置信息</response>
         /// <response code="400">请求参数错误</response>
         [HttpGet("Analyze/{pmcCode}")]
-        [ProducesResponseType(typeof(ApiResponse<PmcBaseInfoDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<PmcInfoWithConfigDto>), 200)]
         [ProducesResponseType(typeof(ApiResponse), 400)]
         public IActionResult AnalyzePmcCode(
             [Required(ErrorMessage = "PMC编码不能为空")] string pmcCode)
@@ -152,9 +152,10 @@ namespace PMCSystem_Backend.Controllers
             {
                 _logger.LogInformation("开始解析PMC编码: {PmcCode}", pmcCode);
 
-                var result = _pmcSpecService.AnalyzeCodeFromPMC(pmcCode);
+                // 调用新方法，返回基础信息和配置信息
+                var result = _pmcSpecService.AnalyzeCodeFromPMCWithConfig(pmcCode);
 
-                _logger.LogInformation("成功解析PMC编码: {PmcCode}", pmcCode);
+                _logger.LogInformation("成功解析PMC编码: {PmcCode}，是否已配置: {IsConfigured}", pmcCode, result.IsConfigured);
                 return Success(result, "解析成功");
             }
             catch (ArgumentException ex)
