@@ -169,8 +169,7 @@ export interface ComponentTypeConfiguration {
 }
 
 export interface ComponentFullConfiguration {
-  standardFileConfigs?: StandardFileConfig[];   // 标准文件配置（简化版）
-  configurations?: StandardFileConfiguration[];
+  standardFileConfigs?: StandardFileConfig[];   // 标准文件配置
   duplicateRangeDefaults?: DuplicateRangeDefault[];
 }
 
@@ -179,15 +178,6 @@ export interface StandardFileConfig {
   material?: any;
   minNpdValue?: number;
   maxNpdValue?: number;
-  bendRadiusMultiple?: any;
-}
-
-export interface StandardFileConfiguration {
-  standardFileId?: any;
-  standardFileName?: string;
-  materialId?: any;
-  materialName?: string;
-  npdRange?: [number, number];
   bendRadiusMultiple?: any;
 }
 

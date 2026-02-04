@@ -327,27 +327,16 @@ interface ComponentTypeConfiguration {
 
 interface ComponentFullConfiguration {
   standardFileIds?: any[];                   // 标准文件ID列表
-  standardFileConfigs?: StandardFileConfig[]; // 标准文件配置（简化版），与 configurations 二选一或同时使用
-  configurations?: StandardFileConfiguration[]; // 标准文件配置（完整版）
+  standardFileConfigs?: StandardFileConfig[]; // 标准文件配置
   duplicateRangeDefaults?: DuplicateRangeDefault[]; // 重复范围默认配置
 }
 
-/** 标准文件配置（简化版），当使用 standardFileConfigs 时采用此结构。当前简化配置下仅需 standardFile、material；通径可选 */
+/** 标准文件配置 */
 interface StandardFileConfig {
   standardFile?: any;        // 标准文件ID或名称（必填）
   material?: any;            // 材料ID或名称（必填）
   minNpdValue?: number;      // 最小NPD值（可选，供后续标准+通径→管系模块使用）
   maxNpdValue?: number;      // 最大NPD值（可选，供后续标准+通径→管系模块使用）
-  bendRadiusMultiple?: any;  // 弯管半径倍数
-}
-
-/** 标准文件配置（完整版）。当前简化配置下必填：standardFileName、材料；通径可选 */
-interface StandardFileConfiguration {
-  standardFileId?: any;      // 标准文件ID
-  standardFileName?: string; // 标准文件名称（必填）
-  materialId?: any;          // 材料ID
-  materialName?: string;     // 材料名称（必填）
-  npdRange?: [number, number] | [string, string]; // NPD范围 [最小值, 最大值]（可选），支持 number 或 string，供后续标准+通径→管系模块使用
   bendRadiusMultiple?: any;  // 弯管半径倍数
 }
 
@@ -380,13 +369,12 @@ interface DiameterRange {
       "componentType": "Elbow",
       "configResult": "配置成功",
       "fullConfig": {
-        "configurations": [
+        "standardFileConfigs": [
           {
-            "standardFileId": 1,
-            "standardFileName": "ASME B16.9",
-            "materialId": 10,
-            "materialName": "Carbon Steel",
-            "npdRange": [15, 100],
+            "standardFile": 1,
+            "material": 10,
+            "minNpdValue": 15,
+            "maxNpdValue": 100,
             "bendRadiusMultiple": 1.5
           }
         ],
@@ -1494,15 +1482,6 @@ export interface StandardFileConfig {
   bendRadiusMultiple?: any;
 }
 
-export interface StandardFileConfiguration {
-  standardFileId?: any;
-  standardFileName?: string;
-  materialId?: any;
-  materialName?: string;
-  npdRange?: [number, number] | [string, string];
-  bendRadiusMultiple?: any;
-}
-
 export interface DuplicateRangeDefault {
   overlapMin: number;
   overlapMax: number;
@@ -1516,7 +1495,6 @@ export interface DuplicateRangeDefault {
 export interface ComponentFullConfiguration {
   standardFileIds?: any[];
   standardFileConfigs?: StandardFileConfig[];
-  configurations?: StandardFileConfiguration[];
   duplicateRangeDefaults?: DuplicateRangeDefault[];
 }
 
@@ -1541,6 +1519,7 @@ export interface SavePipeSpecRequest {
 | ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
 | v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                                                                                                                                             | AI Assistant |
 | v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则 | AI Assistant |
+| v1.2 | 2026-02-04 | SaveSpecRules: 移除 StandardFileConfiguration，统一使用 StandardFileConfig 作为标准文件配置数据模型 | AI Assistant |
 
 ---
 

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Dtos.PipeSpecConfig.Models;
 using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
@@ -40,7 +39,7 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
         }
 
         /// <summary>
-        /// 映射标准文件配置（完整版 Configurations + 简化版 StandardFileConfigs）
+        /// 映射标准文件配置（StandardFileConfigs）
         /// </summary>
         /// <param name="config">部件类型配置</param>
         /// <returns>标准信息列表</returns>
@@ -48,25 +47,6 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
         {
             var standardInfos = new List<PmcStandardInfo>();
 
-            // 1. 处理完整版 configurations（当前模块简化：通径范围可选，无范围时 DiameterRange 为 null，供后续「标准+通径→管系」模块使用）
-            if (config.FullConfig?.Configurations != null)
-            {
-                foreach (var stdConfig in config.FullConfig.Configurations)
-                {
-                    var range = ParseNpdRange(stdConfig.NpdRange);
-                    standardInfos.Add(new PmcStandardInfo
-                    {
-                        StandardType = NormalizeComponentType(config.ComponentType),
-                        StandardName = stdConfig.StandardFileName ?? string.Empty,
-                        Material = stdConfig.MaterialName,
-                        DiameterRange = range,
-                        IsDefault = false,
-                        OverlapRange = null
-                    });
-                }
-            }
-
-            // 2. 处理简化版 standardFileConfigs（通径可选：有 min/max 时写入 DiameterRange，无则 null）
             if (config.FullConfig?.StandardFileConfigs != null)
             {
                 foreach (var stdConfig in config.FullConfig.StandardFileConfigs)
@@ -94,46 +74,6 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
             }
 
             return standardInfos;
-        }
-
-        /// <summary>
-        /// 安全解析NPD范围，支持 object[]/string[]/number[]/JsonElement[] 等 JSON 反序列化结果
-        /// </summary>
-        private static DiameterRange? ParseNpdRange(object[]? npdRange)
-        {
-            if (npdRange == null || npdRange.Length < 2)
-                return null;
-
-            try
-            {
-                var min = ToDouble(npdRange[0]);
-                var max = ToDouble(npdRange[1]);
-                if (min == null || max == null)
-                    return null;
-                return new DiameterRange { MinNpdValue = min.Value, MaxNpdValue = max.Value };
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 将 JSON 反序列化后的各种类型安全转换为 double
-        /// </summary>
-        private static double? ToDouble(object? value)
-        {
-            if (value == null) return null;
-            if (value is JsonElement je)
-                return je.ValueKind == JsonValueKind.Number ? je.GetDouble() : null;
-            try
-            {
-                return Convert.ToDouble(value);
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         /// <summary>

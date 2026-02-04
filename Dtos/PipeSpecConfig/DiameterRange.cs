@@ -23,6 +23,6 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig
         /// <summary>
         /// 标准文件（可选）
         /// </summary>
-        public object? StandardFile { get; set; }
+        public string? StandardFile { get; set; }
     }
 }

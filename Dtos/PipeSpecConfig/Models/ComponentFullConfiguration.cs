@@ -11,14 +11,9 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig.Models
         public List<object> StandardFileIds { get; set; } = new List<object>();
 
         /// <summary>
-        /// 标准文件配置列表（简化版）
+        /// 标准文件配置列表
         /// </summary>
         public List<StandardFileConfig> StandardFileConfigs { get; set; } = new List<StandardFileConfig>();
-
-        /// <summary>
-        /// 标准文件配置列表（完整版）
-        /// </summary>
-        public List<StandardFileConfiguration> Configurations { get; set; } = new List<StandardFileConfiguration>();
 
         /// <summary>
         /// 重复范围默认配置列表

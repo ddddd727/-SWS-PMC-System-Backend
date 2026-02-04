@@ -6,9 +6,9 @@
     public class PipeFittingSpecDto
     {
         // 标准名字
-        public string StandardName { get; set; }
+        public string StandardName { get; set; } = string.Empty;
 
         // 标准内材料
-        public List<string> MaterialList { get; set; }
+        public List<string> MaterialList { get; set; } = new List<string>();
     }
 }

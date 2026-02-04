@@ -25,7 +25,6 @@
   │   ├── ComponentTypeConfiguration.cs
   │   ├── ComponentFullConfiguration.cs
   │   ├── StandardFileConfig.cs
-  │   ├── StandardFileConfiguration.cs
   │   └── DuplicateRangeDefault.cs
   └── DiameterRange.cs    # 通用DTO
   ```
@@ -37,7 +36,6 @@
 - `Dtos/PipeSpecInfo/PartTypeConfiguration.cs`
 - `Dtos/PipeSpecInfo/FullConfiguration.cs`
 - `Dtos/PipeSpecInfo/StandardFileConfig.cs`
-- `Dtos/PipeSpecInfo/StandardFileConfiguration.cs`
 - `Dtos/PipeSpecInfo/DuplicateRangeDefault.cs`
 - `Dtos/PipeSpecInfo/NPDRange.cs`
 - `Dtos/PipeSpecConfig/SaveSpecRulesRequest.cs`
