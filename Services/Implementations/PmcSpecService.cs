@@ -448,7 +448,132 @@ namespace PMCSystem_Backend.Services.Implementations
 
 
         /// <summary>
-        /// 保存PMC管系规格书中的标准规格
+        /// 保存PMC管系规格书中的标准规格（简化版：仅包含标准名称和材料信息）
+        /// </summary>
+        /// <param name="request">简化的管系规格书保存请求</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public bool SaveSpecRulesSimple(SavePipeSpecSimpleRequest request)
+        {
+            // 使用Mapper进行验证
+            var (isValid, errorMessage) = _pipeSpecConfigMapper.ValidateSimpleRequest(request);
+            if (!isValid)
+            {
+                _logger.LogError(errorMessage);
+                throw new ArgumentException(errorMessage);
+            }
+
+            try
+            {
+                // 查询现有的PMC数据：按 (Pmccode, ShipType, ShipNo) 精确匹配
+                var existingEntity = _context.S3dRulePmcdata
+                    .FirstOrDefault(x => x.Pmccode == request.PmcCode
+                        && x.ShipType == request.ShipType
+                        && x.ShipNo == request.ShipNumber);
+
+                if (existingEntity == null)
+                {
+                    _logger.LogError("未找到PMC编码 {PmcCode} 船型 {ShipType} 船号 {ShipNo} 对应的数据，无法更新规则",
+                        request.PmcCode, request.ShipType, request.ShipNumber);
+                    throw new Exception($"未找到PMC编码 {request.PmcCode}（船型: {request.ShipType}, 船号: {request.ShipNumber}）对应的数据");
+                }
+
+                // 使用Mapper转换简化的DTO结构为标准信息列表格式（不包含通径范围）
+                var standardInfos = _pipeSpecConfigMapper.MapSimpleConfigurationsToStandardInfos(request.Configurations);
+
+                // 根据 StandardType 将标准信息分组并更新实体
+                var groupedStandards = standardInfos.GroupBy(x => x.StandardType);
+
+                foreach (var group in groupedStandards)
+                {
+                    var standardType = group.Key;
+                    if (string.IsNullOrWhiteSpace(standardType))
+                    {
+                        _logger.LogWarning("跳过 StandardType 为空的配置项");
+                        continue;
+                    }
+
+                    var standards = group.ToList();
+
+                    // 根据部件类型分配到对应的实体字段（与 S3dRulePmcData 实体属性对应）
+                    switch (standardType)
+                    {
+                        case "Elbow":
+                            existingEntity.ElbowStandard = standards;
+                            break;
+                        case "Reducer":
+                            existingEntity.RedStandard = standards;
+                            break;
+                        case "Tee":
+                            existingEntity.TeeStandard = standards;
+                            break;
+                        case "Sleeve":
+                            existingEntity.SleeveStandard = standards;
+                            break;
+                        case "Bosses":
+                            existingEntity.BossesStandard = standards;
+                            break;
+                        case "Saddles":
+                            existingEntity.SaddlesStandard = standards;
+                            break;
+                        case "Caps":
+                            existingEntity.CapsStandard = standards;
+                            break;
+                        case "Overpass":
+                            existingEntity.OverpassStandard = standards;
+                            break;
+                        case "Accessories":
+                            existingEntity.AccessoriesStandard = standards;
+                            break;
+                        case "Flange":
+                            existingEntity.FlangeStandard = standards;
+                            break;
+                        case "BlindFlange":
+                            existingEntity.BlindFlangeStandard = standards;
+                            break;
+                        case "Gasket":
+                            existingEntity.GasketStandard = standards;
+                            break;
+                        case "Bolt":
+                            existingEntity.BoltStandard = standards;
+                            break;
+                        case "Nut":
+                            existingEntity.NutStandard = standards;
+                            break;
+                        case "Washer":
+                            existingEntity.WasherStandard = standards;
+                            break;
+                        case "Pipe":
+                            existingEntity.PipeStandard = standards;
+                            break;
+                        default:
+                            _logger.LogWarning("未知的部件类型: {StandardType}", standardType);
+                            break;
+                    }
+                }
+
+                // 更新船型和船号信息
+                existingEntity.ShipType = request.ShipType;
+                existingEntity.ShipNo = request.ShipNumber;
+
+                // 更新状态为已配置
+                existingEntity.Status = "已配置";
+
+                // 保存更改
+                _context.SaveChanges();
+
+                _logger.LogInformation("成功保存PMC编码 {PmcCode} 的简化规格规则（仅标准+材料）", request.PmcCode);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "保存PMC编码 {PmcCode} 的简化规格规则时发生错误", request.PmcCode);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 保存PMC管系规格书中的标准规格（完整版：包含通径范围，保留给后续模块使用）
         /// </summary>
         /// <param name="request">管系规格书保存请求</param>
         /// <returns></returns>

@@ -1024,7 +1024,9 @@ interface PipeFittingSpec {
 
 ### 4.7 保存规格书配置
 
-保存管系规格书的完整配置信息。后端按 `(pmcCode, shipType, shipNumber)` 精确匹配数据库中已存在的记录进行更新，**请确保该组合对应的 PMC 数据已预先存在**。
+保存管系规格书的配置信息（简化版：仅包含标准名称和材料信息，不包含通径范围）。后端按 `(pmcCode, shipType, shipNumber)` 精确匹配数据库中已存在的记录进行更新，**请确保该组合对应的 PMC 数据已预先存在**。
+
+> **注意**：当前模块已简化配置，仅保存标准名称和材料信息。完整的配置格式（包含通径范围）已保留给后续模块使用。
 
 #### 基本信息
 
@@ -1045,22 +1047,7 @@ interface PipeFittingSpec {
 
 #### 请求体示例
 
-**最小请求体：**
-
-```json
-{
-  "shipType": "散货船",
-  "shipNumber": "H1234",
-  "pmcCode": "A1B2C3D",
-  "configurations": [
-    {
-      "componentType": "Elbow"
-    }
-  ]
-}
-```
-
-**完整请求体：**
+**简化配置示例（推荐）：**
 
 ```json
 {
@@ -1071,56 +1058,25 @@ interface PipeFittingSpec {
     {
       "componentType": "Elbow",
       "configResult": "配置成功",
-      "fullConfig": {
-        "configurations": [
-          {
-            "standardFileId": 1,
-            "standardFileName": "ASME B16.9",
-            "materialId": 10,
-            "materialName": "Carbon Steel",
-            "npdRange": [15, 100],
-            "bendRadiusMultiple": 1.5
-          },
-          {
-            "standardFileId": 2,
-            "standardFileName": "JIS B2311",
-            "materialId": 10,
-            "materialName": "Carbon Steel",
-            "npdRange": [100, 300],
-            "bendRadiusMultiple": 1.5
-          }
-        ],
-        "duplicateRangeDefaults": [
-          {
-            "overlapMin": 50,
-            "overlapMax": 80,
-            "defaultStandardFileId": 1,
-            "defaultStandardFileName": "ASME B16.9",
-            "ranges": [
-              {
-                "minNpdValue": 50,
-                "maxNpdValue": 65
-              },
-              {
-                "minNpdValue": 65,
-                "maxNpdValue": 80
-              }
-            ]
-          }
-        ]
-      }
+      "standards": [
+        {
+          "standardFile": "ASME B16.9",
+          "material": "Carbon Steel"
+        },
+        {
+          "standardFile": "JIS B2311",
+          "material": "Carbon Steel"
+        }
+      ]
     },
     {
       "componentType": "Tee",
-      "fullConfig": {
-        "configurations": [
-          {
-            "standardFileName": "ASME B16.9",
-            "materialName": "Stainless Steel",
-            "npdRange": [15, 200]
-          }
-        ]
-      }
+      "standards": [
+        {
+          "standardFile": "ASME B16.9",
+          "material": "Stainless Steel 304"
+        }
+      ]
     }
   ],
   "metadata": {
@@ -1130,6 +1086,11 @@ interface PipeFittingSpec {
   }
 }
 ```
+
+**说明**：
+- `standardFile` 可以是标准文件ID（number）或标准文件名称（string）
+- `material` 可以是材料ID（number）或材料名称（string）
+- 不包含通径范围（`minNpdValue`、`maxNpdValue`）和重复范围默认配置（`duplicateRangeDefaults`）
 
 #### 响应数据
 
@@ -1185,14 +1146,31 @@ interface PipeFittingSpec {
 ```typescript
 type SaveSpecRulesResponse = ApiResponse<null>;
 
-interface SavePipeSpecRequest {
-  shipType: string;      // 长度≤255
-  shipNumber: string;    // 长度≤255
-  pmcCode: string;       // 长度≤255
-  configurations: ComponentTypeConfiguration[];
-  metadata?: Record<string, any>;
+interface SavePipeSpecSimpleRequest {
+  shipType: string;      // 船型（必填，长度≤255）
+  shipNumber: string;    // 船号（必填，长度≤255）
+  pmcCode: string;        // PMC编码（必填，长度≤255）
+  configurations: SimpleComponentTypeConfiguration[]; // 部件类型配置列表（至少1个）
+  metadata?: Record<string, any>; // 可选元数据
+}
+
+interface SimpleComponentTypeConfiguration {
+  componentType: string;  // 部件类型（必填）
+  configResult?: string;  // 配置结果描述（可选）
+  standards: SimpleStandardConfig[]; // 标准配置列表（至少1个）
+}
+
+interface SimpleStandardConfig {
+  standardFile: string | number; // 标准文件ID或名称（必填）
+  material: string | number;     // 材料ID或名称（必填）
 }
 ```
+
+**简化配置说明**：
+- 仅包含标准名称（`standardFile`）和材料信息（`material`）
+- 不包含通径范围相关字段（`minNpdValue`、`maxNpdValue`）
+- 不包含重复范围默认配置（`duplicateRangeDefaults`）
+- 不包含弯管半径倍数（`bendRadiusMultiple`）
 
 ---
 

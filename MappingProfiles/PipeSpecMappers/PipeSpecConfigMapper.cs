@@ -130,7 +130,46 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
         }
 
         /// <summary>
-        /// 验证保存请求的有效性
+        /// 将简化的部件类型配置列表转换为标准信息列表（简化版：仅包含标准名称和材料，不包含通径范围）
+        /// </summary>
+        /// <param name="configurations">简化的部件类型配置列表</param>
+        /// <returns>标准信息列表</returns>
+        public List<PmcStandardInfo> MapSimpleConfigurationsToStandardInfos(List<SimpleComponentTypeConfiguration> configurations)
+        {
+            if (configurations == null || !configurations.Any())
+            {
+                return new List<PmcStandardInfo>();
+            }
+
+            var standardInfos = new List<PmcStandardInfo>();
+
+            foreach (var config in configurations)
+            {
+                if (config.Standards == null || !config.Standards.Any())
+                {
+                    continue;
+                }
+
+                foreach (var standard in config.Standards)
+                {
+                    // 只提取标准名称和材料信息，不包含通径范围
+                    standardInfos.Add(new PmcStandardInfo
+                    {
+                        StandardType = NormalizeComponentType(config.ComponentType),
+                        StandardName = standard.StandardFile?.ToString() ?? string.Empty,
+                        Material = standard.Material?.ToString(),
+                        DiameterRange = null, // 简化版不包含通径范围
+                        IsDefault = false,
+                        OverlapRange = null // 简化版不包含重复范围配置
+                    });
+                }
+            }
+
+            return standardInfos;
+        }
+
+        /// <summary>
+        /// 验证保存请求的有效性（完整版）
         /// </summary>
         /// <param name="request">保存请求</param>
         /// <returns>验证结果及错误消息</returns>
@@ -166,6 +205,67 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
             if (invalidConfig != null)
             {
                 return (false, "部件类型不能为空");
+            }
+
+            return (true, string.Empty);
+        }
+
+        /// <summary>
+        /// 验证简化保存请求的有效性
+        /// </summary>
+        /// <param name="request">简化保存请求</param>
+        /// <returns>验证结果及错误消息</returns>
+        public (bool IsValid, string ErrorMessage) ValidateSimpleRequest(SavePipeSpecSimpleRequest request)
+        {
+            if (request == null)
+            {
+                return (false, "保存请求不能为空");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.PmcCode))
+            {
+                return (false, "PMC编码不能为空");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.ShipType))
+            {
+                return (false, "船型不能为空");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.ShipNumber))
+            {
+                return (false, "船号不能为空");
+            }
+
+            if (request.Configurations == null || !request.Configurations.Any())
+            {
+                return (false, "请至少配置一个部件类型");
+            }
+
+            // 验证每个配置的部件类型是否为空
+            var invalidConfig = request.Configurations.FirstOrDefault(c => string.IsNullOrWhiteSpace(c.ComponentType));
+            if (invalidConfig != null)
+            {
+                return (false, "部件类型不能为空");
+            }
+
+            // 验证每个配置是否至少包含一个标准
+            var configWithoutStandards = request.Configurations.FirstOrDefault(c =>
+                c.Standards == null || !c.Standards.Any());
+            if (configWithoutStandards != null)
+            {
+                return (false, $"部件类型 {configWithoutStandards.ComponentType} 必须至少配置一个标准");
+            }
+
+            // 验证每个标准是否包含必填字段
+            foreach (var config in request.Configurations)
+            {
+                var invalidStandard = config.Standards.FirstOrDefault(s =>
+                    s.StandardFile == null || s.Material == null);
+                if (invalidStandard != null)
+                {
+                    return (false, $"部件类型 {config.ComponentType} 的标准配置中，标准文件和材料不能为空");
+                }
             }
 
             return (true, string.Empty);

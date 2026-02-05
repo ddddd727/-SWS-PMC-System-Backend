@@ -273,16 +273,16 @@ namespace PMCSystem_Backend.Controllers
         }
 
         /// <summary>
-        /// 保存规格书配置信息
+        /// 保存规格书配置信息（简化版：仅包含标准名称和材料信息，不包含通径范围）
         /// </summary>
-        /// <param name="request">保存规格书配置请求，包含船型、船号、PMC编码和部件类型配置列表</param>
+        /// <param name="request">简化的保存规格书配置请求，包含船型、船号、PMC编码和部件类型配置列表</param>
         /// <returns>保存结果</returns>
         /// <response code="200">保存成功</response>
         /// <response code="400">请求参数错误或保存失败</response>
         [HttpPost("SpecRules")]
         [ProducesResponseType(typeof(ApiResponse), 200)]
         [ProducesResponseType(typeof(ApiResponse), 400)]
-        public IActionResult SaveSpecRules([FromBody] SavePipeSpecRequest request)
+        public IActionResult SaveSpecRules([FromBody] SavePipeSpecSimpleRequest request)
         {
             // 使用 ModelState 自动验证（基于 Data Annotations）
             if (!ModelState.IsValid)
@@ -292,31 +292,31 @@ namespace PMCSystem_Backend.Controllers
 
             try
             {
-                _logger.LogInformation("开始保存规格书配置，PMC编码: {PmcCode}, 船型: {ShipType}, 船号: {ShipNumber}",
+                _logger.LogInformation("开始保存简化规格书配置，PMC编码: {PmcCode}, 船型: {ShipType}, 船号: {ShipNumber}",
                     request.PmcCode, request.ShipType, request.ShipNumber);
 
-                // 调用服务层方法保存规格书配置
-                var result = _pmcSpecService.SaveSpecRules(request);
+                // 调用服务层方法保存简化规格书配置
+                var result = _pmcSpecService.SaveSpecRulesSimple(request);
 
                 if (result)
                 {
-                    _logger.LogInformation("成功保存规格书配置，PMC编码: {PmcCode}", request.PmcCode);
+                    _logger.LogInformation("成功保存简化规格书配置，PMC编码: {PmcCode}", request.PmcCode);
                     return Success("规格书配置保存成功");
                 }
                 else
                 {
-                    _logger.LogWarning("规格书配置保存失败，PMC编码: {PmcCode}", request.PmcCode);
+                    _logger.LogWarning("简化规格书配置保存失败，PMC编码: {PmcCode}", request.PmcCode);
                     return Fail(ApiErrorCode.BusinessRuleViolation, "规格书配置保存失败");
                 }
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "规格书配置参数验证失败，PMC编码: {PmcCode}", request.PmcCode);
+                _logger.LogWarning(ex, "简化规格书配置参数验证失败，PMC编码: {PmcCode}", request.PmcCode);
                 return Fail(ApiErrorCode.ValidationError, ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "保存规格书配置时发生错误，PMC编码: {PmcCode}", request.PmcCode);
+                _logger.LogError(ex, "保存简化规格书配置时发生错误，PMC编码: {PmcCode}", request.PmcCode);
                 return Fail(ApiErrorCode.BusinessRuleViolation, "保存失败，请稍后重试");
             }
         }

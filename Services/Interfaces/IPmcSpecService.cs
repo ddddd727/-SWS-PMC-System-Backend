@@ -66,11 +66,18 @@ namespace PMCSystem_Backend.Services.Interfaces
 
 
         /// <summary>
-        /// 保存页面配置的管系规格书信息
+        /// 保存页面配置的管系规格书信息（完整版，包含通径范围，保留给后续模块使用）
         /// </summary>
         /// <param name="request">管系规格书保存请求</param>
         /// <returns></returns>
         bool SaveSpecRules(SavePipeSpecRequest request);
+
+        /// <summary>
+        /// 保存页面配置的管系规格书信息（简化版，仅包含标准名称和材料信息）
+        /// </summary>
+        /// <param name="request">简化的管系规格书保存请求</param>
+        /// <returns></returns>
+        bool SaveSpecRulesSimple(SavePipeSpecSimpleRequest request);
 
 
         /// <summary>
