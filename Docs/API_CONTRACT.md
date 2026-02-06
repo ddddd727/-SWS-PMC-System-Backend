@@ -4,13 +4,13 @@
 
 | 项目               | 内容             |
 | ------------------ | ---------------- |
-| **版本号**   | v1.0             |
+| **版本号**   | v1.4             |
 | **生成日期** | 2026-02-03       |
-| **基础路径** | `/api/PmcSpec` |
+| **基础路径** | `/api/PmcSpec`、`/api/template-preview` |
 | **协议**     | HTTP/HTTPS       |
 | **数据格式** | JSON             |
 | **字符编码** | UTF-8            |
-| **最后更新** | 2026-02-04       |
+| **最后更新** | 2026-02-06       |
 
 ---
 
@@ -27,6 +27,7 @@
   - [4.5 获取NPD信息](#45-获取npd信息)
   - [4.6 获取管附件规格](#46-获取管附件规格)
   - [4.7 保存规格书配置](#47-保存规格书配置)
+  - [4.8 模板预览与导出](#48-模板预览与导出)
 - [5. 错误码说明](#5-错误码说明)
 - [6. 前端调用示例](#6-前端调用示例)
 
@@ -42,6 +43,7 @@
 - PMC编码查询与解析
 - 部件类型配置
 - 规格书信息管理
+- 规格书表格模板预览与导出（占位符 `{{key}}` 由规格书数据或自定义参数填充）
 
 ### 1.2 技术栈
 
@@ -831,6 +833,7 @@ interface StandardFileConfig {
 ```
 
 **简化配置说明：**
+
 - 响应中仅包含标准名称（`standardFile`）和材料信息（`material`）
 - 不包含通径范围相关字段（`minNpdValue`、`maxNpdValue`）
 - 不包含重复范围默认配置（`duplicateRangeDefaults`）
@@ -1088,6 +1091,7 @@ interface PipeFittingSpec {
 ```
 
 **说明**：
+
 - `standardFile` 可以是标准文件ID（number）或标准文件名称（string）
 - `material` 可以是材料ID（number）或材料名称（string）
 - 不包含通径范围（`minNpdValue`、`maxNpdValue`）和重复范围默认配置（`duplicateRangeDefaults`）
@@ -1167,10 +1171,186 @@ interface SimpleStandardConfig {
 ```
 
 **简化配置说明**：
+
 - 仅包含标准名称（`standardFile`）和材料信息（`material`）
 - 不包含通径范围相关字段（`minNpdValue`、`maxNpdValue`）
 - 不包含重复范围默认配置（`duplicateRangeDefaults`）
 - 不包含弯管半径倍数（`bendRadiusMultiple`）
+
+---
+
+### 4.8 模板预览与导出
+
+规格书保存后，可通过**模板预览**与**模板导出**接口，将已保存的规格书数据填入预设 Excel 模板。模板内数据位置使用 `{{key}}` 占位符；填入内容与保存接口（SavePipeSpecSimpleRequest）一致，仅包含**标准类型、标准名字、标准材料**，标准信息格式为「**标准名 材料**」，同一类型多个标准时用英文逗号分隔（如 `GB/T 8163 20#, GB/T 3091 Q235`）。
+
+#### 4.8.1 获取模板预览
+
+获取指定模板的预览数据（单元格、合并区域、样式等），占位符已按参数或规格书替换。优先使用 `pmcCode` 填充规格书数据；未传 `pmcCode` 时使用 `parameters` 键值对替换。
+
+**基本信息**
+
+- **接口地址**: `GET /api/template-preview/{templateId}`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+**请求参数**
+
+| 参数名      | 类型   | 位置  | 必填 | 说明                                                                 |
+| ----------- | ------ | ----- | ---- | -------------------------------------------------------------------- |
+| templateId  | string | Path  | 是   | 模板唯一标识，仅允许字母、数字、下划线、中划线                        |
+| pmcCode     | string | Query | 否   | PMC 编码；传入时使用已保存的规格书数据填充占位符，与 parameters 二选一 |
+| parameters  | object | Query | 否   | 自定义占位符键值对，如 `parameters[pmcCode]=A1B2C3D`；未传 pmcCode 时使用 |
+
+**请求示例（按规格书填充）**
+
+```
+GET /api/template-preview/pipe-spec?pmcCode=A1B2C3D
+```
+
+**请求示例（自定义参数）**
+
+```
+GET /api/template-preview/pipe-spec?parameters[pmcCode]=A1B2C3D&parameters[shipNumber]=H1234
+```
+
+**响应数据 - 成功 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "templateId": "pipe-spec",
+    "title": "管系规格书",
+    "orientation": "rowHeader",
+    "grid": { "rowCount": 10, "columnCount": 5 },
+    "mergedCells": [
+      { "startRow": 0, "endRow": 0, "startColumn": 0, "endColumn": 2, "value": "标题", "style": null }
+    ],
+    "cells": [
+      { "row": 0, "column": 0, "value": "PMC编码", "isHeader": true, "isData": false, "field": "col1", "style": null },
+      { "row": 1, "column": 0, "value": "A1B2C3D", "isHeader": false, "isData": true, "field": "col1", "style": null }
+    ]
+  },
+  "timestamp": "2026-02-06T10:00:00Z",
+  "traceId": "0HMVD7K3QH1AX"
+}
+```
+
+**规格书驱动时的占位符约定（模板中可用的 `{{key}}`）**
+
+| 占位符 | 说明 | 示例值 |
+|--------|------|--------|
+| `{{pmcCode}}` | PMC 编码 | A1B2C3D |
+| `{{shipNumber}}` | 船号 | H1234 |
+| `{{pipingClass}}` | 管道等级 | 150# |
+| `{{materialGrade}}` | 牌号 | A105 |
+| `{{pressureRating}}` | 法兰压力等级 | Class 150 |
+| `{{pipeStandard}}` | 管材标准 | ASME B36.10 |
+| `{{materialCategory}}` | 管材材料 | Carbon Steel |
+| `{{wallThickness}}` | 壁厚系列 | Sch40 |
+| `{{material}}` | 首条规格的材料 | 20# |
+| `{{standard_1}}` | 第 1 条标准（标准名 材料） | GB/T 8163 20# |
+| `{{standard_2}}` | 第 2 条标准 | GB/T 3091 Q235 |
+| `{{standardName_N}}` / `{{standardType_N}}` / `{{material_N}}` | 第 N 条的标准名、类型、材料（N 为 1-based） | — |
+| `{{standard_Pipe}}` | 类型为 Pipe 的所有标准，逗号分隔 | GB/T 8163 20#, GB/T 3091 Q235 |
+| `{{standard_Elbow}}` | 类型为 Elbow 的所有标准 | GB/T 12459 20# |
+| `{{standard_<类型名>}}` | 其他类型，类型名与配置中的 componentType 一致（空格转为下划线） | — |
+
+---
+
+#### 4.8.2 导出模板为 Excel
+
+导出指定模板为 xlsx 文件，占位符替换规则与预览一致：传 `pmcCode` 时按规格书填充，否则按 `parameters` 替换。
+
+**基本信息**
+
+- **接口地址**: `GET /api/template-preview/{templateId}/export`
+- **请求方式**: GET
+- **权限要求**: 无
+- **响应内容类型**: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet（成功时）；application/json（错误时）
+
+**请求参数**
+
+| 参数名     | 类型   | 位置  | 必填 | 说明 |
+| ----------- | ------ | ----- | ---- | ---- |
+| templateId  | string | Path  | 是   | 模板唯一标识 |
+| pmcCode     | string | Query | 否   | PMC 编码；传入时按规格书填充 |
+| parameters  | object | Query | 否   | 自定义占位符键值对；未传 pmcCode 时使用 |
+
+**请求示例**
+
+```
+GET /api/template-preview/pipe-spec/export?pmcCode=A1B2C3D
+```
+
+**响应**
+
+- **成功 (200)**：直接返回 Excel 文件流，文件名形如 `pipe-spec_20260206120000.xlsx`。
+- **失败 (400/404/500)**：返回 JSON，格式同通用错误响应。
+
+**前端调用示例（下载文件）**
+
+```typescript
+// 按规格书导出并下载
+async function exportTemplateBySpec(templateId: string, pmcCode: string) {
+  const url = `/api/template-preview/${templateId}/export?pmcCode=${encodeURIComponent(pmcCode)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || '导出失败');
+  }
+  const blob = await res.blob();
+  const name = res.headers.get('Content-Disposition')?.match(/filename="?([^";]+)"?/)?.[1]
+    || `${templateId}_${new Date().toISOString().slice(0,10)}.xlsx`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+```
+
+#### TypeScript 类型定义（模板预览）
+
+```typescript
+type GetTemplatePreviewResponse = ApiResponse<TemplatePreviewResponse>;
+
+interface TemplatePreviewResponse {
+  templateId: string;
+  title?: string;
+  orientation: string;
+  grid?: { rowCount: number; columnCount: number };
+  mergedCells?: MergedCell[];
+  cells?: PreviewCell[];
+}
+
+interface MergedCell {
+  startRow: number;
+  endRow: number;
+  startColumn: number;
+  endColumn: number;
+  value?: string;
+  style?: CellStyle | null;
+}
+
+interface PreviewCell {
+  row: number;
+  column: number;
+  value?: string;
+  isHeader: boolean;
+  isData: boolean;
+  field?: string;
+  style?: CellStyle | null;
+}
+
+interface CellStyle {
+  bgColor?: string;
+  textAlign?: string;
+  fontWeight?: string;
+}
+```
 
 ---
 
@@ -1380,6 +1560,32 @@ export const pmcSpecApi = {
   // 保存规格书配置
   saveSpecRules(data: SavePipeSpecRequest) {
     return apiClient.post<ApiResponse<null>>('/PmcSpec/SpecRules', data);
+  },
+
+  // 获取模板预览（按规格书填充时传 pmcCode，否则传 parameters）
+  getTemplatePreview(templateId: string, params?: { pmcCode?: string; parameters?: Record<string, string> }) {
+    const search = new URLSearchParams();
+    if (params?.pmcCode) search.set('pmcCode', params.pmcCode);
+    if (params?.parameters) {
+      Object.entries(params.parameters).forEach(([k, v]) => search.set(`parameters[${k}]`, v));
+    }
+    const qs = search.toString();
+    return apiClient.get<ApiResponse<TemplatePreviewResponse>>(
+      `/template-preview/${templateId}${qs ? '?' + qs : ''}`
+    );
+  },
+
+  // 导出模板为 Excel（按规格书填充时传 pmcCode）
+  exportTemplate(templateId: string, params?: { pmcCode?: string; parameters?: Record<string, string> }) {
+    const search = new URLSearchParams();
+    if (params?.pmcCode) search.set('pmcCode', params.pmcCode);
+    if (params?.parameters) {
+      Object.entries(params.parameters).forEach(([k, v]) => search.set(`parameters[${k}]`, v));
+    }
+    const qs = search.toString();
+    return apiClient.get(`/template-preview/${templateId}/export${qs ? '?' + qs : ''}`, {
+      responseType: 'blob'
+    });
   }
 };
 ```
@@ -1595,6 +1801,41 @@ export interface SavePipeSpecRequest {
   configurations: ComponentTypeConfiguration[];
   metadata?: Record<string, any>;
 }
+
+// ============ 模板预览与导出 ============
+export interface TemplatePreviewResponse {
+  templateId: string;
+  title?: string;
+  orientation: string;
+  grid?: { rowCount: number; columnCount: number };
+  mergedCells?: MergedCell[];
+  cells?: PreviewCell[];
+}
+
+export interface MergedCell {
+  startRow: number;
+  endRow: number;
+  startColumn: number;
+  endColumn: number;
+  value?: string;
+  style?: CellStyle | null;
+}
+
+export interface PreviewCell {
+  row: number;
+  column: number;
+  value?: string;
+  isHeader: boolean;
+  isData: boolean;
+  field?: string;
+  style?: CellStyle | null;
+}
+
+export interface CellStyle {
+  bgColor?: string;
+  textAlign?: string;
+  fontWeight?: string;
+}
 ```
 
 ### B. 更新日志
@@ -1605,6 +1846,7 @@ export interface SavePipeSpecRequest {
 | v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则 | AI Assistant |
 | v1.2 | 2026-02-04 | SaveSpecRules: 移除 StandardFileConfiguration，统一使用 StandardFileConfig 作为标准文件配置数据模型 | AI Assistant |
 | v1.3 | 2026-02-04 | 请求参数长度约束：SavePipeSpecRequest（shipType/shipNumber/pmcCode）、GetNPDInfoRequest（endStandard/schedule）、GetPipeFittingSpecRequest（componentTypeName）均增加长度≤255 的校验与契约说明 | AI Assistant |
+| v1.4 | 2026-02-06 | 新增模板预览与导出：GET /api/template-preview/{templateId}、GET /api/template-preview/{templateId}/export；支持 pmcCode（规格书填充）或 parameters（自定义占位符）；占位符约定：标准信息格式「标准名 材料」、同类型多标准逗号分隔；standard_N、standard_&lt;类型&gt; 及 PMC 基础信息占位符；补充前端调用示例与 TypeScript 类型 | AI Assistant |
 
 ---
 

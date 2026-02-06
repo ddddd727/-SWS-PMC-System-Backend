@@ -5,18 +5,41 @@ using System.Text.RegularExpressions;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
+    /// <summary>
+    /// 模板预览与导出服务：读取 Excel 模板、解析单元格与合并区域、替换 "{{key}}" 占位符；
+    /// 支持自定义参数或按规格书（PMC 编码）自动填充。
+    /// </summary>
     public class TemplatePreviewService : ITemplatePreviewService
     {
+        /// <summary>Excel 模板文件所在目录的根路径（不含文件名）。</summary>
         private readonly string _templateBasePath;
 
-        public TemplatePreviewService(string templateBasePath)
+        /// <summary>规格书服务，用于按 PMC 编码拉取已保存的规格数据。</summary>
+        private readonly IPmcSpecService _pmcSpecService;
+
+        /// <summary>
+        /// 构造函数，指定模板根目录与规格书服务。
+        /// </summary>
+        /// <param name="templateBasePath">模板根路径，模板文件名为 {templateId}.xlsx</param>
+        /// <param name="pmcSpecService">用于按 pmcCode 获取规格书数据的服务</param>
+        public TemplatePreviewService(string templateBasePath, IPmcSpecService pmcSpecService)
         {
             _templateBasePath = templateBasePath;
+            _pmcSpecService = pmcSpecService ?? throw new ArgumentNullException(nameof(pmcSpecService));
         }
 
+        /// <summary>
+        /// 获取指定模板的预览数据：解析首张工作表，提取合并单元格与普通单元格，替换 {{key}} 占位符并注入业务数据。
+        /// </summary>
+        /// <param name="templateId">模板唯一标识，仅允许字母、数字、下划线、中划线</param>
+        /// <param name="parameters">用于替换模板中 {{key}} 的键值对，key 与 value 均不可为 null</param>
+        /// <returns>包含标题、网格信息、合并单元格与单元格列表的预览响应</returns>
+        /// <exception cref="ArgumentException">templateId 为空或格式不合法</exception>
+        /// <exception cref="FileNotFoundException">模板文件不存在</exception>
+        /// <exception cref="InvalidOperationException">Excel 无工作表或工作表为空</exception>
         public TemplatePreviewResponse GetTemplatePreview(string templateId, Dictionary<string, string> parameters)
         {
-            // 1. 验证templateId
+            // 1. 验证 templateId 非空且格式合法（防路径遍历）
             if (string.IsNullOrWhiteSpace(templateId))
             {
                 throw new ArgumentException("TemplateId cannot be null or empty", nameof(templateId));
@@ -26,17 +49,17 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("Invalid templateId format", nameof(templateId));
             }
 
-            // 2. 验证parameters
+            // 2. 统一 parameters 为非 null
             parameters ??= new Dictionary<string, string>();
 
-            // 3. 构建文件路径
+            // 3. 解析模板文件路径并校验存在
             string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException("Template file not found", filePath);
             }
 
-            // 4. 解析Excel
+            // 4. 打开 Excel 并取首张工作表与维度
             using var package = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
             if (package.Workbook.Worksheets.Count == 0)
             {
@@ -45,7 +68,7 @@ namespace PMCSystem_Backend.Services.Implementations
             var sheet = package.Workbook.Worksheets[0];
             var dim = sheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
 
-            // 5. 提取合并单元格
+            // 5. 提取合并区域（仅保留左上角代表整块，避免重复渲染）
             var mergedCells = new List<MergedCell>();
             if (sheet.MergedCells != null)
             {
@@ -64,9 +87,9 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
             }
 
-            // 5. 跳过被合并覆盖的单元格
+            // 6. 构建“被合并覆盖”的单元格集合，后续遍历时跳过，避免与合并块重复
             var skipSet = new HashSet<(int, int)>();
-            foreach(var cell in mergedCells)
+            foreach (var cell in mergedCells)
             {
                 for (int r = cell.StartRow; r <= cell.EndRow; r++)
                 {
@@ -78,7 +101,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
             }
 
-            // 6. 提取普通单元格
+            // 7. 遍历非合并区域单元格，替换 {{key}} 并收集样式
             var cells = new List<PreviewCell>();
             for (int r = 0; r < dim.Rows; r++)
             {
@@ -87,7 +110,7 @@ namespace PMCSystem_Backend.Services.Implementations
                     if (skipSet.Contains((r, c))) continue;
                     var cell = sheet.Cells[r + 1, c + 1];
                     var cellValue = cell.Text;
-                    // 替换参数
+                    // 占位符替换：{{key}} -> parameters[key]
                     foreach (var param in parameters)
                     {
                         if (param.Key != null && param.Value != null)
@@ -108,7 +131,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
             }
 
-            // 7. 注入动态数据
+            // 8. 注入业务数据（如 material 等字段）
             var businessData = GetBusinessData(parameters);
             if (businessData != null && businessData.Count > 0)
             {
@@ -119,7 +142,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
             }
 
-            // 8. 安全获取标题
+            // 9. 从 A1 安全读取标题（避免无 A1 时抛错）
             string title = string.Empty;
             try
             {
@@ -127,7 +150,6 @@ namespace PMCSystem_Backend.Services.Implementations
             }
             catch
             {
-                // 如果A1单元格不存在，使用空字符串
                 title = string.Empty;
             }
 
@@ -146,14 +168,17 @@ namespace PMCSystem_Backend.Services.Implementations
         }
 
         /// <summary>
-        /// 导出模板为Excel文件
+        /// 导出模板为 Excel 文件：在模板副本上替换占位符并填充业务数据后，返回 xlsx 字节数组。
         /// </summary>
-        /// <param name="templateId">模板ID</param>
-        /// <param name="parameters">模板参数</param>
-        /// <returns>Excel文件的字节流</returns>
+        /// <param name="templateId">模板唯一标识，仅允许字母、数字、下划线、中划线</param>
+        /// <param name="parameters">用于替换模板中 {{key}} 的键值对，可为 null</param>
+        /// <returns>填充后的 Excel 文件字节流（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）</returns>
+        /// <exception cref="ArgumentException">templateId 为空或格式不合法</exception>
+        /// <exception cref="FileNotFoundException">模板文件不存在</exception>
+        /// <exception cref="InvalidOperationException">Excel 无工作表或工作表为空</exception>
         public byte[] ExportTemplate(string templateId, Dictionary<string, string>? parameters)
         {
-            // 1. 验证templateId
+            // 1. 验证 templateId
             if (string.IsNullOrWhiteSpace(templateId))
             {
                 throw new ArgumentException("TemplateId cannot be null or empty", nameof(templateId));
@@ -163,17 +188,17 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("Invalid templateId format", nameof(templateId));
             }
 
-            // 2. 验证parameters
+            // 2. 统一 parameters
             parameters ??= new Dictionary<string, string>();
 
-            // 3. 构建文件路径
+            // 3. 定位模板文件
             string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException("Template file not found", filePath);
             }
 
-            // 4. 读取模板并就地修改（不新建工作簿复制，避免样式/合并复制导致文件损坏）
+            // 4. 打开模板并就地修改（不复制工作簿，避免样式/合并丢失或损坏）
             using var package = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
             if (package.Workbook.Worksheets.Count == 0)
             {
@@ -182,10 +207,10 @@ namespace PMCSystem_Backend.Services.Implementations
             var sheet = package.Workbook.Worksheets[0];
             var dim = sheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
 
-            // 5. 合并区域中非左上角单元格视为“幽灵”，不写入避免破坏合并
+            // 5. 合并区域内除左上角外的单元格为“幽灵”，写入会破坏合并，故跳过
             var ghostSet = BuildGhostCellSet(sheet);
 
-            // 6. 替换模板参数（仅修改非幽灵单元格）
+            // 6. 仅对非幽灵单元格做 {{key}} 替换并写回
             for (int r = 1; r <= dim.Rows; r++)
             {
                 for (int c = 1; c <= dim.Columns; c++)
@@ -204,10 +229,10 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
             }
 
-            // 7. 填充业务数据
+            // 7. 将业务数据写入工作表（由子类或扩展实现具体逻辑）
             FillBusinessData(sheet, parameters);
 
-            // 8. 使用 MemoryStream + SaveAs 替代 GetAsByteArray，避免已知的文件损坏问题
+            // 8. 通过 MemoryStream + SaveAs 输出字节，避免 GetAsByteArray 导致的文件损坏
             using var ms = new MemoryStream();
             package.SaveAs(ms);
             ms.Position = 0;
@@ -215,8 +240,111 @@ namespace PMCSystem_Backend.Services.Implementations
         }
 
         /// <summary>
-        /// 构建合并区域内“幽灵”单元格集合（除每个合并区左上角外的单元格）。写入这些单元格会破坏合并结构。
+        /// 使用已保存的规格书数据获取模板预览：按 pmcCode 拉取 PMC 基础信息与规格规则，扁平化为占位符字典后调用预览逻辑。
         /// </summary>
+        public TemplatePreviewResponse GetTemplatePreviewBySpec(string templateId, string pmcCode)
+        {
+            if (string.IsNullOrWhiteSpace(pmcCode))
+                throw new ArgumentException("PmcCode cannot be null or empty", nameof(pmcCode));
+            var parameters = BuildSpecPlaceholderDictionary(pmcCode);
+            return GetTemplatePreview(templateId, parameters);
+        }
+
+        /// <summary>
+        /// 使用已保存的规格书数据导出模板：按 pmcCode 拉取规格书并填充占位符后导出 xlsx。
+        /// </summary>
+        public byte[] ExportTemplateBySpec(string templateId, string pmcCode)
+        {
+            if (string.IsNullOrWhiteSpace(pmcCode))
+                throw new ArgumentException("PmcCode cannot be null or empty", nameof(pmcCode));
+            var parameters = BuildSpecPlaceholderDictionary(pmcCode);
+            return ExportTemplate(templateId, parameters);
+        }
+
+        /// <summary>
+        /// 根据 PMC 编码从规格书服务获取基础信息与规格规则，组装为模板占位符字典。
+        /// 与简化版保存接口一致：仅标准类型、标准名字、标准材料。标准信息填入格式为「标准名 材料」；
+        /// 同一类型下多个标准时，用英文逗号分隔（如 "GB/T 8163 20#, GB/T 3091 Q235"）。
+        /// </summary>
+        /// <param name="pmcCode">PMC 编码</param>
+        /// <returns>占位符键值对：PMC 基础信息 + standard_N（标准名 材料）、standard_&lt;类型&gt;（同类型多标准逗号分隔）及保留 standardName_N / standardType_N / material_N</returns>
+        private Dictionary<string, string> BuildSpecPlaceholderDictionary(string pmcCode)
+        {
+            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // PMC 基础信息（来自 7 位编码解析）
+            var baseInfo = _pmcSpecService.AnalyzeCodeFromPMC(pmcCode);
+            dict["pmcCode"] = baseInfo.PmcCode ?? string.Empty;
+            dict["shipNumber"] = baseInfo.ShipNumber ?? string.Empty;
+            dict["pipingClass"] = baseInfo.PipingClass ?? string.Empty;
+            dict["materialGrade"] = baseInfo.MaterialGrade ?? string.Empty;
+            dict["pressureRating"] = baseInfo.PressureRating ?? string.Empty;
+            dict["pipeStandard"] = baseInfo.PipeStandard ?? string.Empty;
+            dict["materialCategory"] = baseInfo.MaterialCategory ?? string.Empty;
+            dict["wallThickness"] = baseInfo.WallThickness ?? string.Empty;
+
+            // 管附件标准配置：填入格式「标准名 材料」；同类型多标准用逗号分隔
+            if (_pmcSpecService.GetSpecRules(pmcCode, out var standardInfos) && standardInfos != null && standardInfos.Count > 0)
+            {
+                for (var i = 0; i < standardInfos.Count; i++)
+                {
+                    var n = i + 1;
+                    var s = standardInfos[i];
+                    var nameMaterial = FormatStandardNameMaterial(s.StandardName, s.Material);
+                    dict[$"standard_{n}"] = nameMaterial;
+                    dict[$"standardName_{n}"] = s.StandardName ?? string.Empty;
+                    dict[$"standardType_{n}"] = s.StandardType ?? string.Empty;
+                    dict[$"material_{n}"] = s.Material ?? string.Empty;
+                }
+                dict["material"] = standardInfos[0].Material ?? string.Empty;
+
+                // 按标准类型分组，同类型多个标准用逗号分隔，格式「标准名 材料, 标准名 材料」
+                var byType = standardInfos
+                    .Where(s => !string.IsNullOrWhiteSpace(s.StandardType))
+                    .GroupBy(s => s.StandardType!.Trim(), StringComparer.OrdinalIgnoreCase);
+                foreach (var g in byType)
+                {
+                    var typeKey = "standard_" + SanitizePlaceholderKey(g.Key);
+                    var value = string.Join(", ", g.Select(s => FormatStandardNameMaterial(s.StandardName, s.Material)));
+                    dict[typeKey] = value;
+                }
+            }
+            else
+            {
+                dict["material"] = string.Empty;
+            }
+
+            return dict;
+        }
+
+        /// <summary>格式化为「标准名 材料」。</summary>
+        private static string FormatStandardNameMaterial(string? standardName, string? material)
+        {
+            var a = (standardName ?? string.Empty).Trim();
+            var b = (material ?? string.Empty).Trim();
+            return string.IsNullOrEmpty(a) && string.IsNullOrEmpty(b) ? string.Empty : $"{a} {b}".Trim();
+        }
+
+        /// <summary>将类型名转为占位符安全键（仅保留字母、数字、下划线，空格转下划线）。</summary>
+        private static string SanitizePlaceholderKey(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) return "Unknown";
+            var sb = new System.Text.StringBuilder();
+            foreach (var c in typeName.Trim())
+            {
+                if (char.IsLetterOrDigit(c) || c == '_') sb.Append(c);
+                else if (char.IsWhiteSpace(c) && (sb.Length == 0 || sb[sb.Length - 1] != '_')) sb.Append('_');
+            }
+            var s = sb.ToString().Trim('_');
+            return string.IsNullOrEmpty(s) ? "Unknown" : s;
+        }
+
+        /// <summary>
+        /// 构建合并区域内的“幽灵”单元格集合（每个合并块只保留左上角，其余行列加入集合）。
+        /// 导出时跳过这些单元格的写入，避免破坏 Excel 合并结构。
+        /// </summary>
+        /// <param name="sheet">当前工作表</param>
+        /// <returns>幽灵单元格 (1-based Row, Col) 集合</returns>
         private static HashSet<(int Row, int Col)> BuildGhostCellSet(OfficeOpenXml.ExcelWorksheet sheet)
         {
             var set = new HashSet<(int, int)>();
@@ -238,15 +366,14 @@ namespace PMCSystem_Backend.Services.Implementations
         }
 
         /// <summary>
-        /// 填充业务数据到导出的Excel文件中
-        /// 需要根据具体的业务逻辑进行实现
+        /// 将业务数据填充到导出用工作表中。当前为扩展点，可根据占位符或行列规则写入数据。
         /// </summary>
+        /// <param name="exportSheet">正在导出的首张工作表</param>
+        /// <param name="parameters">本次导出请求的模板参数</param>
         private void FillBusinessData(OfficeOpenXml.ExcelWorksheet exportSheet, Dictionary<string, string> parameters)
         {
-            // 空实现，后续根据业务逻辑补充
-            // 此方法用于将动态业务数据填充到Excel表格中
             var businessData = GetExportBusinessData(parameters);
-            
+
             // 示例：填充业务数据
             // for (int r = 2; r <= exportSheet.Dimension?.Rows; r++)
             // {
@@ -260,7 +387,12 @@ namespace PMCSystem_Backend.Services.Implementations
             // }
         }
 
-        private CellStyle? ExtractCellStyle(OfficeOpenXml.ExcelRange cell)
+        /// <summary>
+        /// 从 EPPlus 单元格中提取前端可用的样式（背景色、水平对齐、字重）。
+        /// </summary>
+        /// <param name="cell">Excel 单元格区域</param>
+        /// <returns>若有非默认样式则返回 <see cref="CellStyle"/>，否则返回 null</returns>
+        private static CellStyle? ExtractCellStyle(OfficeOpenXml.ExcelRange cell)
         {
             var rgb = cell.Style.Fill.BackgroundColor?.Rgb;
             string? hex = rgb != null && rgb.Length == 8 ? $"#{rgb[2..]}" : null;
@@ -269,28 +401,29 @@ namespace PMCSystem_Backend.Services.Implementations
 
             var weight = cell.Style.Font.Bold ? "bold" : "normal";
 
-            // 如果所有样式都是默认值，返回 null
+            // 全为默认值时返回 null，减少前端数据量
             if (hex == null && align == "left" && weight == "normal")
             {
                 return null;
             }
 
-            // CellStyle 构造函数接受可空参数，所以可以安全传递 null
             return new CellStyle(hex, align, weight);
         }
 
-        // 业务数据模拟（实际项目需要替换）
-        private List<string> GetBusinessData(Dictionary<string, string> _) => (new List<string> { "20#", "SSL 304" });
+        /// <summary>
+        /// 获取预览用的业务数据（如材质等）。当前为模拟数据，实际项目应改为从数据库或配置获取。
+        /// </summary>
+        /// <param name="_">模板参数，预留用于按参数筛选数据</param>
+        /// <returns>业务数据项列表，用于填充预览中 material 等占位</returns>
+        private static List<string> GetBusinessData(Dictionary<string, string> _) => new List<string> { "20#", "SSL 304" };
 
         /// <summary>
-        /// 获取导出所需的业务数据
-        /// 空实现，需要根据具体业务逻辑进行补充
+        /// 获取导出时需写入工作表的业务数据。当前返回空列表，后续可按 parameters 从数据库或服务拉取并返回。
         /// </summary>
-        /// <param name="parameters">模板参数</param>
-        /// <returns>业务数据列表</returns>
-        private List<string> GetExportBusinessData(Dictionary<string, string> parameters)
+        /// <param name="parameters">本次导出请求的模板参数</param>
+        /// <returns>待写入的业务数据列表</returns>
+        private static List<string> GetExportBusinessData(Dictionary<string, string> parameters)
         {
-            // 空实现 - 后续补充具体的业务数据获取逻辑
             return new List<string>();
         }
     }

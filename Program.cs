@@ -77,7 +77,8 @@ try
     builder.Services.AddScoped<ITemplatePreviewService>(provider =>
     {
         var templateBasePath = builder.Configuration.GetValue<string>("TemplateBasePath") ?? "Templates";
-        return new TemplatePreviewService(templateBasePath);
+        var pmcSpecService = provider.GetRequiredService<IPmcSpecService>();
+        return new TemplatePreviewService(templateBasePath, pmcSpecService);
     });
 
     // 注册管系规格配置映射器
