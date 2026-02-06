@@ -78,7 +78,8 @@ try
     {
         var templateBasePath = builder.Configuration.GetValue<string>("TemplateBasePath") ?? "Templates";
         var pmcSpecService = provider.GetRequiredService<IPmcSpecService>();
-        return new TemplatePreviewService(templateBasePath, pmcSpecService);
+        var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<TemplatePreviewService>>();
+        return new TemplatePreviewService(templateBasePath, pmcSpecService, logger);
     });
 
     // 注册管系规格配置映射器

@@ -17,15 +17,19 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>规格书服务，用于按 PMC 编码拉取已保存的规格数据。</summary>
         private readonly IPmcSpecService _pmcSpecService;
 
+        private readonly ILogger<TemplatePreviewService> _logger;
+
         /// <summary>
-        /// 构造函数，指定模板根目录与规格书服务。
+        /// 构造函数，指定模板根目录、规格书服务与日志。
         /// </summary>
         /// <param name="templateBasePath">模板根路径，模板文件名为 {templateId}.xlsx</param>
         /// <param name="pmcSpecService">用于按 pmcCode 获取规格书数据的服务</param>
-        public TemplatePreviewService(string templateBasePath, IPmcSpecService pmcSpecService)
+        /// <param name="logger">日志</param>
+        public TemplatePreviewService(string templateBasePath, IPmcSpecService pmcSpecService, ILogger<TemplatePreviewService> logger)
         {
             _templateBasePath = templateBasePath;
             _pmcSpecService = pmcSpecService ?? throw new ArgumentNullException(nameof(pmcSpecService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -39,13 +43,17 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <exception cref="InvalidOperationException">Excel 无工作表或工作表为空</exception>
         public TemplatePreviewResponse GetTemplatePreview(string templateId, Dictionary<string, string> parameters)
         {
+            _logger.LogInformation("开始获取模板预览，TemplateId: {TemplateId}, 占位符数量: {Count}", templateId, parameters?.Count ?? 0);
+
             // 1. 验证 templateId 非空且格式合法（防路径遍历）
             if (string.IsNullOrWhiteSpace(templateId))
             {
+                _logger.LogWarning("模板预览失败：TemplateId 为空");
                 throw new ArgumentException("TemplateId cannot be null or empty", nameof(templateId));
             }
             if (!Regex.IsMatch(templateId, "^[a-zA-Z0-9_-]+$"))
             {
+                _logger.LogWarning("模板预览失败：TemplateId 格式不合法，TemplateId: {TemplateId}", templateId);
                 throw new ArgumentException("Invalid templateId format", nameof(templateId));
             }
 
@@ -56,6 +64,7 @@ namespace PMCSystem_Backend.Services.Implementations
             string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
             if (!File.Exists(filePath))
             {
+                _logger.LogWarning("模板文件不存在，TemplateId: {TemplateId}, Path: {FilePath}", templateId, filePath);
                 throw new FileNotFoundException("Template file not found", filePath);
             }
 
@@ -63,10 +72,16 @@ namespace PMCSystem_Backend.Services.Implementations
             using var package = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
             if (package.Workbook.Worksheets.Count == 0)
             {
+                _logger.LogWarning("模板 Excel 无工作表，TemplateId: {TemplateId}", templateId);
                 throw new InvalidOperationException("Excel file contains no worksheets");
             }
             var sheet = package.Workbook.Worksheets[0];
-            var dim = sheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
+            var dim = sheet.Dimension;
+            if (dim == null)
+            {
+                _logger.LogWarning("模板工作表为空，TemplateId: {TemplateId}", templateId);
+                throw new InvalidOperationException("Worksheet is empty");
+            }
 
             // 5. 提取合并区域（仅保留左上角代表整块，避免重复渲染）
             var mergedCells = new List<MergedCell>();
@@ -153,6 +168,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 title = string.Empty;
             }
 
+            _logger.LogInformation("模板预览成功，TemplateId: {TemplateId}, 行数: {Rows}, 列数: {Cols}, 单元格数: {CellCount}", templateId, dim.Rows, dim.Columns, cells.Count);
             return new TemplatePreviewResponse
             {
                 TemplateId = templateId,
@@ -178,13 +194,17 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <exception cref="InvalidOperationException">Excel 无工作表或工作表为空</exception>
         public byte[] ExportTemplate(string templateId, Dictionary<string, string>? parameters)
         {
+            _logger.LogInformation("开始导出模板，TemplateId: {TemplateId}, 占位符数量: {Count}", templateId, parameters?.Count ?? 0);
+
             // 1. 验证 templateId
             if (string.IsNullOrWhiteSpace(templateId))
             {
+                _logger.LogWarning("模板导出失败：TemplateId 为空");
                 throw new ArgumentException("TemplateId cannot be null or empty", nameof(templateId));
             }
             if (!Regex.IsMatch(templateId, "^[a-zA-Z0-9_-]+$"))
             {
+                _logger.LogWarning("模板导出失败：TemplateId 格式不合法，TemplateId: {TemplateId}", templateId);
                 throw new ArgumentException("Invalid templateId format", nameof(templateId));
             }
 
@@ -195,6 +215,7 @@ namespace PMCSystem_Backend.Services.Implementations
             string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
             if (!File.Exists(filePath))
             {
+                _logger.LogWarning("模板文件不存在，TemplateId: {TemplateId}, Path: {FilePath}", templateId, filePath);
                 throw new FileNotFoundException("Template file not found", filePath);
             }
 
@@ -202,10 +223,16 @@ namespace PMCSystem_Backend.Services.Implementations
             using var package = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
             if (package.Workbook.Worksheets.Count == 0)
             {
+                _logger.LogWarning("导出模板 Excel 无工作表，TemplateId: {TemplateId}", templateId);
                 throw new InvalidOperationException("Excel file contains no worksheets");
             }
             var sheet = package.Workbook.Worksheets[0];
-            var dim = sheet.Dimension ?? throw new InvalidOperationException("Worksheet is empty");
+            var dim = sheet.Dimension;
+            if (dim == null)
+            {
+                _logger.LogWarning("导出模板工作表为空，TemplateId: {TemplateId}", templateId);
+                throw new InvalidOperationException("Worksheet is empty");
+            }
 
             // 5. 合并区域内除左上角外的单元格为“幽灵”，写入会破坏合并，故跳过
             var ghostSet = BuildGhostCellSet(sheet);
@@ -236,7 +263,9 @@ namespace PMCSystem_Backend.Services.Implementations
             using var ms = new MemoryStream();
             package.SaveAs(ms);
             ms.Position = 0;
-            return ms.ToArray();
+            var bytes = ms.ToArray();
+            _logger.LogInformation("模板导出成功，TemplateId: {TemplateId}, 文件大小: {Size} bytes", templateId, bytes.Length);
+            return bytes;
         }
 
         /// <summary>
@@ -244,10 +273,16 @@ namespace PMCSystem_Backend.Services.Implementations
         /// </summary>
         public TemplatePreviewResponse GetTemplatePreviewBySpec(string templateId, string pmcCode)
         {
+            _logger.LogInformation("开始按规格书获取模板预览，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
             if (string.IsNullOrWhiteSpace(pmcCode))
+            {
+                _logger.LogWarning("按规格书预览失败：PmcCode 为空");
                 throw new ArgumentException("PmcCode cannot be null or empty", nameof(pmcCode));
+            }
             var parameters = BuildSpecPlaceholderDictionary(pmcCode);
-            return GetTemplatePreview(templateId, parameters);
+            var result = GetTemplatePreview(templateId, parameters);
+            _logger.LogInformation("按规格书模板预览成功，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
+            return result;
         }
 
         /// <summary>
@@ -255,10 +290,16 @@ namespace PMCSystem_Backend.Services.Implementations
         /// </summary>
         public byte[] ExportTemplateBySpec(string templateId, string pmcCode)
         {
+            _logger.LogInformation("开始按规格书导出模板，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
             if (string.IsNullOrWhiteSpace(pmcCode))
+            {
+                _logger.LogWarning("按规格书导出失败：PmcCode 为空");
                 throw new ArgumentException("PmcCode cannot be null or empty", nameof(pmcCode));
+            }
             var parameters = BuildSpecPlaceholderDictionary(pmcCode);
-            return ExportTemplate(templateId, parameters);
+            var result = ExportTemplate(templateId, parameters);
+            _logger.LogInformation("按规格书模板导出成功，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
+            return result;
         }
 
         /// <summary>
@@ -270,6 +311,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <returns>占位符键值对：PMC 基础信息 + standard_N（标准名 材料）、standard_&lt;类型&gt;（同类型多标准逗号分隔）及保留 standardName_N / standardType_N / material_N</returns>
         private Dictionary<string, string> BuildSpecPlaceholderDictionary(string pmcCode)
         {
+            _logger.LogDebug("构建规格书占位符字典，PmcCode: {PmcCode}", pmcCode);
             var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             // PMC 基础信息（来自 7 位编码解析）
@@ -286,6 +328,7 @@ namespace PMCSystem_Backend.Services.Implementations
             // 管附件标准配置：填入格式「标准名 材料」；同类型多标准用逗号分隔
             if (_pmcSpecService.GetSpecRules(pmcCode, out var standardInfos) && standardInfos != null && standardInfos.Count > 0)
             {
+                _logger.LogDebug("已加载规格书标准信息，PmcCode: {PmcCode}, 标准条数: {Count}", pmcCode, standardInfos.Count);
                 for (var i = 0; i < standardInfos.Count; i++)
                 {
                     var n = i + 1;
@@ -311,6 +354,7 @@ namespace PMCSystem_Backend.Services.Implementations
             }
             else
             {
+                _logger.LogDebug("未找到规格书标准信息或列表为空，PmcCode: {PmcCode}", pmcCode);
                 dict["material"] = string.Empty;
             }
 
