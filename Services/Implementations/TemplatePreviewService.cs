@@ -304,9 +304,16 @@ namespace PMCSystem_Backend.Services.Implementations
 
         /// <summary>
         /// 根据 PMC 编码从规格书服务获取基础信息与规格规则，组装为模板占位符字典。
-        /// 与简化版保存接口一致：仅标准类型、标准名字、标准材料。标准信息填入格式为「标准名 材料」；
-        /// 同一类型下多个标准时，用英文逗号分隔（如 "GB/T 8163 20#, GB/T 3091 Q235"）。
+        /// 与简化版保存接口（SavePipeSpecSimpleRequest）一致：仅标准类型、标准名字、标准材料。
+        /// 标准信息填入格式为「标准名 材料」；同一类型下多个标准时，用英文逗号分隔（如 "GB/T 8163 20#, GB/T 3091 Q235"）。
         /// </summary>
+        /// <remarks>
+        /// 字段映射关系（保存 → 读取 → 模板占位符）：
+        /// - SimpleStandardConfig.StandardFile (object) → PmcStandardInfo.StandardName (string) → {{standardName_N}}
+        /// - SimpleStandardConfig.Material (object) → PmcStandardInfo.Material (string) → {{material_N}}
+        /// - SimpleComponentTypeConfiguration.ComponentType (string) → PmcStandardInfo.StandardType (string) → {{standardType_N}}
+        /// 注意：StandardFile 和 Material 在保存时通过 .ToString() 转换，前端应传入名称字符串（而非 ID）以确保模板中显示为可读名称。
+        /// </remarks>
         /// <param name="pmcCode">PMC 编码</param>
         /// <returns>占位符键值对：PMC 基础信息 + standard_N（标准名 材料）、standard_&lt;类型&gt;（同类型多标准逗号分隔）及保留 standardName_N / standardType_N / material_N</returns>
         private Dictionary<string, string> BuildSpecPlaceholderDictionary(string pmcCode)
@@ -326,6 +333,7 @@ namespace PMCSystem_Backend.Services.Implementations
             dict["wallThickness"] = baseInfo.WallThickness ?? string.Empty;
 
             // 管附件标准配置：填入格式「标准名 材料」；同类型多标准用逗号分隔
+            // 数据来源：GetSpecRules 返回的 PmcStandardInfo 列表，与保存时 MapSimpleConfigurationsToStandardInfos 转换后的结构一致
             if (_pmcSpecService.GetSpecRules(pmcCode, out var standardInfos) && standardInfos != null && standardInfos.Count > 0)
             {
                 _logger.LogDebug("已加载规格书标准信息，PmcCode: {PmcCode}, 标准条数: {Count}", pmcCode, standardInfos.Count);
@@ -333,6 +341,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 {
                     var n = i + 1;
                     var s = standardInfos[i];
+                    // StandardName 和 Material 直接来自 PmcStandardInfo，与保存时的映射一致
                     var nameMaterial = FormatStandardNameMaterial(s.StandardName, s.Material);
                     dict[$"standard_{n}"] = nameMaterial;
                     dict[$"standardName_{n}"] = s.StandardName ?? string.Empty;
