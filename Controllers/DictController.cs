@@ -88,12 +88,15 @@ namespace PMCSystem_Backend.Controllers
                 if (data == null || data.Count == 0)
                     return BadRequest(new { message = "提交数据不能为空" });
 
-                await _dictService.AddAsync(type, data);
-                return Ok(new { message = "添加成功" });
+                // 调用 Service
+                int newId = await _dictService.AddAsync(type, data);
+
+                return Ok(new { message = "新增成功", id = newId });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = $"添加失败: {ex.Message}" });
+                // 记录日志...
+                return BadRequest(new { message = $"新增失败: {ex.Message}" });
             }
         }
 
@@ -101,7 +104,7 @@ namespace PMCSystem_Backend.Controllers
         // 4. 修改 (Update)
         // URL: PUT /api/dict/std-series/5
         // =================================================================
-       
+
 
         // =================================================================
         // 5. 删除 (Delete)
@@ -112,21 +115,23 @@ namespace PMCSystem_Backend.Controllers
         {
             try
             {
-                await _dictService.DeleteAsync(type, id);
+                int affected = await _dictService.DeleteAsync(type, id);
+                if (affected == 0)
+                    return NotFound(new { message = "未找到记录或已被删除" });
+
                 return Ok(new { message = "删除成功" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = $"删除失败: {ex.Message}" });
+                return BadRequest(new { message = $"删除失败: {ex.Message}" });
             }
         }
-
         // =================================================================
         // 6. 批量删除 (Batch Delete)
         // URL: POST /api/dict/std-series/batch-delete
         // Payload: [1, 2, 3]
         // =================================================================
-        
-        
+
+
     }
 }

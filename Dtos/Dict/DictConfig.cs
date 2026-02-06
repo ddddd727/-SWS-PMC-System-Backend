@@ -1,4 +1,6 @@
-﻿namespace PMCSystem_Backend.Dtos.Dict
+﻿using System.Collections.Generic;
+
+namespace PMCSystem_Backend.Dtos.Dict
 {
     // 对应 appsettings.json 的根节点
     public class RootDictConfig
@@ -6,20 +8,14 @@
         public Dictionary<string, DictItemConfig> DictConfiguration { get; set; } = new();
     }
 
-    // 对应每个具体的字典配置（例如 "UserDict", "RoleDict"）
+    // 对应每个具体的字典配置（例如 "std-series"）
     public class DictItemConfig
     {
-        public string DisplayName { get; set; }
-
-        public string ViewName { get; set; }
-
-        public string PhysicalTableName { get; set; }
-
-        public string CodeListTableName { get; set; }
-
-
-        public string TableName { get; set; } 
-        public List<DictColumnConfig> Columns { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
+        public string ViewName { get; set; } = string.Empty;
+        public string PhysicalTableName { get; set; } = string.Empty;
+        public string CodeListTableName { get; set; } = string.Empty;
+        public List<DictColumnConfig> Columns { get; set; } = new();
     }
 
     // 对应每一列的详细配置
@@ -31,7 +27,18 @@
         public string? UiType { get; set; }                 // 控件类型 (Input, Select, etc.)
         public bool IsRequired { get; set; }                // 是否必填
         public bool IsPrimaryKey { get; set; }              // 是否是主键
-        public string? DataSource { get; set; }             // 下拉框的数据源标识
-        public bool IsReadOnly { get; set; }                // 是否只读 (之前缺少的属性)
+        public bool IsReadOnly { get; set; }                // 是否只读
+
+        // ✅ 修复：改为对象类型，匹配 dicts.json 中的结构
+        public DictDataSourceConfig? DataSource { get; set; }
+    }
+
+    // ✅ 新增：下拉源配置类
+    public class DictDataSourceConfig
+    {
+        public string Url { get; set; } = string.Empty;
+        public string LabelField { get; set; } = string.Empty;
+        public string ValueField { get; set; } = string.Empty;
+        public Dictionary<string, string>? ValueMapping { get; set; }
     }
 }

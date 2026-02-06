@@ -37,4 +37,10 @@
     <None Include="appsettings.Development.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Configs\dicts.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

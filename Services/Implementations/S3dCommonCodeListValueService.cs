@@ -10,29 +10,27 @@ namespace PMCSystem_Backend.Services.Implementations
         private readonly PmcContextCky _context;
         public async Task<IEnumerable<dynamic>> GetOptionsAsync(string tableName)
         {
-            
+           
             var tableEntity = await _context.S3dCommonCodeListTables
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.CodeListTableName == tableName);
 
             if (tableEntity == null)
             {
-                // 如果找不到表，返回空列表，不要报错，保证前端安全
+              
                 return Enumerable.Empty<dynamic>();
             }
 
-         
+            // 2. 查询该表的所有选项
             var values = await _context.S3dCommonCodeListValues
                 .AsNoTracking()
-                .Where(v => v.CodeListTableId == tableEntity.Id) 
-                .Where(v => v.Status == true)                    
+                .Where(v => v.CodeListTableId == tableEntity.Id)
                 .OrderBy(v => v.CodeListNumber)
                 .Select(v => new
                 {
-                    
-                    Value = v.CodeListNumber,    
-                    Short = v.ShortStringValue,  
-                    Long = v.LongStringValue     
+                    Value = v.CodeListNumber,
+                    Short = v.ShortStringValue,
+                    Long = v.LongStringValue,
                 })
                 .ToListAsync();
 

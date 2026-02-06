@@ -1,13 +1,15 @@
-﻿namespace PMCSystem_Backend.Dtos.Dict
+﻿using System.Collections.Generic;
+
+namespace PMCSystem_Backend.Dtos.Dict
 {
-    // 整个表格的数据结构：包含表头定义(Columns)和数据行(Rows)
+    // 整个表格的数据结构
     public class DictTableDto
     {
         public List<DictColumnDto> Columns { get; set; } = new();
         public List<Dictionary<string, object>> Rows { get; set; } = new();
     }
 
-    // 发送给前端的列定义（也就是前端根据这个来生成表头和表单）
+    // 列定义 (发送给前端)
     public class DictColumnDto
     {
         public string Prop { get; set; } = string.Empty;    // 对应前端的 prop
@@ -16,7 +18,18 @@
         public string UiType { get; set; } = "Input";       // 控件类型
         public bool Required { get; set; }                  // 是否必填
         public bool IsPrimaryKey { get; set; }              // 是否主键
-        public string? DataSource { get; set; }             // 下拉源
         public bool IsReadOnly { get; set; }                // 是否只读
+
+        // ✅ 修复：改为对象类型
+        public DictDataSourceDto? DataSource { get; set; }
+    }
+
+    // ✅ 新增：对应前端需要的下拉配置结构
+    public class DictDataSourceDto
+    {
+        public string Url { get; set; } = string.Empty;
+        public string LabelField { get; set; } = string.Empty;
+        public string ValueField { get; set; } = string.Empty;
+        public Dictionary<string, string>? ValueMapping { get; set; }
     }
 }

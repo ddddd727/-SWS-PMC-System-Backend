@@ -8,7 +8,6 @@
         "JsonData": "JsonData"
     },
     "DictConfiguration": {
-
         "std-series": {
             "DisplayName": "标准系列",
             "ViewName": "View_Dict_GeometricIndustryPractice",
@@ -68,7 +67,6 @@
                 }
             ]
         },
-
         "piping-class": {
             "DisplayName": "管材等级",
             "ViewName": "View_Dict_PipingClass",
@@ -128,7 +126,6 @@
                 }
             ]
         },
-
         "mat-category": {
             "DisplayName": "主材料",
             "ViewName": "View_Dict_MaterialsCategory",
@@ -188,7 +185,6 @@
                 }
             ]
         },
-
         "piping-standard": {
             "DisplayName": "管材标准",
             "ViewName": "View_Dict_PipingStandard",
@@ -248,3 +244,5 @@
                 }
             ]
         }
+    }
+}
