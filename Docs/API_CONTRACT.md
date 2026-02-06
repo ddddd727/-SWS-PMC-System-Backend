@@ -2,15 +2,15 @@
 
 ## 文档信息
 
-| 项目               | 内容             |
-| ------------------ | ---------------- |
-| **版本号**   | v1.4             |
-| **生成日期** | 2026-02-03       |
+| 项目               | 内容                                        |
+| ------------------ | ------------------------------------------- |
+| **版本号**   | v1.5                                        |
+| **生成日期** | 2026-02-03                                  |
 | **基础路径** | `/api/PmcSpec`、`/api/template-preview` |
-| **协议**     | HTTP/HTTPS       |
-| **数据格式** | JSON             |
-| **字符编码** | UTF-8            |
-| **最后更新** | 2026-02-06       |
+| **协议**     | HTTP/HTTPS                                  |
+| **数据格式** | JSON                                        |
+| **字符编码** | UTF-8                                       |
+| **最后更新** | 2026-02-06                                  |
 
 ---
 
@@ -854,8 +854,8 @@ interface StandardFileConfig {
 
 #### 请求参数
 
-| 参数名      | 类型   | 位置  | 必填 | 说明               | 示例       |
-| ----------- | ------ | ----- | ---- | ------------------ | ---------- |
+| 参数名      | 类型   | 位置  | 必填 | 说明                | 示例       |
+| ----------- | ------ | ----- | ---- | ------------------- | ---------- |
 | endStandard | string | Query | 是   | 端面标准，长度≤255 | ASME B16.9 |
 | schedule    | string | Query | 是   | 壁厚系列，长度≤255 | Sch40      |
 
@@ -943,8 +943,8 @@ interface SpecNPDInfo {
 
 #### 请求参数
 
-| 参数名            | 类型   | 位置  | 必填 | 说明                   | 示例  |
-| ----------------- | ------ | ----- | ---- | ---------------------- | ----- |
+| 参数名            | 类型   | 位置  | 必填 | 说明                    | 示例  |
+| ----------------- | ------ | ----- | ---- | ----------------------- | ----- |
 | componentTypeName | string | Query | 是   | 部件类型名称，长度≤255 | Elbow |
 
 #### 请求示例
@@ -1042,9 +1042,9 @@ interface PipeFittingSpec {
 
 | 参数名         | 类型   | 位置 | 必填 | 说明                        |
 | -------------- | ------ | ---- | ---- | --------------------------- |
-| shipType       | string | Body | 是   | 船型，长度≤255              |
-| shipNumber     | string | Body | 是   | 船号，长度≤255              |
-| pmcCode        | string | Body | 是   | PMC编码，长度≤255           |
+| shipType       | string | Body | 是   | 船型，长度≤255             |
+| shipNumber     | string | Body | 是   | 船号，长度≤255             |
+| pmcCode        | string | Body | 是   | PMC编码，长度≤255          |
 | configurations | array  | Body | 是   | 部件类型配置列表（至少1个） |
 | metadata       | object | Body | 否   | 可选元数据                  |
 
@@ -1196,11 +1196,11 @@ interface SimpleStandardConfig {
 
 **请求参数**
 
-| 参数名      | 类型   | 位置  | 必填 | 说明                                                                 |
-| ----------- | ------ | ----- | ---- | -------------------------------------------------------------------- |
-| templateId  | string | Path  | 是   | 模板唯一标识，仅允许字母、数字、下划线、中划线                        |
-| pmcCode     | string | Query | 否   | PMC 编码；传入时使用已保存的规格书数据填充占位符，与 parameters 二选一 |
-| parameters  | object | Query | 否   | 自定义占位符键值对，如 `parameters[pmcCode]=A1B2C3D`；未传 pmcCode 时使用 |
+| 参数名     | 类型   | 位置  | 必填 | 说明                                                                        |
+| ---------- | ------ | ----- | ---- | --------------------------------------------------------------------------- |
+| templateId | string | Path  | 是   | 模板唯一标识，仅允许字母、数字、下划线、中划线                              |
+| pmcCode    | string | Query | 否   | PMC 编码；传入时使用已保存的规格书数据填充占位符，与 parameters 二选一      |
+| parameters | object | Query | 否   | 自定义占位符键值对，如 `parameters[pmcCode]=A1B2C3D`；未传 pmcCode 时使用 |
 
 **请求示例（按规格书填充）**
 
@@ -1240,23 +1240,39 @@ GET /api/template-preview/pipe-spec?parameters[pmcCode]=A1B2C3D&parameters[shipN
 
 **规格书驱动时的占位符约定（模板中可用的 `{{key}}`）**
 
-| 占位符 | 说明 | 示例值 |
-|--------|------|--------|
-| `{{pmcCode}}` | PMC 编码 | A1B2C3D |
-| `{{shipNumber}}` | 船号 | H1234 |
-| `{{pipingClass}}` | 管道等级 | 150# |
-| `{{materialGrade}}` | 牌号 | A105 |
-| `{{pressureRating}}` | 法兰压力等级 | Class 150 |
-| `{{pipeStandard}}` | 管材标准 | ASME B36.10 |
-| `{{materialCategory}}` | 管材材料 | Carbon Steel |
-| `{{wallThickness}}` | 壁厚系列 | Sch40 |
-| `{{material}}` | 首条规格的材料 | 20# |
-| `{{standard_1}}` | 第 1 条标准（标准名 材料） | GB/T 8163 20# |
-| `{{standard_2}}` | 第 2 条标准 | GB/T 3091 Q235 |
-| `{{standardName_N}}` / `{{standardType_N}}` / `{{material_N}}` | 第 N 条的标准名、类型、材料（N 为 1-based） | — |
-| `{{standard_Pipe}}` | 类型为 Pipe 的所有标准，逗号分隔 | GB/T 8163 20#, GB/T 3091 Q235 |
-| `{{standard_Elbow}}` | 类型为 Elbow 的所有标准 | GB/T 12459 20# |
-| `{{standard_<类型名>}}` | 其他类型，类型名与配置中的 componentType 一致（空格转为下划线） | — |
+| 占位符                                                               | 说明                                                            | 示例值                        |
+| -------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------- |
+| `{{pmcCode}}`                                                      | PMC 编码                                                        | A1B2C3D                       |
+| `{{shipNumber}}`                                                   | 船号                                                            | H1234                         |
+| `{{pipingClass}}`                                                  | 管道等级                                                        | 150#                          |
+| `{{materialGrade}}`                                                | 牌号                                                            | A105                          |
+| `{{pressureRating}}`                                               | 法兰压力等级                                                    | Class 150                     |
+| `{{pipeStandard}}`                                                 | 管材标准                                                        | ASME B36.10                   |
+| `{{materialCategory}}`                                             | 管材材料                                                        | Carbon Steel                  |
+| `{{wallThickness}}`                                                | 壁厚系列                                                        | Sch40                         |
+| `{{material}}`                                                     | 首条规格的材料                                                  | 20#                           |
+| `{{standard_1}}`                                                   | 第 1 条标准（标准名 材料）                                      | GB/T 8163 20#                 |
+| `{{standard_2}}`                                                   | 第 2 条标准                                                     | GB/T 3091 Q235                |
+| `{{standardName_N}}` / `{{standardType_N}}` / `{{material_N}}` | 第 N 条的标准名、类型、材料（N 为 1-based）                     | —                            |
+| `{{standard_Pipe}}`                                                | 类型为 Pipe 的所有标准，逗号分隔                                | GB/T 8163 20#, GB/T 3091 Q235 |
+| `{{standard_Elbow}}`                                               | 类型为 Elbow 的所有标准                                         | GB/T 12459 20#                |
+| `{{standard_<类型名>}}`                                            | 其他类型，类型名与配置中的 componentType 一致（空格转为下划线） | —                            |
+| **通径范围信息**                                               |                                                                 |                               |
+| `{{npd}}`                                                          | 通径列表（逗号分隔，单位：mm）                                  | 15, 20, 25, 32, 40, 50        |
+| `{{npd_1}}`, `{{npd_2}}`, ...                                    | 第 N 个通径值（N 从 1 开始，单位：mm）                          | 15, 20, ...                   |
+| `{{outsideDiameter}}`                                              | 外径列表（逗号分隔，单位：mm）                                  | 21.3, 26.9, 33.7, 42.4        |
+| `{{outsideDiameter_1}}`, `{{outsideDiameter_2}}`, ...            | 第 N 个外径值（N 从 1 开始，单位：mm）                          | 21.3, 26.9, ...               |
+| `{{wallThicknessList}}`                                            | 壁厚列表（逗号分隔，单位：mm）                                  | 2.77, 2.87, 3.38, 3.56        |
+| `{{wallThicknessList_1}}`, `{{wallThicknessList_2}}`, ...        | 第 N 个壁厚值（N 从 1 开始，单位：mm）                          | 2.77, 2.87, ...               |
+| `{{endStandard}}`                                                  | 端面标准（几何工业标准）                                        | ASME B16.9                    |
+| `{{schedule}}`                                                     | 壁厚系列                                                        | Sch40                         |
+
+**注意**：
+
+- 通径范围信息根据 PMC 基础信息中的 `pipeStandard`（端面标准）和 `wallThickness`（壁厚系列）自动获取
+- 如果缺少端面标准或壁厚系列，通径相关占位符将为空字符串
+- 通径、外径、壁厚列表按数值大小排序
+- 通径值保留 1 位小数，外径和壁厚值保留 2 位小数
 
 ---
 
@@ -1273,11 +1289,11 @@ GET /api/template-preview/pipe-spec?parameters[pmcCode]=A1B2C3D&parameters[shipN
 
 **请求参数**
 
-| 参数名     | 类型   | 位置  | 必填 | 说明 |
-| ----------- | ------ | ----- | ---- | ---- |
-| templateId  | string | Path  | 是   | 模板唯一标识 |
-| pmcCode     | string | Query | 否   | PMC 编码；传入时按规格书填充 |
-| parameters  | object | Query | 否   | 自定义占位符键值对；未传 pmcCode 时使用 |
+| 参数名     | 类型   | 位置  | 必填 | 说明                                    |
+| ---------- | ------ | ----- | ---- | --------------------------------------- |
+| templateId | string | Path  | 是   | 模板唯一标识                            |
+| pmcCode    | string | Query | 否   | PMC 编码；传入时按规格书填充            |
+| parameters | object | Query | 否   | 自定义占位符键值对；未传 pmcCode 时使用 |
 
 **请求示例**
 
@@ -1840,13 +1856,14 @@ export interface CellStyle {
 
 ### B. 更新日志
 
-| 版本 | 日期       | 修改内容                                                                                                                                                                                 | 修改人       |
-| ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                                                                                                                                             | AI Assistant |
-| v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则 | AI Assistant |
-| v1.2 | 2026-02-04 | SaveSpecRules: 移除 StandardFileConfiguration，统一使用 StandardFileConfig 作为标准文件配置数据模型 | AI Assistant |
-| v1.3 | 2026-02-04 | 请求参数长度约束：SavePipeSpecRequest（shipType/shipNumber/pmcCode）、GetNPDInfoRequest（endStandard/schedule）、GetPipeFittingSpecRequest（componentTypeName）均增加长度≤255 的校验与契约说明 | AI Assistant |
+| 版本 | 日期       | 修改内容                                                                                                                                                                                                                                                                                                                       | 修改人       |
+| ---- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                                                                                                                                                                                                                                                                                   | AI Assistant |
+| v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则                                                                                                                                       | AI Assistant |
+| v1.2 | 2026-02-04 | SaveSpecRules: 移除 StandardFileConfiguration，统一使用 StandardFileConfig 作为标准文件配置数据模型                                                                                                                                                                                                                            | AI Assistant |
+| v1.3 | 2026-02-04 | 请求参数长度约束：SavePipeSpecRequest（shipType/shipNumber/pmcCode）、GetNPDInfoRequest（endStandard/schedule）、GetPipeFittingSpecRequest（componentTypeName）均增加长度≤255 的校验与契约说明                                                                                                                                | AI Assistant |
 | v1.4 | 2026-02-06 | 新增模板预览与导出：GET /api/template-preview/{templateId}、GET /api/template-preview/{templateId}/export；支持 pmcCode（规格书填充）或 parameters（自定义占位符）；占位符约定：标准信息格式「标准名 材料」、同类型多标准逗号分隔；standard_N、standard_&lt;类型&gt; 及 PMC 基础信息占位符；补充前端调用示例与 TypeScript 类型 | AI Assistant |
+| v1.5 | 2026-02-06 | 模板预览与导出增强：新增通径范围信息占位符（NPD、外径、壁厚）；支持列表格式（{{npd}}、{{outsideDiameter}}、{{wallThicknessList}}）和索引格式（{{npd_N}}、{{outsideDiameter_N}}、{{wallThicknessList_N}}）；根据 PMC 基础信息中的 pipeStandard 和 wallThickness 自动获取通径数据；更新占位符说明文档                            | AI Assistant |
 
 ---
 

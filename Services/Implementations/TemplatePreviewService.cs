@@ -304,7 +304,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         /// <summary>
         /// 根据 PMC 编码从规格书服务获取基础信息与规格规则，组装为模板占位符字典。
-        /// 与简化版保存接口（SavePipeSpecSimpleRequest）一致：仅标准类型、标准名字、标准材料。
+        /// 包含：PMC 基础信息、管附件标准配置（标准名、材料、类型）、通径范围信息（NPD、外径、壁厚）。
         /// 标准信息填入格式为「标准名 材料」；同一类型下多个标准时，用英文逗号分隔（如 "GB/T 8163 20#, GB/T 3091 Q235"）。
         /// </summary>
         /// <remarks>
@@ -312,10 +312,19 @@ namespace PMCSystem_Backend.Services.Implementations
         /// - SimpleStandardConfig.StandardFile (object) → PmcStandardInfo.StandardName (string) → {{standardName_N}}
         /// - SimpleStandardConfig.Material (object) → PmcStandardInfo.Material (string) → {{material_N}}
         /// - SimpleComponentTypeConfiguration.ComponentType (string) → PmcStandardInfo.StandardType (string) → {{standardType_N}}
+        /// 通径范围信息（通过 GetNPDInfoByPmc 获取）：
+        /// - {{npd}} - 通径列表（逗号分隔，如 "15, 20, 25, 32"）
+        /// - {{npd_N}} - 第 N 个通径值（N 从 1 开始）
+        /// - {{outsideDiameter}} - 外径列表（逗号分隔）
+        /// - {{outsideDiameter_N}} - 第 N 个外径值
+        /// - {{wallThicknessList}} - 壁厚列表（逗号分隔）
+        /// - {{wallThicknessList_N}} - 第 N 个壁厚值
+        /// - {{endStandard}} - 端面标准
+        /// - {{schedule}} - 壁厚系列
         /// 注意：StandardFile 和 Material 在保存时通过 .ToString() 转换，前端应传入名称字符串（而非 ID）以确保模板中显示为可读名称。
         /// </remarks>
         /// <param name="pmcCode">PMC 编码</param>
-        /// <returns>占位符键值对：PMC 基础信息 + standard_N（标准名 材料）、standard_&lt;类型&gt;（同类型多标准逗号分隔）及保留 standardName_N / standardType_N / material_N</returns>
+        /// <returns>占位符键值对：PMC 基础信息 + 标准信息 + 通径范围信息</returns>
         private Dictionary<string, string> BuildSpecPlaceholderDictionary(string pmcCode)
         {
             _logger.LogDebug("构建规格书占位符字典，PmcCode: {PmcCode}", pmcCode);
@@ -331,6 +340,89 @@ namespace PMCSystem_Backend.Services.Implementations
             dict["pipeStandard"] = baseInfo.PipeStandard ?? string.Empty;
             dict["materialCategory"] = baseInfo.MaterialCategory ?? string.Empty;
             dict["wallThickness"] = baseInfo.WallThickness ?? string.Empty;
+
+            // 通径范围信息（NPD、外径、壁厚）：根据端面标准（PipeStandard）和壁厚系列（WallThickness）获取
+            if (!string.IsNullOrWhiteSpace(baseInfo.PipeStandard) && !string.IsNullOrWhiteSpace(baseInfo.WallThickness))
+            {
+                try
+                {
+                    var npdInfo = _pmcSpecService.GetNPDInfoByPmc(baseInfo.PipeStandard, baseInfo.WallThickness);
+                    if (npdInfo != null)
+                    {
+                        // 通径列表（NPD）：逗号分隔的字符串，如 "15, 20, 25, 32, 40"
+                        if (npdInfo.NPD != null && npdInfo.NPD.Count > 0)
+                        {
+                            dict["npd"] = string.Join(", ", npdInfo.NPD.Select(n => n.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)));
+                            // 按索引提供单个通径值：{{npd_1}}, {{npd_2}}, ...
+                            for (var i = 0; i < npdInfo.NPD.Count; i++)
+                            {
+                                dict[$"npd_{i + 1}"] = npdInfo.NPD[i].ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+                            }
+                        }
+                        else
+                        {
+                            dict["npd"] = string.Empty;
+                        }
+
+                        // 外径列表（OutsideDiameter）：逗号分隔的字符串
+                        if (npdInfo.OutsideDiameter != null && npdInfo.OutsideDiameter.Count > 0)
+                        {
+                            dict["outsideDiameter"] = string.Join(", ", npdInfo.OutsideDiameter.Select(d => d.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)));
+                            // 按索引提供单个外径值：{{outsideDiameter_1}}, {{outsideDiameter_2}}, ...
+                            for (var i = 0; i < npdInfo.OutsideDiameter.Count; i++)
+                            {
+                                dict[$"outsideDiameter_{i + 1}"] = npdInfo.OutsideDiameter[i].ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                            }
+                        }
+                        else
+                        {
+                            dict["outsideDiameter"] = string.Empty;
+                        }
+
+                        // 壁厚列表（WallThickness）：逗号分隔的字符串
+                        if (npdInfo.WallThickness != null && npdInfo.WallThickness.Count > 0)
+                        {
+                            dict["wallThicknessList"] = string.Join(", ", npdInfo.WallThickness.Select(t => t.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)));
+                            // 按索引提供单个壁厚值：{{wallThicknessList_1}}, {{wallThicknessList_2}}, ...
+                            for (var i = 0; i < npdInfo.WallThickness.Count; i++)
+                            {
+                                dict[$"wallThicknessList_{i + 1}"] = npdInfo.WallThickness[i].ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                            }
+                        }
+                        else
+                        {
+                            dict["wallThicknessList"] = string.Empty;
+                        }
+
+                        // 端面标准和壁厚系列（用于显示）
+                        dict["endStandard"] = npdInfo.EndStandard ?? string.Empty;
+                        dict["schedule"] = npdInfo.Schedule ?? string.Empty;
+
+                        _logger.LogDebug("已加载通径范围信息，PmcCode: {PmcCode}, 通径数量: {NpdCount}, 外径数量: {OdCount}, 壁厚数量: {WtCount}",
+                            pmcCode, npdInfo.NPD?.Count ?? 0, npdInfo.OutsideDiameter?.Count ?? 0, npdInfo.WallThickness?.Count ?? 0);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "获取通径范围信息失败，PmcCode: {PmcCode}, PipeStandard: {PipeStandard}, WallThickness: {WallThickness}",
+                        pmcCode, baseInfo.PipeStandard, baseInfo.WallThickness);
+                    // 失败时设置空值，避免模板中显示错误
+                    dict["npd"] = string.Empty;
+                    dict["outsideDiameter"] = string.Empty;
+                    dict["wallThicknessList"] = string.Empty;
+                    dict["endStandard"] = string.Empty;
+                    dict["schedule"] = string.Empty;
+                }
+            }
+            else
+            {
+                _logger.LogDebug("缺少端面标准或壁厚系列，无法获取通径范围信息，PmcCode: {PmcCode}", pmcCode);
+                dict["npd"] = string.Empty;
+                dict["outsideDiameter"] = string.Empty;
+                dict["wallThicknessList"] = string.Empty;
+                dict["endStandard"] = string.Empty;
+                dict["schedule"] = string.Empty;
+            }
 
             // 管附件标准配置：填入格式「标准名 材料」；同类型多标准用逗号分隔
             // 数据来源：GetSpecRules 返回的 PmcStandardInfo 列表，与保存时 MapSimpleConfigurationsToStandardInfos 转换后的结构一致
