@@ -104,7 +104,28 @@ namespace PMCSystem_Backend.Controllers
         // 4. 修改 (Update)
         // URL: PUT /api/dict/std-series/5
         // =================================================================
+        [HttpPut("{type}/{id}")]
+        public async Task<IActionResult> Update(string type, int id, [FromBody] DictInputDto data)
+        {
+            try
+            {
+                if (data == null || data.Count == 0)
+                    return BadRequest(new { message = "提交数据不能为空" });
 
+                // 调用 Service 的 UpdateAsync
+                int affected = await _dictService.UpdateAsync(type, id, data);
+
+                if (affected == 0)
+                    return NotFound(new { message = "未找到记录或未做任何修改" });
+
+                return Ok(new { message = "修改成功" });
+            }
+            catch (Exception ex)
+            {
+                // 建议记录 ex 日志
+                return BadRequest(new { message = $"修改失败: {ex.Message}" });
+            }
+        }
 
         // =================================================================
         // 5. 删除 (Delete)

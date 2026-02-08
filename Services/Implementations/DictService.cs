@@ -132,33 +132,43 @@ namespace PMCSystem_Backend.Services.Implementations
         public async Task<int> AddAsync(string type, DictInputDto data)
         {
             var config = GetConfig(type);
-            string tableName = config.PhysicalTableName; // 写入必须走物理表，不能走视图
+            string tableName = config.PhysicalTableName;
 
             using var conn = _context.Database.GetDbConnection();
 
-            // 1. 获取物理表的实际列名 (用于判断哪些字段是物理字段)
-            // 💡 性能优化点：这个 Schema 应该被缓存，不要每次 Insert 都查系统表
+            // 1. 获取物理表的列 (S3D_Dict_...)
             var dbColumns = await GetTableSchemaAsync(conn, tableName);
             var dbColSet = new HashSet<string>(dbColumns, StringComparer.OrdinalIgnoreCase);
 
-            // 2. 分离数据：物理列 vs 扩展列(JsonData)
-            var insertDict = new Dictionary<string, object>(); // 存物理字段
-            var jsonDict = new Dictionary<string, object>();   // 存扩展字段
+            // 2. 获取配置文件中定义的所有列 (包含 Short, Long 等视图列)
+            // 💡 关键点：建立一个“已知列”的清单
+            var definedColSet = config.Columns
+                .Select(c => c.DbField)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var insertDict = new Dictionary<string, object>();
+            var jsonDict = new Dictionary<string, object>();
 
             foreach (var kvp in data)
             {
-                // 过滤掉空 Key 和自增 ID
                 if (string.IsNullOrWhiteSpace(kvp.Key)) continue;
                 if (kvp.Key.Equals("ID", StringComparison.OrdinalIgnoreCase)) continue;
 
+                // A. 如果是物理列 -> 存入 SQL
                 if (dbColSet.Contains(kvp.Key))
                 {
-                    // 如果数据库里有这个列，就直接存
                     insertDict[kvp.Key] = DataToSqlValue(kvp.Value);
                 }
+                // B. 💡 关键修正：如果不是物理列，但在 dicts.json 里定义过 (如 Short, Long)
+                // -> 说明它是视图展示列，直接忽略 (Do Nothing)，千万别进 JSON！
+                else if (definedColSet.Contains(kvp.Key))
+                {
+                    continue;
+                }
+                // C. 既不是物理列，也没在配置里定义 -> 才是真正的前端新增列 (Extension)
+                // -> 存入 JsonData
                 else
                 {
-                    // 如果数据库里没这个列，就丢进 JSON 大肚子里
                     jsonDict[kvp.Key] = kvp.Value;
                 }
             }
@@ -178,7 +188,6 @@ namespace PMCSystem_Backend.Services.Implementations
             var colNames = insertDict.Keys.Select(c => $"[{c}]");
             var paramNames = insertDict.Keys.Select(c => $"@{c}");
 
-            // 输出 INSERT INTO [Table] ([Col1], [Col2]) VALUES (@Col1, @Col2); SELECT SCOPE_IDENTITY();
             string sql = $"INSERT INTO [{tableName}] ({string.Join(",", colNames)}) VALUES ({string.Join(",", paramNames)}); SELECT CAST(SCOPE_IDENTITY() as int)";
 
             return await conn.QuerySingleAsync<int>(sql, new DynamicParameters(insertDict));
@@ -197,8 +206,16 @@ namespace PMCSystem_Backend.Services.Implementations
             string tableName = config.PhysicalTableName;
 
             using var conn = _context.Database.GetDbConnection();
+
+            // 1. 获取物理表的列 (S3D_Dict_...)
             var dbColumns = await GetTableSchemaAsync(conn, tableName);
             var dbColSet = new HashSet<string>(dbColumns, StringComparer.OrdinalIgnoreCase);
+
+            // 2. 获取配置文件中定义的“已知列” (包含 Short, Long 等视图列)
+            // 用于识别哪些是“展示字段”，需要被忽略
+            var definedColSet = config.Columns
+                .Select(c => c.DbField)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var updateDict = new Dictionary<string, object>();
             var jsonDict = new Dictionary<string, object>();
@@ -206,27 +223,46 @@ namespace PMCSystem_Backend.Services.Implementations
             foreach (var kvp in data)
             {
                 if (string.IsNullOrWhiteSpace(kvp.Key)) continue;
+                // 排除主键，防止用户尝试修改 ID
                 if (kvp.Key.Equals("ID", StringComparison.OrdinalIgnoreCase)) continue;
 
+                // A. 如果是物理列 -> 更新它
                 if (dbColSet.Contains(kvp.Key))
                 {
                     updateDict[kvp.Key] = DataToSqlValue(kvp.Value);
                 }
+                // B. 如果不是物理列，但在 dicts.json 里定义过 -> 说明是视图展示列，忽略！
+                else if (definedColSet.Contains(kvp.Key))
+                {
+                    continue;
+                }
+                // C. 既不是物理列，也没配置过 -> 认为是扩展数据，进 JsonData
                 else
                 {
                     jsonDict[kvp.Key] = kvp.Value;
                 }
             }
 
+            // 3. 处理 JsonData (Update 时通常是覆盖整个 JSON)
+            // 如果你想做“局部更新” (Merge)，逻辑会复杂很多，这里先按“前端传什么就存什么”处理
             if (jsonDict.Any() && dbColSet.Contains("JsonData"))
             {
                 updateDict["JsonData"] = JsonSerializer.Serialize(jsonDict);
             }
+            else if (dbColSet.Contains("JsonData") && !jsonDict.Any())
+            {
+                // 如果前端传了数据但把扩展字段都清空了，也可以考虑把数据库的 JsonData 置空
+                // updateDict["JsonData"] = DBNull.Value; // 视业务需求而定，暂时不强制清空
+            }
 
+            // 4. 自动更新时间
             if (dbColSet.Contains("UpdatedTime")) updateDict["UpdatedTime"] = DateTime.Now;
+            // 记录修改人 (如果实现了用户系统，这里填当前用户)
+            if (dbColSet.Contains("UpdatedBy")) updateDict["UpdatedBy"] = "System";
 
-            if (!updateDict.Any()) return 0;
+            if (!updateDict.Any()) return 0; // 没有有效字段需要更新
 
+            // 5. 构造 SQL
             var setClauses = updateDict.Keys.Select(k => $"[{k}] = @{k}");
             string sql = $"UPDATE [{tableName}] SET {string.Join(", ", setClauses)} WHERE ID = @Id";
 
@@ -237,6 +273,8 @@ namespace PMCSystem_Backend.Services.Implementations
         }
 
         #endregion
+
+
 
         #region 4. 删除 (Delete)
 
