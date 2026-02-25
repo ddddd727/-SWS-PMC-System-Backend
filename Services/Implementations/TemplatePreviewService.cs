@@ -2,6 +2,7 @@ using AutoMapper.Execution;
 using PMCSystem_Backend.Dtos.TemplatePreview;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
@@ -278,8 +279,9 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("Invalid templateId format", nameof(templateId));
             }
 
-            // 2. 统一 parameters
+            // 2. 统一 parameters（并过滤非法 XML 字符，避免导出后 Excel 判定文件损坏）
             parameters ??= new Dictionary<string, string>();
+            parameters = SanitizeParametersForExcel(parameters);
 
             // 3. 定位模板文件
             string filePath = Path.Combine(_templateBasePath, $"{templateId}.xlsx");
@@ -288,8 +290,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 _logger.LogWarning("模板文件不存在，TemplateId: {TemplateId}, Path: {FilePath}", templateId, filePath);
                 throw new FileNotFoundException("Template file not found", filePath);
             }
-
-            // 4. 打开模板并就地修改（不复制工作簿，避免样式/合并丢失或损坏）
+            // 4. 打开模板并就地修改
             using var package = new OfficeOpenXml.ExcelPackage(new FileInfo(filePath));
             if (package.Workbook.Worksheets.Count == 0)
             {
@@ -304,26 +305,28 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new InvalidOperationException("Worksheet is empty");
             }
 
-            // 5. 合并区域内除左上角外的单元格为“幽灵”，写入会破坏合并，故跳过
+            // 5. 创建占位符替换器，并识别合并区域内除左上角外的“幽灵”单元格
+            var placeholderReplacer = CreatePlaceholderReplacer(parameters);
             var ghostSet = BuildGhostCellSet(sheet);
 
-            // 6. 仅对非幽灵单元格做 {{key}} 替换并写回，未被替换的占位符置空
+            // 6. 仅替换“包含占位符的文本单元格”，避免全表重写导致公式/共享公式被破坏
             for (int r = 1; r <= dim.Rows; r++)
             {
                 for (int c = 1; c <= dim.Columns; c++)
                 {
                     if (ghostSet.Contains((r, c))) continue;
                     var cell = sheet.Cells[r, c];
-                    var cellValue = cell.Text ?? string.Empty;
-                    foreach (var p in parameters)
+                    // 跳过公式单元格，避免把公式结果文本化后回写，破坏公式结构
+                    if (!string.IsNullOrEmpty(cell.Formula)) continue;
+
+                    if (cell.Value is not string rawText) continue;
+                    if (!rawText.Contains("{{")) continue;
+
+                    var replaced = SanitizeExcelText(placeholderReplacer(rawText));
+                    if (!string.Equals(replaced, rawText, StringComparison.Ordinal))
                     {
-                        if (p.Key != null && p.Value != null)
-                        {
-                            cellValue = cellValue.Replace($"{{{{{p.Key}}}}}", p.Value);
-                        }
+                        cell.Value = replaced;
                     }
-                    cellValue = Regex.Replace(cellValue, @"\{\{[^}]*\}\}", string.Empty);
-                    cell.Value = cellValue;
                 }
             }
 
@@ -333,8 +336,14 @@ namespace PMCSystem_Backend.Services.Implementations
             // 8. 通过 MemoryStream + SaveAs 输出字节，避免 GetAsByteArray 导致的文件损坏
             using var ms = new MemoryStream();
             package.SaveAs(ms);
+            ms.Flush();  // 确保所有缓冲数据写入
             ms.Position = 0;
             var bytes = ms.ToArray();
+            if (bytes.Length < 4 || bytes[0] != 0x50 || bytes[1] != 0x4B)
+            {
+                _logger.LogError("模板导出失败：生成内容不是有效的 xlsx(zip) 文件，TemplateId: {TemplateId}", templateId);
+                throw new InvalidDataException("Generated file is not a valid xlsx package");
+            }
             _logger.LogInformation("模板导出成功，TemplateId: {TemplateId}, 文件大小: {Size} bytes", templateId, bytes.Length);
             return bytes;
         }
@@ -641,6 +650,37 @@ namespace PMCSystem_Backend.Services.Implementations
         private static List<string> GetExportBusinessData(Dictionary<string, string> parameters)
         {
             return new List<string>();
+        }
+
+        /// <summary>
+        /// 清洗导出参数：移除 Excel(OpenXML) 不允许的 XML 字符，避免生成损坏工作簿。
+        /// </summary>
+        private static Dictionary<string, string> SanitizeParametersForExcel(Dictionary<string, string> parameters)
+        {
+            var sanitized = new Dictionary<string, string>(parameters.Count, StringComparer.Ordinal);
+            foreach (var kv in parameters)
+            {
+                if (string.IsNullOrWhiteSpace(kv.Key)) continue;
+                sanitized[kv.Key] = SanitizeExcelText(kv.Value ?? string.Empty);
+            }
+            return sanitized;
+        }
+
+        /// <summary>
+        /// 仅保留 XML 合法字符，过滤控制字符（如 \0），防止写入 xlsx 后 Excel 无法打开。
+        /// </summary>
+        private static string SanitizeExcelText(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            var sb = new System.Text.StringBuilder(value.Length);
+            foreach (var ch in value)
+            {
+                if (XmlConvert.IsXmlChar(ch))
+                {
+                    sb.Append(ch);
+                }
+            }
+            return sb.ToString();
         }
     }
 }

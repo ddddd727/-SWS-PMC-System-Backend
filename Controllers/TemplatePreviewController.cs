@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PMCSystem_Backend.Common.Enums;
 using PMCSystem_Backend.Common.Models;
 using PMCSystem_Backend.Services.Interfaces;
+using System.Security.Cryptography;
 
 namespace PMCSystem_Backend.Controllers
 {
@@ -18,16 +19,19 @@ namespace PMCSystem_Backend.Controllers
     {
         private readonly ILogger<TemplatePreviewController> _logger;
         private readonly ITemplatePreviewService _templatePreviewService;
+        private readonly IWebHostEnvironment _environment;
 
         /// <summary>
         /// 构造函数，注入模板预览服务与日志
         /// </summary>
         public TemplatePreviewController(
             ITemplatePreviewService templatePreviewService,
-            ILogger<TemplatePreviewController> logger)
+            ILogger<TemplatePreviewController> logger,
+            IWebHostEnvironment environment)
         {
             _templatePreviewService = templatePreviewService;
             _logger = logger;
+            _environment = environment;
         }
 
         /// <summary>
@@ -96,6 +100,22 @@ namespace PMCSystem_Backend.Controllers
                     return Fail(ApiErrorCode.InvalidParameter, "PmcCode is required for template export");
                 }
                 var fileContent = _templatePreviewService.ExportTemplateBySpec(templateId, pmcCode.Trim());
+                var sig = fileContent.Length >= 4
+                    ? BitConverter.ToString(fileContent, 0, 4)
+                    : "N/A";
+                var sha256 = Convert.ToHexString(SHA256.HashData(fileContent));
+                Response.Headers["X-Export-Sha256"] = sha256;
+                _logger.LogInformation("模板导出响应，TemplateId: {TemplateId}, PmcCode: {PmcCode}, Size: {Size}, Signature: {Signature}, Sha256: {Sha256}",
+                    templateId, pmcCode, fileContent.Length, sig, sha256);
+
+                if (_environment.IsDevelopment())
+                {
+                    var debugDir = Path.Combine(Path.GetTempPath(), "PMCSystem_Backend", "ExportDebug");
+                    Directory.CreateDirectory(debugDir);
+                    var debugPath = Path.Combine(debugDir, $"{templateId}_{DateTime.Now:yyyyMMddHHmmssfff}.xlsx");
+                    System.IO.File.WriteAllBytes(debugPath, fileContent);
+                    _logger.LogInformation("已写入导出调试文件，Path: {Path}", debugPath);
+                }
                 var fileName = $"{templateId}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 return File(
                     fileContent,

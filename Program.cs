@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
@@ -12,6 +13,8 @@ using PMCSystem_Backend.Services.Impletation;
 using PMCSystem_Backend.Services.Interface;
 using OfficeOpenXml;
 
+// 注册编码提供程序，确保 EPPlus 处理 ZIP/xlsx 时正确解析编码（修复导出 Excel 无法打开问题）
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 // 设置 EPPlus 许可证上下文（必须在创建任何 ExcelPackage 之前设置）
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业用途，如果是商业用途请使用 LicenseContext.Commercial
 
