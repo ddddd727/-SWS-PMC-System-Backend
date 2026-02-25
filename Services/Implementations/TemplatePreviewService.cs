@@ -225,7 +225,7 @@ namespace PMCSystem_Backend.Services.Implementations
         private static Func<string, string> CreatePlaceholderReplacer(Dictionary<string, string> parameters)
         {
             if (parameters == null || parameters.Count == 0)
-                return text => text;
+                return text => string.IsNullOrEmpty(text) ? text : Regex.Replace(text, @"\{\{[^}]*\}\}", string.Empty);
 
             // 构建替换映射，按键长度降序排序，避免短键替换长键的问题（如 {{a}} 和 {{ab}}）
             var replacements = parameters
@@ -235,7 +235,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 .ToList();
 
             if (replacements.Count == 0)
-                return text => text;
+                return text => string.IsNullOrEmpty(text) ? text : Regex.Replace(text, @"\{\{[^}]*\}\}", string.Empty);
 
             return text =>
             {
@@ -247,6 +247,8 @@ namespace PMCSystem_Backend.Services.Implementations
                 {
                     result = result.Replace(replacement.Placeholder, replacement.Value);
                 }
+                // 移除未被替换的占位符，避免用户看到 {{key}} 标记
+                result = Regex.Replace(result, @"\{\{[^}]*\}\}", string.Empty);
                 return result;
             };
         }
@@ -305,7 +307,7 @@ namespace PMCSystem_Backend.Services.Implementations
             // 5. 合并区域内除左上角外的单元格为“幽灵”，写入会破坏合并，故跳过
             var ghostSet = BuildGhostCellSet(sheet);
 
-            // 6. 仅对非幽灵单元格做 {{key}} 替换并写回
+            // 6. 仅对非幽灵单元格做 {{key}} 替换并写回，未被替换的占位符置空
             for (int r = 1; r <= dim.Rows; r++)
             {
                 for (int c = 1; c <= dim.Columns; c++)
@@ -320,6 +322,7 @@ namespace PMCSystem_Backend.Services.Implementations
                             cellValue = cellValue.Replace($"{{{{{p.Key}}}}}", p.Value);
                         }
                     }
+                    cellValue = Regex.Replace(cellValue, @"\{\{[^}]*\}\}", string.Empty);
                     cell.Value = cellValue;
                 }
             }

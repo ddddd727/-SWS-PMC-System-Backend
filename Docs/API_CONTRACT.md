@@ -1181,11 +1181,15 @@ interface SimpleStandardConfig {
 
 ### 4.8 模板预览与导出
 
-规格书保存后，可通过**模板预览**与**模板导出**接口，将已保存的规格书数据填入预设 Excel 模板。模板内数据位置使用 `{{key}}` 占位符；填入内容与保存接口（SavePipeSpecSimpleRequest）一致，仅包含**标准类型、标准名字、标准材料**，标准信息格式为「**标准名 材料**」，同一类型多个标准时用英文逗号分隔（如 `GB/T 8163 20#, GB/T 3091 Q235`）。
+规格书保存后，可通过**模板预览**与**模板导出**接口，将已保存的规格书数据填入预设 Excel 模板。**业务数据填入在预览环节完成**；导出直接导出用户确认后的预览结果，使用与预览相同的 pmcCode。
+
+**流程说明**：1）用户传入 pmcCode 获取预览（含已填充表单数据）；2）用户确认预览无误；3）用户点击导出，传入相同 pmcCode，导出确认后的表格。
+
+模板内数据位置使用 `{{key}}` 占位符；填入内容与保存接口（SavePipeSpecSimpleRequest）一致，仅包含**标准类型、标准名字、标准材料**，标准信息格式为「**标准名 材料**」，同一类型多个标准时用英文逗号分隔（如 `GB/T 8163 20#, GB/T 3091 Q235`）。
 
 #### 4.8.1 获取模板预览
 
-获取指定模板的预览数据（单元格、合并区域、样式等），占位符已按参数或规格书替换。优先使用 `pmcCode` 填充规格书数据；未传 `pmcCode` 时使用 `parameters` 键值对替换。
+获取指定模板的预览数据（单元格、合并区域、样式等），**必须传入 pmcCode** 以获取已保存的规格书数据，占位符在预览环节完成替换，返回含业务表单数据的预览结果。
 
 **基本信息**
 
@@ -1196,22 +1200,15 @@ interface SimpleStandardConfig {
 
 **请求参数**
 
-| 参数名     | 类型   | 位置  | 必填 | 说明                                                                        |
-| ---------- | ------ | ----- | ---- | --------------------------------------------------------------------------- |
-| templateId | string | Path  | 是   | 模板唯一标识，仅允许字母、数字、下划线、中划线                              |
-| pmcCode    | string | Query | 否   | PMC 编码；传入时使用已保存的规格书数据填充占位符，与 parameters 二选一      |
-| parameters | object | Query | 否   | 自定义占位符键值对，如 `parameters[pmcCode]=A1B2C3D`；未传 pmcCode 时使用 |
+| 参数名     | 类型   | 位置  | 必填 | 说明                                                        |
+| ---------- | ------ | ----- | ---- | ----------------------------------------------------------- |
+| templateId | string | Path  | 是   | 模板唯一标识，仅允许字母、数字、下划线、中划线              |
+| pmcCode    | string | Query | 是   | PMC 编码，用于获取已保存的规格书数据并填充模板占位符        |
 
-**请求示例（按规格书填充）**
+**请求示例**
 
 ```
 GET /api/template-preview/pipe-spec?pmcCode=A1B2C3D
-```
-
-**请求示例（自定义参数）**
-
-```
-GET /api/template-preview/pipe-spec?parameters[pmcCode]=A1B2C3D&parameters[shipNumber]=H1234
 ```
 
 **响应数据 - 成功 (200)**
@@ -1274,21 +1271,11 @@ GET /api/template-preview/pipe-spec?parameters[pmcCode]=A1B2C3D&parameters[shipN
 - 通径、外径、壁厚列表按数值大小排序
 - 通径值保留 1 位小数，外径和壁厚值保留 2 位小数
 
-**Pipe-Spec 模板占位符别名**（服务端已支持，模板中可使用以下别名，与标准占位符等价）：
-
-| 模板别名               | 标准占位符               |
-| ---------------------- | ------------------------ |
-| `{{pipingStandard}}`   | `{{pipeStandard}}`       |
-| `{{materialCategoryl}}`| `{{materialCategory}}`   |
-| `{{OD_N}}`             | `{{outsideDiameter_N}}`  |
-| `{{Thickness_N}}`      | `{{wallThicknessList_N}}`|
-| `{{standard_BlindFlinge}}` | `{{standard_Blind_Flange}}` |
-
 ---
 
 #### 4.8.2 导出模板为 Excel
 
-导出指定模板为 xlsx 文件，占位符替换规则与预览一致：传 `pmcCode` 时按规格书填充，否则按 `parameters` 替换。
+导出用户确认后的预览表格结果为 xlsx 文件。使用与预览相同的 pmcCode 获取规格书数据，导出内容与预览展示一致。
 
 **基本信息**
 
@@ -1299,11 +1286,10 @@ GET /api/template-preview/pipe-spec?parameters[pmcCode]=A1B2C3D&parameters[shipN
 
 **请求参数**
 
-| 参数名     | 类型   | 位置  | 必填 | 说明                                    |
-| ---------- | ------ | ----- | ---- | --------------------------------------- |
-| templateId | string | Path  | 是   | 模板唯一标识                            |
-| pmcCode    | string | Query | 否   | PMC 编码；传入时按规格书填充            |
-| parameters | object | Query | 否   | 自定义占位符键值对；未传 pmcCode 时使用 |
+| 参数名     | 类型   | 位置  | 必填 | 说明                                                            |
+| ---------- | ------ | ----- | ---- | --------------------------------------------------------------- |
+| templateId | string | Path  | 是   | 模板唯一标识                                                    |
+| pmcCode    | string | Query | 是   | PMC 编码，需与预览时传入的 pmcCode 一致，导出确认后的表格结果   |
 
 **请求示例**
 
@@ -1588,30 +1574,19 @@ export const pmcSpecApi = {
     return apiClient.post<ApiResponse<null>>('/PmcSpec/SpecRules', data);
   },
 
-  // 获取模板预览（按规格书填充时传 pmcCode，否则传 parameters）
-  getTemplatePreview(templateId: string, params?: { pmcCode?: string; parameters?: Record<string, string> }) {
-    const search = new URLSearchParams();
-    if (params?.pmcCode) search.set('pmcCode', params.pmcCode);
-    if (params?.parameters) {
-      Object.entries(params.parameters).forEach(([k, v]) => search.set(`parameters[${k}]`, v));
-    }
-    const qs = search.toString();
+  // 获取模板预览（pmcCode 必填，用于获取规格书数据并填充表单）
+  getTemplatePreview(templateId: string, pmcCode: string) {
     return apiClient.get<ApiResponse<TemplatePreviewResponse>>(
-      `/template-preview/${templateId}${qs ? '?' + qs : ''}`
+      `/template-preview/${templateId}?pmcCode=${encodeURIComponent(pmcCode)}`
     );
   },
 
-  // 导出模板为 Excel（按规格书填充时传 pmcCode）
-  exportTemplate(templateId: string, params?: { pmcCode?: string; parameters?: Record<string, string> }) {
-    const search = new URLSearchParams();
-    if (params?.pmcCode) search.set('pmcCode', params.pmcCode);
-    if (params?.parameters) {
-      Object.entries(params.parameters).forEach(([k, v]) => search.set(`parameters[${k}]`, v));
-    }
-    const qs = search.toString();
-    return apiClient.get(`/template-preview/${templateId}/export${qs ? '?' + qs : ''}`, {
-      responseType: 'blob'
-    });
+  // 导出模板为 Excel（pmcCode 必填，与预览时传入的一致，导出确认后的表格结果）
+  exportTemplate(templateId: string, pmcCode: string) {
+    return apiClient.get(
+      `/template-preview/${templateId}/export?pmcCode=${encodeURIComponent(pmcCode)}`,
+      { responseType: 'blob' }
+    );
   }
 };
 ```
@@ -1874,6 +1849,7 @@ export interface CellStyle {
 | v1.3 | 2026-02-04 | 请求参数长度约束：SavePipeSpecRequest（shipType/shipNumber/pmcCode）、GetNPDInfoRequest（endStandard/schedule）、GetPipeFittingSpecRequest（componentTypeName）均增加长度≤255 的校验与契约说明                                                                                                                                | AI Assistant |
 | v1.4 | 2026-02-06 | 新增模板预览与导出：GET /api/template-preview/{templateId}、GET /api/template-preview/{templateId}/export；支持 pmcCode（规格书填充）或 parameters（自定义占位符）；占位符约定：标准信息格式「标准名 材料」、同类型多标准逗号分隔；standard_N、standard_&lt;类型&gt; 及 PMC 基础信息占位符；补充前端调用示例与 TypeScript 类型 | AI Assistant |
 | v1.5 | 2026-02-06 | 模板预览与导出增强：新增通径范围信息占位符（NPD、外径、壁厚）；支持列表格式（{{npd}}、{{outsideDiameter}}、{{wallThicknessList}}）和索引格式（{{npd_N}}、{{outsideDiameter_N}}、{{wallThicknessList_N}}）；根据 PMC 基础信息中的 pipeStandard 和 wallThickness 自动获取通径数据；更新占位符说明文档                            | AI Assistant |
+| v1.6 | 2026-02-25 | 模板预览与导出需求变更：预览需包含用户表单数据，pmcCode 改为必填；导出直接导出用户确认后的预览结果，pmcCode 必填；移除 parameters 可选参数；Pipe-Spec 模板占位符标准化；移除占位符别名映射                                          | AI Assistant |
 
 ---
 

@@ -31,12 +31,11 @@ namespace PMCSystem_Backend.Controllers
         }
 
         /// <summary>
-        /// 获取指定模板的预览数据（RESTful: GET 资源）。优先使用规格书数据：传入 pmcCode 时按已保存规格书填充；否则使用 parameters 键值对替换占位符。
+        /// 获取指定模板的预览数据（RESTful: GET 资源）。预览需包含用户表单数据，故 pmcCode 必填，按已保存规格书填充模板占位符。
         /// </summary>
         /// <param name="templateId">模板唯一标识</param>
-        /// <param name="pmcCode">可选。PMC 编码；传入时使用已保存的规格书数据填充模板中的 "{{xxx}}" 占位符</param>
-        /// <param name="parameters">可选。当未传 pmcCode 时，用于替换模板占位符的键值对</param>
-        /// <returns>包装后的预览数据</returns>
+        /// <param name="pmcCode">必填。PMC 编码，用于获取已保存的规格书数据并填充模板</param>
+        /// <returns>包装后的预览数据（含已填充的业务表单数据）</returns>
         /// <response code="200">成功返回预览数据</response>
         /// <response code="400">请求参数错误或系统异常</response>
         /// <response code="404">模板不存在</response>
@@ -47,18 +46,16 @@ namespace PMCSystem_Backend.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
         public IActionResult GetPreview(
             [FromRoute] string templateId,
-            [FromQuery] string? pmcCode,
-            [FromQuery] Dictionary<string, string>? parameters)
+            [FromQuery] string pmcCode)
         {
             try
             {
-                if (!string.IsNullOrWhiteSpace(pmcCode))
+                if (string.IsNullOrWhiteSpace(pmcCode))
                 {
-                    var preview = _templatePreviewService.GetTemplatePreviewBySpec(templateId, pmcCode.Trim());
-                    return Success(preview);
+                    return Fail(ApiErrorCode.InvalidParameter, "PmcCode is required for template preview");
                 }
-                var previewCustom = _templatePreviewService.GetTemplatePreview(templateId, parameters ?? new Dictionary<string, string>());
-                return Success(previewCustom);
+                var preview = _templatePreviewService.GetTemplatePreviewBySpec(templateId, pmcCode.Trim());
+                return Success(preview);
             }
             catch (ArgumentException ex)
             {
@@ -73,11 +70,10 @@ namespace PMCSystem_Backend.Controllers
         }
 
         /// <summary>
-        /// 导出指定模板为 Excel 文件（RESTful: GET 子资源 /export）。传入 pmcCode 时使用已保存规格书数据填充；否则使用 parameters 替换占位符。
+        /// 导出用户确认完的预览表格结果为 Excel 文件（RESTful: GET 子资源 /export）。使用与预览相同的 pmcCode 生成填充后的表格。
         /// </summary>
         /// <param name="templateId">模板唯一标识</param>
-        /// <param name="pmcCode">可选。PMC 编码；传入时使用已保存的规格书数据填充模板</param>
-        /// <param name="parameters">可选。当未传 pmcCode 时，用于替换模板占位符的键值对</param>
+        /// <param name="pmcCode">必填。PMC 编码，用于获取已保存的规格书数据，与预览时传入的 pmcCode 一致</param>
         /// <returns>Excel 文件流，或错误响应</returns>
         /// <response code="200">成功返回 Excel 文件</response>
         /// <response code="400">参数无效</response>
@@ -91,16 +87,15 @@ namespace PMCSystem_Backend.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
         public IActionResult Export(
             [FromRoute] string templateId,
-            [FromQuery] string? pmcCode,
-            [FromQuery] Dictionary<string, string>? parameters)
+            [FromQuery] string pmcCode)
         {
             try
             {
-                byte[] fileContent;
-                if (!string.IsNullOrWhiteSpace(pmcCode))
-                    fileContent = _templatePreviewService.ExportTemplateBySpec(templateId, pmcCode.Trim());
-                else
-                    fileContent = _templatePreviewService.ExportTemplate(templateId, parameters ?? new Dictionary<string, string>());
+                if (string.IsNullOrWhiteSpace(pmcCode))
+                {
+                    return Fail(ApiErrorCode.InvalidParameter, "PmcCode is required for template export");
+                }
+                var fileContent = _templatePreviewService.ExportTemplateBySpec(templateId, pmcCode.Trim());
                 var fileName = $"{templateId}_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
                 return File(
                     fileContent,
