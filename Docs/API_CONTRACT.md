@@ -4,13 +4,13 @@
 
 | 项目               | 内容                                        |
 | ------------------ | ------------------------------------------- |
-| **版本号**   | v1.5                                        |
+| **版本号**   | v1.6                                        |
 | **生成日期** | 2026-02-03                                  |
 | **基础路径** | `/api/PmcSpec`、`/api/template-preview` |
 | **协议**     | HTTP/HTTPS                                  |
 | **数据格式** | JSON                                        |
 | **字符编码** | UTF-8                                       |
-| **最后更新** | 2026-02-06                                  |
+| **最后更新** | 2026-02-25                                  |
 
 ---
 
@@ -1273,6 +1273,16 @@ GET /api/template-preview/pipe-spec?parameters[pmcCode]=A1B2C3D&parameters[shipN
 - 如果缺少端面标准或壁厚系列，通径相关占位符将为空字符串
 - 通径、外径、壁厚列表按数值大小排序
 - 通径值保留 1 位小数，外径和壁厚值保留 2 位小数
+
+**Pipe-Spec 模板占位符别名**（服务端已支持，模板中可使用以下别名，与标准占位符等价）：
+
+| 模板别名               | 标准占位符               |
+| ---------------------- | ------------------------ |
+| `{{pipingStandard}}`   | `{{pipeStandard}}`       |
+| `{{materialCategoryl}}`| `{{materialCategory}}`   |
+| `{{OD_N}}`             | `{{outsideDiameter_N}}`  |
+| `{{Thickness_N}}`      | `{{wallThicknessList_N}}`|
+| `{{standard_BlindFlinge}}` | `{{standard_Blind_Flange}}` |
 
 ---
 

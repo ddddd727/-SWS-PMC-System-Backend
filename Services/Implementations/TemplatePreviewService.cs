@@ -83,20 +83,26 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new InvalidOperationException("Worksheet is empty");
             }
 
-            // 5. 提取合并区域（仅保留左上角代表整块，避免重复渲染）
+            // 5. 创建占位符替换函数（优化性能，统一处理占位符替换）
+            var placeholderReplacer = CreatePlaceholderReplacer(parameters);
+
+            // 6. 提取合并区域（仅保留左上角代表整块，避免重复渲染），并替换占位符
             var mergedCells = new List<MergedCell>();
             if (sheet.MergedCells != null)
             {
                 foreach (var mergedCellAddress in sheet.MergedCells)
                 {
                     var range = sheet.Cells[mergedCellAddress];
+                    var mergedValue = range.Text ?? string.Empty;
+                    // 合并单元格的值也需要替换占位符
+                    mergedValue = placeholderReplacer(mergedValue);
                     mergedCells.Add(new MergedCell
                     {
                         StartRow = range.Start.Row - 1,
                         StartColumn = range.Start.Column - 1,
                         EndRow = range.End.Row - 1,
                         EndColumn = range.End.Column - 1,
-                        Value = range.Text,
+                        Value = mergedValue,
                         Style = ExtractCellStyle(range)
                     });
                 }
@@ -116,70 +122,132 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
             }
 
-            // 7. 遍历非合并区域单元格，替换 {{key}} 并收集样式
+            // 8. 遍历非合并区域单元格，替换 {{key}} 占位符并收集样式
             var cells = new List<PreviewCell>();
+            
             for (int r = 0; r < dim.Rows; r++)
             {
                 for (int c = 0; c < dim.Columns; c++)
                 {
                     if (skipSet.Contains((r, c))) continue;
                     var cell = sheet.Cells[r + 1, c + 1];
-                    var cellValue = cell.Text;
-                    // 占位符替换：{{key}} -> parameters[key]
-                    foreach (var param in parameters)
-                    {
-                        if (param.Key != null && param.Value != null)
-                        {
-                            cellValue = cellValue.Replace($"{{{{{param.Key}}}}}", param.Value);
-                        }
-                    }
+                    var cellValue = cell.Text ?? string.Empty;
+                    // 使用优化的占位符替换方法
+                    cellValue = placeholderReplacer(cellValue);
+                    
+                    var cellStyle = ExtractCellStyle(cell);
+                    // 性能优化：空值且无样式时，Value 设为 null 以减少 JSON 大小
+                    var finalValue = string.IsNullOrEmpty(cellValue) && cellStyle == null ? null : cellValue;
+                    
                     cells.Add(new PreviewCell
                     {
                         Row = r,
                         Column = c,
-                        Value = cellValue,
+                        Value = finalValue,
                         IsHeader = r == 0,
                         IsData = r > 0,
                         Field = $"col{c + 1}",
-                        Style = ExtractCellStyle(cell)
+                        Style = cellStyle
                     });
                 }
             }
 
-            // 8. 注入业务数据（如 material 等字段）
-            var businessData = GetBusinessData(parameters);
-            if (businessData != null && businessData.Count > 0)
-            {
-                foreach (var cell in cells)
-                {
-                    if (cell.Field?.StartsWith("material") == true)
-                        cell.Value = businessData[0];
-                }
-            }
+            // 9. 业务数据已通过占位符替换完成，无需额外注入
+            // 注：GetBusinessData 方法保留用于扩展，当前通过占位符字典已包含所有业务数据
 
-            // 9. 从 A1 安全读取标题（避免无 A1 时抛错）
+            // 10. 从 A1 安全读取标题并替换占位符（避免无 A1 时抛错）
             string title = string.Empty;
             try
             {
-                title = sheet.Cells["A1"]?.Text ?? string.Empty;
+                var titleCell = sheet.Cells["A1"];
+                if (titleCell != null)
+                {
+                    title = titleCell.Text ?? string.Empty;
+                    title = placeholderReplacer(title);
+                }
             }
             catch
             {
                 title = string.Empty;
             }
 
-            _logger.LogInformation("模板预览成功，TemplateId: {TemplateId}, 行数: {Rows}, 列数: {Cols}, 单元格数: {CellCount}", templateId, dim.Rows, dim.Columns, cells.Count);
+            // 11. 优化响应数据：减少 JSON 大小
+            // - 空列表设为 null
+            // - 合并单元格空值设为 null
+            // - 移除不必要的 Field 字段（前端可通过 Row/Column 计算）
+            var optimizedMergedCells = mergedCells.Count > 0 
+                ? mergedCells.Select(mc => new MergedCell
+                {
+                    StartRow = mc.StartRow,
+                    StartColumn = mc.StartColumn,
+                    EndRow = mc.EndRow,
+                    EndColumn = mc.EndColumn,
+                    Value = string.IsNullOrEmpty(mc.Value) ? null : mc.Value,
+                    Style = mc.Style
+                }).ToList()
+                : null;
+
+            var optimizedCells = cells.Count > 0
+                ? cells.Select(c => new PreviewCell
+                {
+                    Row = c.Row,
+                    Column = c.Column,
+                    Value = c.Value, // 已在步骤 8 中优化为空值 null
+                    IsHeader = c.IsHeader,
+                    IsData = c.IsData,
+                    Field = null, // 性能优化：移除 Field 字段，前端可通过 Row/Column 计算
+                    Style = c.Style
+                }).ToList()
+                : null;
+
+            _logger.LogInformation("模板预览成功，TemplateId: {TemplateId}, 行数: {Rows}, 列数: {Cols}, 单元格数: {CellCount}, 合并单元格数: {MergedCount}", 
+                templateId, dim.Rows, dim.Columns, cells.Count, mergedCells.Count);
+            
             return new TemplatePreviewResponse
             {
                 TemplateId = templateId,
-                Title = title,
+                Title = string.IsNullOrEmpty(title) ? null : title,
                 Grid = new GridInfo
                 {
                     RowCount = dim.Rows,
                     ColumnCount = dim.Columns
                 },
-                MergedCells = mergedCells,
-                Cells = cells
+                MergedCells = optimizedMergedCells,
+                Cells = optimizedCells
+            };
+        }
+
+        /// <summary>
+        /// 创建占位符替换函数，优化字符串替换性能（避免多次字符串分配）。
+        /// </summary>
+        /// <param name="parameters">占位符键值对</param>
+        /// <returns>替换函数：输入原始文本，输出替换后的文本</returns>
+        private static Func<string, string> CreatePlaceholderReplacer(Dictionary<string, string> parameters)
+        {
+            if (parameters == null || parameters.Count == 0)
+                return text => text;
+
+            // 构建替换映射，按键长度降序排序，避免短键替换长键的问题（如 {{a}} 和 {{ab}}）
+            var replacements = parameters
+                .Where(kvp => !string.IsNullOrEmpty(kvp.Key) && kvp.Value != null)
+                .OrderByDescending(kvp => kvp.Key.Length)
+                .Select(kvp => new { Placeholder = $"{{{{{kvp.Key}}}}}", Value = kvp.Value })
+                .ToList();
+
+            if (replacements.Count == 0)
+                return text => text;
+
+            return text =>
+            {
+                if (string.IsNullOrEmpty(text))
+                    return text;
+
+                var result = text;
+                foreach (var replacement in replacements)
+                {
+                    result = result.Replace(replacement.Placeholder, replacement.Value);
+                }
+                return result;
             };
         }
 
