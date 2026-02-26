@@ -322,6 +322,45 @@ namespace PMCSystem_Backend.Controllers
         }
 
         /// <summary>
+        /// 接受规格书审核（占位，默认审核成功，后续接入审核系统）
+        /// </summary>
+        /// <param name="request">包含 PMC 编码，可选船型、船号</param>
+        /// <returns>是否更新成功</returns>
+        /// <response code="200">审核接受成功</response>
+        /// <response code="400">参数错误或未找到对应记录</response>
+        [HttpPost("AcceptReview")]
+        [ProducesResponseType(typeof(ApiResponse), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 400)]
+        public IActionResult AcceptSpecReview([FromBody] AcceptSpecReviewRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.PmcCode))
+            {
+                return Fail(ApiErrorCode.ValidationError, "PMC编码不能为空");
+            }
+
+            try
+            {
+                var result = _pmcSpecService.AcceptSpecReview(
+                    request.PmcCode,
+                    string.IsNullOrWhiteSpace(request.ShipType) ? null : request.ShipType,
+                    string.IsNullOrWhiteSpace(request.ShipNumber) ? null : request.ShipNumber);
+
+                if (result)
+                {
+                    _logger.LogInformation("接受规格书审核成功，PMC编码: {PmcCode}", request.PmcCode);
+                    return Success("审核已通过");
+                }
+
+                return Fail(ApiErrorCode.ResourceNotFound, "未找到对应的规格书配置记录");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "接受规格书审核时发生错误，PMC编码: {PmcCode}", request.PmcCode);
+                return Fail(ApiErrorCode.BusinessRuleViolation, "操作失败，请稍后重试");
+            }
+        }
+
+        /// <summary>
         /// 检查NPD信息是否为空
         /// </summary>
         /// <param name="info">NPD信息对象</param>

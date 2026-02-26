@@ -94,5 +94,24 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <returns></returns>
         bool GeneratePipeSpecTable();
+
+        /// <summary>
+        /// 设置规格书配置状态
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="status">状态：pending/review/approved</param>
+        /// <param name="shipType">船型（可选，与 shipNumber 同时提供时精确匹配）</param>
+        /// <param name="shipNumber">船号（可选）</param>
+        /// <returns>是否更新成功</returns>
+        bool SetSpecConfigStatus(string pmcCode, string status, string? shipType = null, string? shipNumber = null);
+
+        /// <summary>
+        /// 接受审核（占位，默认审核成功，后续接入审核系统）
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="shipType">船型（可选）</param>
+        /// <param name="shipNumber">船号（可选）</param>
+        /// <returns>是否更新成功</returns>
+        bool AcceptSpecReview(string pmcCode, string? shipType = null, string? shipNumber = null);
     }
 }

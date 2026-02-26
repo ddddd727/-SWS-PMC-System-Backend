@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using PMCSystem_Backend.Common.Constants;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Dtos.PipeSpecConfig.Models;
@@ -537,8 +538,8 @@ namespace PMCSystem_Backend.Services.Implementations
                 existingEntity.ShipType = request.ShipType;
                 existingEntity.ShipNo = request.ShipNumber;
 
-                // 更新状态为已配置
-                existingEntity.Status = "待审核";
+                // 更新规格书配置状态为待审核
+                existingEntity.Status = SpecConfigStatus.Review;
 
                 // 保存更改
                 _context.SaveChanges();
@@ -618,8 +619,8 @@ namespace PMCSystem_Backend.Services.Implementations
                 existingEntity.ShipType = request.ShipType;
                 existingEntity.ShipNo = request.ShipNumber;
 
-                // 更新状态为待审核
-                existingEntity.Status = "待审核";
+                // 更新规格书配置状态为待审核
+                existingEntity.Status = SpecConfigStatus.Review;
 
                 // 保存更改
                 _context.SaveChanges();
@@ -821,18 +822,26 @@ namespace PMCSystem_Backend.Services.Implementations
             // 先获取基础信息
             var baseInfo = AnalyzeCodeFromPMC(pmcCode);
 
-            // 查询配置信息
+            // 查询配置信息与规格书配置状态
             var configurations = new List<ComponentTypeConfiguration>();
-            if (GetSpecRules(pmcCode, out var standardInfos) && standardInfos.Any())
+            var configStatus = SpecConfigStatus.Pending;
+            var entity = _context.S3dRulePmcdata
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Pmccode == pmcCode);
+            if (entity != null)
             {
-                // 将标准信息转换为配置格式
-                configurations = ConvertStandardInfosToConfigurations(standardInfos);
+                configStatus = SpecConfigStatus.Normalize(entity.Status);
+                if (GetSpecRules(pmcCode, out var standardInfos) && standardInfos.Any())
+                {
+                    configurations = ConvertStandardInfosToConfigurations(standardInfos);
+                }
             }
 
             return new PmcInfoWithConfigDto
             {
                 BaseInfo = baseInfo,
-                Configurations = configurations
+                Configurations = configurations,
+                ConfigStatus = configStatus
             };
         }
 
@@ -913,6 +922,41 @@ namespace PMCSystem_Backend.Services.Implementations
         public bool GeneratePipeSpecTable()
         {
             throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public bool SetSpecConfigStatus(string pmcCode, string status, string? shipType = null, string? shipNumber = null)
+        {
+            if (string.IsNullOrWhiteSpace(pmcCode))
+            {
+                _logger.LogError("SetSpecConfigStatus: PmcCode 不能为空");
+                throw new ArgumentException("PMC编码不能为空", nameof(pmcCode));
+            }
+
+            var query = _context.S3dRulePmcdata.Where(x => x.Pmccode == pmcCode);
+            if (!string.IsNullOrWhiteSpace(shipType) && !string.IsNullOrWhiteSpace(shipNumber))
+            {
+                query = query.Where(x => x.ShipType == shipType && x.ShipNo == shipNumber);
+            }
+
+            var entity = query.FirstOrDefault();
+            if (entity == null)
+            {
+                _logger.LogWarning("SetSpecConfigStatus: 未找到 PMC 编码 {PmcCode} 对应的记录", pmcCode);
+                return false;
+            }
+
+            entity.Status = status;
+            _context.SaveChanges();
+            _logger.LogInformation("SetSpecConfigStatus: 已将 PMC {PmcCode} 规格书配置状态更新为 {Status}", pmcCode, status);
+            return true;
+        }
+
+        /// <inheritdoc />
+        public bool AcceptSpecReview(string pmcCode, string? shipType = null, string? shipNumber = null)
+        {
+            // TODO: 后续接入审核系统流程，目前占位默认审核成功
+            return SetSpecConfigStatus(pmcCode, SpecConfigStatus.Approved, shipType, shipNumber);
         }
     }
 }

@@ -1,4 +1,5 @@
 using AutoMapper.Execution;
+using PMCSystem_Backend.Common.Constants;
 using PMCSystem_Backend.Dtos.TemplatePreview;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Text.RegularExpressions;
@@ -377,6 +378,8 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("PmcCode cannot be null or empty", nameof(pmcCode));
             }
             var parameters = BuildSpecPlaceholderDictionary(pmcCode);
+            // 生成规格书时，将配置状态更新为待审核
+            _pmcSpecService.SetSpecConfigStatus(pmcCode, SpecConfigStatus.Review);
             var result = ExportTemplate(templateId, parameters);
             _logger.LogInformation("按规格书模板导出成功，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
             return result;

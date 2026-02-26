@@ -4,7 +4,7 @@
 
 | 项目               | 内容                                        |
 | ------------------ | ------------------------------------------- |
-| **版本号**   | v1.7                                        |
+| **版本号**   | v1.8                                        |
 | **生成日期** | 2026-02-03                                  |
 | **基础路径** | `/api/PmcSpec`、`/api/template-preview` |
 | **协议**     | HTTP/HTTPS                                  |
@@ -28,6 +28,7 @@
   - [4.6 获取管附件规格](#46-获取管附件规格)
   - [4.7 保存规格书配置](#47-保存规格书配置)
   - [4.8 模板预览与导出](#48-模板预览与导出)
+  - [4.9 接受规格书审核](#49-接受规格书审核)
 - [5. 错误码说明](#5-错误码说明)
 - [6. 前端调用示例](#6-前端调用示例)
 
@@ -60,6 +61,15 @@
 | **GET /api/PmcSpec/PmcRules/ByPmcCodeWithConfig/{pmcCode}** | 响应增强 | 返回的 `configurations[]` 可能包含 **`componentTypeId`**，再次保存时请原样回传以保持按 ID 匹配。 |
 
 **前端适配建议：** 部件类型下拉数据源使用 GET ComponentTypes，选项的 value 使用 `id`，保存时在 `configurations[].componentTypeId` 中传该 `id`，不再依赖 `componentType` 字符串匹配。
+
+### 1.4 v1.8 规格书配置状态管理
+
+| 接口 | 变更类型 | 说明 |
+|------|----------|------|
+| **GET /api/PmcSpec/Analyze/{pmcCode}** | 响应增强 | 响应 `data` 新增 **`configStatus`**：`pending`-待配置、`review`-待审核、`approved`-已审核。 |
+| **POST /api/PmcSpec/AcceptReview** | 新增 | 接受审核（占位，默认成功），将配置状态设为 `approved`。 |
+| **POST /api/PmcSpec/SpecRules** | 行为变更 | 保存后自动将状态设为 `review`。 |
+| **GET /api/template-preview/{templateId}/export** | 行为变更 | 导出时自动将对应规格书配置状态设为 `review`。 |
 
 ---
 
@@ -417,7 +427,8 @@ interface DiameterRange {
     {
       "componentType": "Elbow",
       "fullConfig": {
-        "configurations": [
+        "configStatus": "review",
+    "configurations": [
           {
             "standardFileName": "ASME B16.9",
             "materialName": "Carbon Steel"
@@ -741,6 +752,7 @@ GET /api/PmcSpec/Analyze/A1B2C3D
       "materialCategory": "Carbon Steel",
       "wallThickness": "Sch40"
     },
+    "configStatus": "review",
     "configurations": [
       {
         "componentType": "Elbow",
@@ -793,6 +805,7 @@ GET /api/PmcSpec/Analyze/A1B2C3D
       "wallThickness": "Sch40"
     },
     "configurations": [],
+    "configStatus": "pending",
     "isConfigured": false
   },
   "timestamp": "2026-02-03T10:30:00Z",
@@ -819,6 +832,7 @@ type AnalyzePmcCodeResponse = ApiResponse<PmcInfoWithConfig>;
 interface PmcInfoWithConfig {
   baseInfo: PmcBaseInfo;
   configurations: ComponentTypeConfiguration[];
+  configStatus: 'pending' | 'review' | 'approved';  // 规格书配置状态：pending-待配置, review-待审核, approved-已审核
   isConfigured: boolean;
 }
 
@@ -1413,6 +1427,50 @@ interface CellStyle {
 
 ---
 
+### 4.9 接受规格书审核
+
+接受规格书审核（占位接口，默认审核成功，后续接入审核系统流程）。
+
+**规格书配置状态说明：**
+
+| 状态码    | 中文描述 | 说明                                                     |
+| --------- | -------- | -------------------------------------------------------- |
+| `pending` | 待配置   | 用户未对 PMC 编码对应的规格书进行配置保存或生成时默认状态 |
+| `review`  | 待审核   | 用户保存或生成规格书后                                   |
+| `approved`| 已审核   | 接受审核流程通过后                                       |
+
+**基本信息**
+
+- **接口地址**: `POST /api/PmcSpec/AcceptReview`
+- **请求方式**: POST
+- **权限要求**: 无
+- **内容类型**: application/json
+
+**请求体**
+
+| 参数名    | 类型   | 必填 | 说明                                                         |
+| --------- | ------ | ---- | ------------------------------------------------------------ |
+| pmcCode   | string | 是   | PMC 7位编码                                                  |
+| shipType  | string | 否   | 船型，与 shipNumber 同时提供时按 (pmcCode, shipType, shipNumber) 精确匹配 |
+| shipNumber| string | 否   | 船号                                                         |
+
+**请求示例**
+
+```json
+{
+  "pmcCode": "A1B2C3D",
+  "shipType": "邮轮",
+  "shipNumber": "H1508"
+}
+```
+
+**响应**
+
+- **成功 (200)**：`{ "code": 200, "message": "审核已通过", "data": null }`
+- **失败 (400)**：未找到对应记录或参数错误
+
+---
+
 ## 5. 错误码说明
 
 ### 5.1 HTTP状态码对应关系
@@ -1900,6 +1958,7 @@ export interface CellStyle {
 | v1.5 | 2026-02-06 | 模板预览与导出增强：新增通径范围信息占位符（NPD、外径、壁厚）；支持列表格式（{{npd}}、{{outsideDiameter}}、{{wallThicknessList}}）和索引格式（{{npd_N}}、{{outsideDiameter_N}}、{{wallThicknessList_N}}）；根据 PMC 基础信息中的 pipeStandard 和 wallThickness 自动获取通径数据；更新占位符说明文档                            | AI Assistant |
 | v1.6 | 2026-02-25 | 模板预览与导出需求变更：预览需包含用户表单数据，pmcCode 改为必填；导出直接导出用户确认后的预览结果，pmcCode 必填；移除 parameters 可选参数；Pipe-Spec 模板占位符标准化；移除占位符别名映射                                          | AI Assistant |
 | v1.7 | 2026-02-25 | **部件类型按 ID 标识**：① 获取部件类型列表 GET /api/PmcSpec/ComponentTypes 响应项新增 `id`（部件类型主键）。② 保存规格书 POST /api/PmcSpec/SpecRules 请求体 configurations 每项新增可选 `componentTypeId`（推荐），与上述 `id` 一致；`componentType` 改为可选，与 `componentTypeId` 二选一，至少其一。③ 校验规则：每项未传 componentTypeId 且 componentType 为空时返回「每个部件类型配置需提供 ComponentTypeId 或 ComponentType」。④ 前端适配建议：下拉使用 ComponentTypes 的 id + componentTypeName，提交时传 componentTypeId，避免英文描述差异导致保存匹配失败。                               | AI Assistant |
+| v1.8 | 2026-02-26 | **规格书配置状态管理**：① 三种状态：pending-待配置、review-待审核、approved-已审核。② 未配置/保存/生成时默认 pending；保存或生成后设为 review；接受审核后设为 approved。③ GET /api/PmcSpec/Analyze/{pmcCode} 响应新增 `configStatus`。④ 新增 POST /api/PmcSpec/AcceptReview 接受审核接口（占位，默认成功）。⑤ 模板导出时自动将状态设为 review。 | AI Assistant |
 
 ---
 

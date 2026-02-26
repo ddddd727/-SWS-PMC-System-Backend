@@ -18,6 +18,11 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig
         public List<ComponentTypeConfiguration> Configurations { get; set; } = new List<ComponentTypeConfiguration>();
 
         /// <summary>
+        /// 规格书配置状态：pending-待配置, review-待审核, approved-已审核
+        /// </summary>
+        public string ConfigStatus { get; set; } = "pending";
+
+        /// <summary>
         /// 是否已配置
         /// </summary>
         public bool IsConfigured => Configurations != null && Configurations.Any();
