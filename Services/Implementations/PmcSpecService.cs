@@ -47,6 +47,7 @@ namespace PMCSystem_Backend.Services.Implementations
         private readonly ICodelistService _codelistService;
         private readonly ILogger<PmcSpecService> _logger;
         private readonly IPipeSpecConfigMapper _pipeSpecConfigMapper;
+        private readonly IPipeSpecVersionService _pipeSpecVersionService;
 
         public PmcSpecService(
             PmcContext context,
@@ -54,7 +55,8 @@ namespace PMCSystem_Backend.Services.Implementations
             ICodelistService codelistService,
             ILogger<PmcSpecService> logger,
             PmcContextCky pmcContextCky,
-            IPipeSpecConfigMapper pipeSpecConfigMapper)
+            IPipeSpecConfigMapper pipeSpecConfigMapper,
+            IPipeSpecVersionService pipeSpecVersionService)
         {
             _context = context;
             _mapper = mapper;
@@ -62,6 +64,7 @@ namespace PMCSystem_Backend.Services.Implementations
             _logger = logger;
             _ckyContext = pmcContextCky;
             _pipeSpecConfigMapper = pipeSpecConfigMapper;
+            _pipeSpecVersionService = pipeSpecVersionService;
         }
 
         /// <summary>
@@ -502,6 +505,9 @@ namespace PMCSystem_Backend.Services.Implementations
                     throw new Exception($"未找到PMC编码 {request.PmcCode}（船型: {request.ShipType}, 船号: {request.ShipNumber}）对应的数据");
                 }
 
+                // 更新主表前，将当前配置保存为历史版本快照
+                _pipeSpecVersionService.CreateVersionSnapshot(existingEntity);
+
                 // 将前端的简化配置（仅标准+材料）转换为内部统一的标准信息列表
                 var standardInfos = _pipeSpecConfigMapper.MapSimpleConfigurationsToStandardInfos(request.Configurations);
 
@@ -584,6 +590,9 @@ namespace PMCSystem_Backend.Services.Implementations
                         request.PmcCode, request.ShipType, request.ShipNumber);
                     throw new Exception($"未找到PMC编码 {request.PmcCode}（船型: {request.ShipType}, 船号: {request.ShipNumber}）对应的数据");
                 }
+
+                // 更新主表前，将当前配置保存为历史版本快照
+                _pipeSpecVersionService.CreateVersionSnapshot(existingEntity);
 
                 // 使用Mapper转换DTO结构为标准信息列表格式
                 var standardInfos = _pipeSpecConfigMapper.MapToStandardInfos(request.Configurations);

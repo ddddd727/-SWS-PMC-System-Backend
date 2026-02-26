@@ -88,6 +88,9 @@ try
     // 注册管系规格配置映射器
     builder.Services.AddScoped<IPipeSpecConfigMapper, PipeSpecConfigMapper>();
 
+    // 注册管系规格书版本管理服务
+    builder.Services.AddScoped<IPipeSpecVersionService, PipeSpecVersionService>();
+
     builder.Services.AddControllers();
 
     builder.Services.AddCors(options =>

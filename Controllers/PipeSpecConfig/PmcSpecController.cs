@@ -12,6 +12,7 @@ namespace PMCSystem_Backend.Controllers
     public class PmcSpecController : ApiControllerBase
     {
         private readonly IPmcSpecService _pmcSpecService;
+        private readonly IPipeSpecVersionService _pipeSpecVersionService;
         private readonly ILogger<PmcSpecController> _logger;
 
         /// <summary>
@@ -19,9 +20,11 @@ namespace PMCSystem_Backend.Controllers
         /// </summary>
         public PmcSpecController(
             IPmcSpecService pmcSpecService,
+            IPipeSpecVersionService pipeSpecVersionService,
             ILogger<PmcSpecController> logger)
         {
             _pmcSpecService = pmcSpecService;
+            _pipeSpecVersionService = pipeSpecVersionService;
             _logger = logger;
         }
 
@@ -357,6 +360,148 @@ namespace PMCSystem_Backend.Controllers
             {
                 _logger.LogError(ex, "接受规格书审核时发生错误，PMC编码: {PmcCode}", request.PmcCode);
                 return Fail(ApiErrorCode.BusinessRuleViolation, "操作失败，请稍后重试");
+            }
+        }
+
+        /// <summary>
+        /// 获取管系规格书历史版本列表（分页）
+        /// </summary>
+        /// <param name="pmcCode">PMC 编码</param>
+        /// <param name="shipType">船型（可选，与 shipNumber 同时提供时精确匹配）</param>
+        /// <param name="shipNumber">船号（可选）</param>
+        /// <param name="pageIndex">页码，从 1 开始，默认 1</param>
+        /// <param name="pageSize">每页条数，默认 20</param>
+        /// <returns>版本列表及总数</returns>
+        /// <response code="200">查询成功</response>
+        /// <response code="400">参数错误</response>
+        [HttpGet("{pmcCode}/versions")]
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<PipeSpecVersionDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 400)]
+        public IActionResult GetVersionList(
+            [Required(ErrorMessage = "PMC编码不能为空")] string pmcCode,
+            [FromQuery] string? shipType = null,
+            [FromQuery] string? shipNumber = null,
+            [FromQuery] int pageIndex = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ValidationFailed();
+            }
+
+            try
+            {
+                var (items, totalCount) = _pipeSpecVersionService.GetVersionList(
+                    pmcCode, shipType, shipNumber, pageIndex, pageSize);
+
+                var result = new PagedResult<PipeSpecVersionDto>
+                {
+                    Items = items,
+                    TotalCount = totalCount
+                };
+                _logger.LogInformation("成功获取 PMC {PmcCode} 版本列表，共 {Total} 条", pmcCode, totalCount);
+                return Paged(result, "查询成功");
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "版本列表参数验证失败，PMC编码: {PmcCode}", pmcCode);
+                return Fail(ApiErrorCode.ValidationError, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取版本列表时发生错误，PMC编码: {PmcCode}", pmcCode);
+                return Fail(ApiErrorCode.BusinessRuleViolation, "查询失败，请稍后重试");
+            }
+        }
+
+        /// <summary>
+        /// 获取管系规格书历史版本详情
+        /// </summary>
+        /// <param name="pmcCode">PMC 编码</param>
+        /// <param name="versionId">版本记录主键 Id</param>
+        /// <returns>版本详情（含完整配置）</returns>
+        /// <response code="200">查询成功</response>
+        /// <response code="404">版本不存在</response>
+        [HttpGet("{pmcCode}/versions/{versionId:int}")]
+        [ProducesResponseType(typeof(ApiResponse<PipeSpecVersionDetailDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 404)]
+        public IActionResult GetVersionDetail(
+            [Required(ErrorMessage = "PMC编码不能为空")] string pmcCode,
+            [Required(ErrorMessage = "版本ID不能为空")] int versionId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ValidationFailed();
+            }
+
+            try
+            {
+                var result = _pipeSpecVersionService.GetVersionDetail(versionId);
+
+                if (result == null)
+                {
+                    _logger.LogWarning("未找到版本 Id {VersionId}", versionId);
+                    return Fail(ApiErrorCode.ResourceNotFound, "版本不存在");
+                }
+
+                if (result.BaseInfo.PmcCode != pmcCode)
+                {
+                    _logger.LogWarning("版本 {VersionId} 与 PMC 编码 {PmcCode} 不匹配", versionId, pmcCode);
+                    return Fail(ApiErrorCode.ResourceNotFound, "版本与 PMC 编码不匹配");
+                }
+
+                _logger.LogInformation("成功获取版本 {VersionId} 详情", versionId);
+                return Success(result, "查询成功");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取版本详情时发生错误，版本Id: {VersionId}", versionId);
+                return Fail(ApiErrorCode.BusinessRuleViolation, "查询失败，请稍后重试");
+            }
+        }
+
+        /// <summary>
+        /// 使用历史版本覆盖当前版本
+        /// </summary>
+        /// <param name="pmcCode">PMC 编码</param>
+        /// <param name="versionId">版本记录主键 Id</param>
+        /// <param name="request">可选船型、船号用于精确匹配主表记录</param>
+        /// <returns>是否成功</returns>
+        /// <response code="200">回滚成功</response>
+        /// <response code="404">版本或主表记录不存在</response>
+        [HttpPost("{pmcCode}/versions/{versionId:int}/revert")]
+        [ProducesResponseType(typeof(ApiResponse), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 404)]
+        public IActionResult RevertToVersion(
+            [Required(ErrorMessage = "PMC编码不能为空")] string pmcCode,
+            [Required(ErrorMessage = "版本ID不能为空")] int versionId,
+            [FromBody] RevertToVersionRequest? request = null)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ValidationFailed();
+            }
+
+            try
+            {
+                var shipType = request?.ShipType;
+                var shipNumber = request?.ShipNumber;
+
+                var result = _pipeSpecVersionService.RevertToVersion(versionId, shipType, shipNumber);
+
+                if (result)
+                {
+                    _logger.LogInformation("成功将 PMC {PmcCode} 回滚至版本 {VersionId}", pmcCode, versionId);
+                    return Success("已使用历史版本覆盖当前配置");
+                }
+
+                _logger.LogWarning("回滚失败，版本 {VersionId} 或主表记录不存在", versionId);
+                return Fail(ApiErrorCode.ResourceNotFound, "版本或主表记录不存在，无法回滚");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "回滚至版本时发生错误，版本Id: {VersionId}", versionId);
+                return Fail(ApiErrorCode.BusinessRuleViolation, "回滚失败，请稍后重试");
             }
         }
 

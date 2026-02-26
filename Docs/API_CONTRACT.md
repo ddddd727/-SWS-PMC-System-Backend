@@ -4,13 +4,13 @@
 
 | 项目               | 内容                                        |
 | ------------------ | ------------------------------------------- |
-| **版本号**   | v1.8                                        |
+| **版本号**   | v1.9                                        |
 | **生成日期** | 2026-02-03                                  |
 | **基础路径** | `/api/PmcSpec`、`/api/template-preview` |
 | **协议**     | HTTP/HTTPS                                  |
 | **数据格式** | JSON                                        |
 | **字符编码** | UTF-8                                       |
-| **最后更新** | 2026-02-25                                  |
+| **最后更新** | 2026-02-26                                  |
 
 ---
 
@@ -29,6 +29,7 @@
   - [4.7 保存规格书配置](#47-保存规格书配置)
   - [4.8 模板预览与导出](#48-模板预览与导出)
   - [4.9 接受规格书审核](#49-接受规格书审核)
+  - [4.10 规格书版本管理](#410-规格书版本管理)
 - [5. 错误码说明](#5-错误码说明)
 - [6. 前端调用示例](#6-前端调用示例)
 
@@ -70,6 +71,15 @@
 | **POST /api/PmcSpec/AcceptReview** | 新增 | 接受审核（占位，默认成功），将配置状态设为 `approved`。 |
 | **POST /api/PmcSpec/SpecRules** | 行为变更 | 保存后自动将状态设为 `review`。 |
 | **GET /api/template-preview/{templateId}/export** | 行为变更 | 导出时自动将对应规格书配置状态设为 `review`。 |
+
+### 1.5 v1.9 规格书版本管理
+
+| 接口 | 变更类型 | 说明 |
+|------|----------|------|
+| **GET /api/PmcSpec/{pmcCode}/versions** | 新增 | 获取历史版本列表，支持 shipType、shipNumber 查询及分页。 |
+| **GET /api/PmcSpec/{pmcCode}/versions/{versionId}** | 新增 | 获取历史版本详情（含完整配置）。 |
+| **POST /api/PmcSpec/{pmcCode}/versions/{versionId}/revert** | 新增 | 使用历史版本覆盖当前配置，请求体可选 shipType、shipNumber。 |
+| **POST /api/PmcSpec/SpecRules** | 行为变更 | 保存前自动创建历史版本快照。 |
 
 ---
 
@@ -1471,6 +1481,126 @@ interface CellStyle {
 
 ---
 
+### 4.10 规格书版本管理
+
+管系规格书支持版本管理：每次保存前自动生成历史快照，可查看历史版本列表、版本详情，并使用历史版本覆盖当前配置。
+
+#### 4.10.1 获取历史版本列表
+
+按 PMC 编码查询历史版本列表，支持分页及船型、船号精确匹配。
+
+**基本信息**
+
+- **接口地址**: `GET /api/PmcSpec/{pmcCode}/versions`
+- **请求方式**: GET
+- **权限要求**: 无
+
+**请求参数**
+
+| 参数名     | 类型   | 位置 | 必填 | 说明 |
+| ---------- | ------ | ---- | ---- | ---- |
+| pmcCode    | string | path | 是   | PMC 7 位编码 |
+| shipType   | string | query| 否   | 船型，与 shipNumber 同时提供时精确匹配 |
+| shipNumber | string | query| 否   | 船号 |
+| pageIndex  | int    | query| 否   | 页码，从 1 开始，默认 1 |
+| pageSize   | int    | query| 否   | 每页条数，默认 20 |
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "查询成功",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "pmcCode": "1C1B1AB",
+        "shipType": "邮轮",
+        "shipNo": "H1509",
+        "version": 2,
+        "createdAt": "2026-02-26T10:30:00Z",
+        "createdBy": null,
+        "comment": null
+      }
+    ],
+    "totalCount": 1
+  }
+}
+```
+
+#### 4.10.2 获取历史版本详情
+
+根据版本记录主键 Id 获取完整快照，结构与 `AnalyzeCodeFromPMCWithConfig` 类似。
+
+**基本信息**
+
+- **接口地址**: `GET /api/PmcSpec/{pmcCode}/versions/{versionId}`
+- **请求方式**: GET
+- **权限要求**: 无
+
+**路径参数**
+
+| 参数名    | 类型 | 必填 | 说明 |
+| --------- | ---- | ---- | ---- |
+| pmcCode   | string | 是 | PMC 7 位编码 |
+| versionId | int    | 是 | 版本记录主键 Id |
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "查询成功",
+  "data": {
+    "id": 1,
+    "version": 2,
+    "createdAt": "2026-02-26T10:30:00Z",
+    "createdBy": null,
+    "comment": null,
+    "baseInfo": { /* PmcBaseInfoDto */ },
+    "configurations": [ /* ComponentTypeConfiguration[] */ ],
+    "configStatus": "review",
+    "isConfigured": true
+  }
+}
+```
+
+**失败 (404)**：版本不存在或 PMC 编码与版本不匹配
+
+#### 4.10.3 使用历史版本覆盖当前版本
+
+将指定历史版本的配置写回主表，当前配置被覆盖，状态置为 review。
+
+**基本信息**
+
+- **接口地址**: `POST /api/PmcSpec/{pmcCode}/versions/{versionId}/revert`
+- **请求方式**: POST
+- **权限要求**: 无
+- **内容类型**: application/json
+
+**路径参数**
+
+| 参数名    | 类型 | 必填 | 说明 |
+| --------- | ---- | ---- | ---- |
+| pmcCode   | string | 是 | PMC 7 位编码 |
+| versionId | int    | 是 | 版本记录主键 Id |
+
+**请求体（可选）**
+
+```typescript
+interface RevertToVersionRequest {
+  shipType?: string;    // 船型，与 shipNumber 同时提供时精确匹配主表记录
+  shipNumber?: string;  // 船号
+}
+```
+
+**成功响应 (200)**：`{ "code": 200, "message": "已使用历史版本覆盖当前配置" }`
+
+**失败 (404)**：版本或主表记录不存在，无法回滚
+
+---
+
 ## 5. 错误码说明
 
 ### 5.1 HTTP状态码对应关系
@@ -1959,6 +2089,7 @@ export interface CellStyle {
 | v1.6 | 2026-02-25 | 模板预览与导出需求变更：预览需包含用户表单数据，pmcCode 改为必填；导出直接导出用户确认后的预览结果，pmcCode 必填；移除 parameters 可选参数；Pipe-Spec 模板占位符标准化；移除占位符别名映射                                          | AI Assistant |
 | v1.7 | 2026-02-25 | **部件类型按 ID 标识**：① 获取部件类型列表 GET /api/PmcSpec/ComponentTypes 响应项新增 `id`（部件类型主键）。② 保存规格书 POST /api/PmcSpec/SpecRules 请求体 configurations 每项新增可选 `componentTypeId`（推荐），与上述 `id` 一致；`componentType` 改为可选，与 `componentTypeId` 二选一，至少其一。③ 校验规则：每项未传 componentTypeId 且 componentType 为空时返回「每个部件类型配置需提供 ComponentTypeId 或 ComponentType」。④ 前端适配建议：下拉使用 ComponentTypes 的 id + componentTypeName，提交时传 componentTypeId，避免英文描述差异导致保存匹配失败。                               | AI Assistant |
 | v1.8 | 2026-02-26 | **规格书配置状态管理**：① 三种状态：pending-待配置、review-待审核、approved-已审核。② 未配置/保存/生成时默认 pending；保存或生成后设为 review；接受审核后设为 approved。③ GET /api/PmcSpec/Analyze/{pmcCode} 响应新增 `configStatus`。④ 新增 POST /api/PmcSpec/AcceptReview 接受审核接口（占位，默认成功）。⑤ 模板导出时自动将状态设为 review。 | AI Assistant |
+| v1.9 | 2026-02-26 | **规格书版本管理**：① 每次保存规格书前自动生成历史快照。② 新增 GET /api/PmcSpec/{pmcCode}/versions 获取历史版本列表（分页，支持 shipType/shipNumber 精确匹配）。③ 新增 GET /api/PmcSpec/{pmcCode}/versions/{versionId} 获取版本详情。④ 新增 POST /api/PmcSpec/{pmcCode}/versions/{versionId}/revert 使用历史版本覆盖当前配置。 | AI Assistant |
 
 ---
 
