@@ -1,4 +1,4 @@
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using System;
 using System.Collections.Generic;
 
@@ -18,7 +18,7 @@ public partial class S3dRulePmcData
 
     public string MaterialsCategoryName { get; set; } = null!;
 
-    public List<PmcStandardInfo>? PipingStandardName { get; set; } = null!;
+    public string PipingStandardName { get; set; } = null!;
 
     public string? MaterialsGradeName { get; set; } = null!;
 

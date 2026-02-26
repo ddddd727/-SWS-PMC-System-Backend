@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PMCSystem_Backend.Entities;
+using System;
 using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Entities.PipeSpecConfig;
@@ -13,5 +14,6 @@ public partial class S3dCommonCodeListTable
 
     public string Major { get; set; } = null!;
 
+    public virtual S3dCommonCodeListHierarchy? S3dCommonCodeListHierarchy { get; set; }
     public virtual ICollection<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; } = new List<S3dCommonCodeListValue>();
 }

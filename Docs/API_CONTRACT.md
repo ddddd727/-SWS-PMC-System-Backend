@@ -1,0 +1,2096 @@
+# PMC管系规格配置API契约文档
+
+## 文档信息
+
+| 项目               | 内容                                        |
+| ------------------ | ------------------------------------------- |
+| **版本号**   | v1.9                                        |
+| **生成日期** | 2026-02-03                                  |
+| **基础路径** | `/api/PmcSpec`、`/api/template-preview` |
+| **协议**     | HTTP/HTTPS                                  |
+| **数据格式** | JSON                                        |
+| **字符编码** | UTF-8                                       |
+| **最后更新** | 2026-02-26                                  |
+
+---
+
+## 目录
+
+- [1. API概述](#1-api概述)
+- [2. 通用约定](#2-通用约定)
+- [3. 数据模型](#3-数据模型)
+- [4. 接口列表](#4-接口列表)
+  - [4.1 获取船型船号信息](#41-获取船型船号信息)
+  - [4.2 获取部件类型列表](#42-获取部件类型列表)
+  - [4.3 根据船号获取PMC编码](#43-根据船号获取pmc编码)
+  - [4.4 解析PMC编码](#44-解析pmc编码)
+  - [4.5 获取NPD信息](#45-获取npd信息)
+  - [4.6 获取管附件规格](#46-获取管附件规格)
+  - [4.7 保存规格书配置](#47-保存规格书配置)
+  - [4.8 模板预览与导出](#48-模板预览与导出)
+  - [4.9 接受规格书审核](#49-接受规格书审核)
+  - [4.10 规格书版本管理](#410-规格书版本管理)
+- [5. 错误码说明](#5-错误码说明)
+- [6. 前端调用示例](#6-前端调用示例)
+
+---
+
+## 1. API概述
+
+本文档定义了PMC管系规格配置模块的所有API接口，用于前后端开发人员之间的协作。
+
+### 1.1 主要功能
+
+- 船型船号管理
+- PMC编码查询与解析
+- 部件类型配置
+- 规格书信息管理
+- 规格书表格模板预览与导出（占位符 `{{key}}` 由规格书数据或自定义参数填充）
+
+### 1.2 技术栈
+
+- **后端框架**: ASP.NET Core 6.0+
+- **前端建议**: Vue 3 / React 18+
+- **HTTP客户端**: Axios / Fetch API
+
+### 1.3 v1.7 接口变更对前端的影响（部件类型按 ID 标识）
+
+| 接口 | 变更类型 | 对请求/响应数据的影响 |
+|------|----------|------------------------|
+| **GET /api/PmcSpec/ComponentTypes** | 响应增强 | 响应 `data[]` 每项**新增 `id`**（number）。前端保存规格书时应将用户选中的部件类型对应的 `id` 作为 `componentTypeId` 传入。 |
+| **POST /api/PmcSpec/SpecRules** | 请求变更 | `configurations[]` 每项**新增可选 `componentTypeId`**（number，推荐）；**`componentType` 改为可选**（与 `componentTypeId` 二选一，至少填一个）。仅传 `componentType` 时后端会尝试解析为 ID，解析失败则该条被跳过。 |
+| **GET /api/PmcSpec/PmcRules/ByPmcCodeWithConfig/{pmcCode}** | 响应增强 | 返回的 `configurations[]` 可能包含 **`componentTypeId`**，再次保存时请原样回传以保持按 ID 匹配。 |
+
+**前端适配建议：** 部件类型下拉数据源使用 GET ComponentTypes，选项的 value 使用 `id`，保存时在 `configurations[].componentTypeId` 中传该 `id`，不再依赖 `componentType` 字符串匹配。
+
+### 1.4 v1.8 规格书配置状态管理
+
+| 接口 | 变更类型 | 说明 |
+|------|----------|------|
+| **GET /api/PmcSpec/Analyze/{pmcCode}** | 响应增强 | 响应 `data` 新增 **`configStatus`**：`pending`-待配置、`review`-待审核、`approved`-已审核。 |
+| **POST /api/PmcSpec/AcceptReview** | 新增 | 接受审核（占位，默认成功），将配置状态设为 `approved`。 |
+| **POST /api/PmcSpec/SpecRules** | 行为变更 | 保存后自动将状态设为 `review`。 |
+| **GET /api/template-preview/{templateId}/export** | 行为变更 | 导出时自动将对应规格书配置状态设为 `review`。 |
+
+### 1.5 v1.9 规格书版本管理
+
+| 接口 | 变更类型 | 说明 |
+|------|----------|------|
+| **GET /api/PmcSpec/{pmcCode}/versions** | 新增 | 获取历史版本列表，支持 shipType、shipNumber 查询及分页。 |
+| **GET /api/PmcSpec/{pmcCode}/versions/{versionId}** | 新增 | 获取历史版本详情（含完整配置）。 |
+| **POST /api/PmcSpec/{pmcCode}/versions/{versionId}/revert** | 新增 | 使用历史版本覆盖当前配置，请求体可选 shipType、shipNumber。 |
+| **POST /api/PmcSpec/SpecRules** | 行为变更 | 保存前自动创建历史版本快照。 |
+
+---
+
+## 2. 通用约定
+
+### 2.1 统一响应格式
+
+所有接口均返回统一的响应格式：
+
+#### 成功响应（带数据）
+
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    // 具体业务数据
+  },
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A2"
+}
+```
+
+#### 成功响应（无数据）
+
+```json
+{
+  "code": 200,
+  "message": "保存成功",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A3"
+}
+```
+
+#### 错误响应
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "shipType",
+      "message": "船型不能为空",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A4"
+}
+```
+
+### 2.2 HTTP状态码
+
+| 状态码 | 说明                  | 场景               |
+| ------ | --------------------- | ------------------ |
+| 200    | OK                    | 请求成功           |
+| 400    | Bad Request           | 参数验证失败       |
+| 401    | Unauthorized          | 未授权（需要登录） |
+| 403    | Forbidden             | 无权限访问         |
+| 404    | Not Found             | 资源不存在         |
+| 500    | Internal Server Error | 服务器内部错误     |
+
+### 2.3 业务错误码
+
+| 错误码 | 说明             | 处理建议            |
+| ------ | ---------------- | ------------------- |
+| 400    | 参数验证错误     | 检查请求参数        |
+| 404    | 资源不存在       | 提示用户资源未找到  |
+| 1001   | 业务规则校验失败 | 根据message提示用户 |
+| 1002   | 重复资源         | 提示用户资源已存在  |
+
+### 2.4 命名规范
+
+- **请求参数**: 使用camelCase（驼峰命名）
+- **响应字段**: 使用camelCase（驼峰命名）
+- **日期时间**: ISO 8601格式 (`YYYY-MM-DDTHH:mm:ssZ`)
+- **布尔值**: `true` / `false`
+
+### 2.5 分页约定
+
+暂无分页接口，所有列表接口返回全量数据。
+
+---
+
+## 3. 数据模型
+
+### 3.1 ShipInfo - 船型船号信息
+
+```typescript
+interface ShipInfo {
+  shipNumber: string;   // 船号，如: "H1234"
+  shipType: string;     // 船型，如: "散货船"
+}
+```
+
+**示例：**
+
+```json
+{
+  "shipNumber": "H1234",
+  "shipType": "散货船"
+}
+```
+
+---
+
+### 3.2 ComponentTypeInfo - 部件类型信息
+
+用于「获取部件类型列表」接口的响应项。**保存规格书时请使用 `id` 作为 `componentTypeId` 传入，避免因英文名称差异导致匹配失败。**
+
+```typescript
+interface ComponentTypeInfo {
+  id: number;                        // 部件类型主键，保存规格书时必传（configurations[].componentTypeId）
+  componentTypeName: string;         // 部件类型名称，如: "Elbow"（展示用）
+  componentTypeDescription: string;  // 部件类型描述，如: "弯头"
+}
+```
+
+**示例：**
+
+```json
+{
+  "id": 1,
+  "componentTypeName": "Elbow",
+  "componentTypeDescription": "弯头"
+}
+```
+
+**可用部件类型：**
+
+- Pipe - 管道
+- Elbow - 弯头
+- Reducer - 异径管
+- Tee - 三通
+- Sleeve - 管套
+- Bosses - 凸台
+- Saddles - 鞍座
+- Caps - 管帽
+- Overpass - 跨接
+- Accessories - 附件
+- Flange - 法兰
+- BlindFlange - 盲板
+- Gasket - 垫片
+- Bolt - 螺栓
+- Nut - 螺母
+- Washer - 垫圈
+
+---
+
+### 3.3 PmcSelectInfo - PMC编码选择信息
+
+```typescript
+interface PmcSelectInfo {
+  pmcCode: string;       // PMC 7位编码
+  shipNumber: string;    // 船号
+  material: string;      // 主材料
+  pipeStandard: string;  // 管材标准
+  status: string;        // PMC编码状态: "未配置" | "已配置"
+}
+```
+
+**示例：**
+
+```json
+{
+  "pmcCode": "A1B2C3D",
+  "shipNumber": "H1234",
+  "material": "Carbon Steel",
+  "pipeStandard": "ASME B36.10",
+  "status": "已配置"
+}
+```
+
+---
+
+### 3.4 PmcBaseInfo - PMC基础信息
+
+```typescript
+interface PmcBaseInfo {
+  pmcCode: string;           // PMC 7位编码（必填）
+  shipNumber?: string;       // 船号
+  status?: string;           // PMC编码状态
+  pipingClass?: string;      // 管道等级
+  materialGrade?: string;    // 牌号
+  pressureRating?: string;   // 法兰压力等级
+  pipeStandard?: string;     // 管材标准
+  materialCategory?: string; // 管材材料
+  wallThickness?: string;    // 壁厚系列
+}
+```
+
+**示例：**
+
+```json
+{
+  "pmcCode": "A1B2C3D",
+  "shipNumber": "H1234",
+  "status": "已配置",
+  "pipingClass": "150#",
+  "materialGrade": "A105",
+  "pressureRating": "Class 150",
+  "pipeStandard": "ASME B36.10",
+  "materialCategory": "Carbon Steel",
+  "wallThickness": "Sch40"
+}
+```
+
+---
+
+### 3.5 SpecNPDInfo - NPD信息
+
+```typescript
+interface SpecNPDInfo {
+  endStandard?: string;          // 端面标准
+  schedule?: string;             // 壁厚系列
+  npd?: number[];               // 通径范围（单位: mm）
+  outsideDiameter?: number[];   // 外径范围（单位: mm）
+  wallThickness?: number[];     // 壁厚范围（单位: mm）
+}
+```
+
+**示例：**
+
+```json
+{
+  "endStandard": "ASME B16.9",
+  "schedule": "Sch40",
+  "npd": [15, 20, 25, 32, 40, 50, 65, 80, 100],
+  "outsideDiameter": [21.3, 26.9, 33.7, 42.4, 48.3, 60.3, 76.1, 88.9, 114.3],
+  "wallThickness": [2.77, 2.87, 3.38, 3.56, 3.68, 3.91, 5.16, 5.49, 6.02]
+}
+```
+
+---
+
+### 3.6 PipeFittingSpec - 管附件规格
+
+```typescript
+interface PipeFittingSpec {
+  standardName: string;     // 标准名称
+  materialList: string[];   // 材料列表
+}
+```
+
+**示例：**
+
+```json
+{
+  "standardName": "ASME B16.9",
+  "materialList": [
+    "Carbon Steel",
+    "Stainless Steel 304",
+    "Stainless Steel 316"
+  ]
+}
+```
+
+---
+
+### 3.7 SavePipeSpecRequest - 保存规格书请求
+
+**当前模块简化配置约定：** 必填项为**标准名称、部件类型、材料信息**；通径相关字段（`npdRange` / `minNpdValue` / `maxNpdValue`）为**可选**。若提供通径则一并保存，供后续「标准+通径范围→管系」模块使用。
+
+**部件类型标识（重要）：** 每个 `configurations[]` 项必须提供 **`componentTypeId` 或 `componentType` 至少其一**。**推荐仅传 `componentTypeId`**（来自「获取部件类型列表」返回的 `id`），后端按 ID 精确写入，不依赖英文名称，可避免前后端或上下游部件类型英文描述不一致导致的匹配失败。若只传 `componentType`（字符串），后端会尝试从字典表解析为 ID，解析失败时该配置会被跳过并记入日志。
+
+```typescript
+interface SavePipeSpecRequest {
+  shipType: string;                           // 船型（必填，长度≤255）
+  shipNumber: string;                         // 船号（必填，长度≤255）
+  pmcCode: string;                           // PMC编码（必填，长度≤255）
+  configurations: ComponentTypeConfiguration[]; // 部件类型配置列表（至少1个）
+  metadata?: Record<string, any>;            // 可选元数据
+}
+
+interface ComponentTypeConfiguration {
+  componentTypeId?: number;                   // 部件类型 ID（推荐），与 GetComponentTypes 返回的 id 一致
+  componentType?: string;                     // 部件类型名称（展示或兼容），与 componentTypeId 二选一
+  configResult?: string;                     // 配置结果描述
+  fullConfig?: ComponentFullConfiguration;   // 完整配置信息
+}
+
+interface ComponentFullConfiguration {
+  standardFileIds?: any[];                   // 标准文件ID列表
+  standardFileConfigs?: StandardFileConfig[]; // 标准文件配置
+  duplicateRangeDefaults?: DuplicateRangeDefault[]; // 重复范围默认配置
+}
+
+/** 标准文件配置 */
+interface StandardFileConfig {
+  standardFile?: any;        // 标准文件ID或名称（必填）
+  material?: any;            // 材料ID或名称（必填）
+  minNpdValue?: number;      // 最小NPD值（可选，供后续标准+通径→管系模块使用）
+  maxNpdValue?: number;      // 最大NPD值（可选，供后续标准+通径→管系模块使用）
+  bendRadiusMultiple?: any;  // 弯管半径倍数
+}
+
+interface DuplicateRangeDefault {
+  overlapMin: number;               // 重叠范围最小值
+  overlapMax: number;               // 重叠范围最大值
+  defaultStandardFileId?: any;      // 默认标准文件ID
+  defaultStandardFileName?: string; // 默认标准文件名称
+  ranges?: DiameterRange[];         // 范围列表
+  standardFiles?: any[];            // 标准文件列表
+  rangeKey?: string;                // 范围键
+}
+
+interface DiameterRange {
+  minNpdValue: number;     // 最小NPD值
+  maxNpdValue: number;     // 最大NPD值
+  standardFile?: any;      // 标准文件
+}
+```
+
+**完整示例（含通径范围）：**
+
+```json
+{
+  "shipType": "散货船",
+  "shipNumber": "H1234",
+  "pmcCode": "A1B2C3D",
+  "configurations": [
+    {
+      "componentType": "Elbow",
+      "configResult": "配置成功",
+      "fullConfig": {
+        "standardFileConfigs": [
+          {
+            "standardFile": 1,
+            "material": 10,
+            "minNpdValue": 15,
+            "maxNpdValue": 100,
+            "bendRadiusMultiple": 1.5
+          }
+        ],
+        "duplicateRangeDefaults": []
+      }
+    }
+  ],
+  "metadata": {
+    "source": "web",
+    "operator": "admin"
+  }
+}
+```
+
+**简化配置示例（仅标准名、类型、材料，不传通径）：**
+
+```json
+{
+  "shipType": "散货船",
+  "shipNumber": "H1234",
+  "pmcCode": "A1B2C3D",
+  "configurations": [
+    {
+      "componentType": "Elbow",
+      "fullConfig": {
+        "configStatus": "review",
+    "configurations": [
+          {
+            "standardFileName": "ASME B16.9",
+            "materialName": "Carbon Steel"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 3.8 GetNPDInfoRequest - 获取NPD信息请求
+
+```typescript
+interface GetNPDInfoRequest {
+  endStandard: string;   // 端面标准（必填，长度≤255）
+  schedule: string;      // 壁厚系列（必填，长度≤255）
+}
+```
+
+---
+
+### 3.9 GetPipeFittingSpecRequest - 获取管附件规格请求
+
+```typescript
+interface GetPipeFittingSpecRequest {
+  componentTypeName: string;  // 部件类型名称（必填，长度≤255）
+}
+```
+
+---
+
+## 4. 接口列表
+
+### 4.1 获取船型船号信息
+
+获取系统中所有可用的船型船号信息。
+
+#### 基本信息
+
+- **接口地址**: `GET /api/PmcSpec/ShipInfos`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+#### 请求参数
+
+无
+
+#### 响应数据
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [
+    {
+      "shipNumber": "H1234",
+      "shipType": "散货船"
+    },
+    {
+      "shipNumber": "H1235",
+      "shipType": "集装箱船"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A2"
+}
+```
+
+**失败响应 (404)**
+
+```json
+{
+  "code": 404,
+  "message": "未找到船型船号信息",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A3"
+}
+```
+
+#### TypeScript类型定义
+
+```typescript
+// 响应类型
+type GetShipInfosResponse = ApiResponse<ShipInfo[]>;
+
+interface ShipInfo {
+  shipNumber: string;
+  shipType: string;
+}
+```
+
+#### 前端调用示例
+
+```typescript
+// Axios
+const response = await axios.get<GetShipInfosResponse>('/api/PmcSpec/ShipInfos');
+const shipInfos = response.data.data;
+
+// Fetch
+const response = await fetch('/api/PmcSpec/ShipInfos');
+const result: GetShipInfosResponse = await response.json();
+```
+
+---
+
+### 4.2 获取部件类型列表
+
+获取所有可用的部件类型信息，用于规格书配置。
+
+#### 基本信息
+
+- **接口地址**: `GET /api/PmcSpec/ComponentTypes`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+#### 请求参数
+
+无
+
+#### 响应数据
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [
+    {
+      "id": 1,
+      "componentTypeName": "Elbow",
+      "componentTypeDescription": "弯头"
+    },
+    {
+      "id": 2,
+      "componentTypeName": "Tee",
+      "componentTypeDescription": "三通"
+    },
+    {
+      "id": 3,
+      "componentTypeName": "Reducer",
+      "componentTypeDescription": "异径管"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A4"
+}
+```
+
+**前端适配说明：** 保存规格书时请将上述 `id` 作为 `configurations[].componentTypeId` 传入，以保证与后端字典表一致，避免部件类型英文名差异导致无法匹配。
+
+**失败响应 (404)**
+
+```json
+{
+  "code": 404,
+  "message": "未找到部件类型信息",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A5"
+}
+```
+
+#### TypeScript类型定义
+
+```typescript
+type GetComponentTypesResponse = ApiResponse<ComponentTypeInfo[]>;
+
+interface ComponentTypeInfo {
+  id: number;                    // 保存规格书时传此值作为 componentTypeId
+  componentTypeName: string;
+  componentTypeDescription: string;
+}
+```
+
+---
+
+### 4.3 根据船号获取PMC编码
+
+根据指定的船号查询对应的PMC编码列表。
+
+#### 基本信息
+
+- **接口地址**: `GET /api/PmcSpec/PmcRules/{shipNumber}`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+#### 请求参数
+
+| 参数名     | 类型   | 位置 | 必填 | 说明 | 示例  |
+| ---------- | ------ | ---- | ---- | ---- | ----- |
+| shipNumber | string | Path | 是   | 船号 | H1234 |
+
+#### 请求示例
+
+```
+GET /api/PmcSpec/PmcRules/H1234
+```
+
+#### 响应数据
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [
+    {
+      "pmcCode": "A1B2C3D",
+      "shipNumber": "H1234",
+      "material": "Carbon Steel",
+      "pipeStandard": "ASME B36.10",
+      "status": "已配置"
+    },
+    {
+      "pmcCode": "A1B2C3E",
+      "shipNumber": "H1234",
+      "material": "Stainless Steel",
+      "pipeStandard": "ASME B36.19",
+      "status": "未配置"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A6"
+}
+```
+
+**失败响应 (400) - 参数验证失败**
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "shipNumber",
+      "message": "船号不能为空",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A7"
+}
+```
+
+**失败响应 (404) - 未找到数据**
+
+```json
+{
+  "code": 404,
+  "message": "未找到对应的PMC编码数据",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A8"
+}
+```
+
+#### TypeScript类型定义
+
+```typescript
+type GetPmcRulesResponse = ApiResponse<PmcSelectInfo[]>;
+
+interface PmcSelectInfo {
+  pmcCode: string;
+  shipNumber: string;
+  material: string;
+  pipeStandard: string;
+  status: string;
+}
+```
+
+---
+
+### 4.4 解析PMC编码
+
+解析PMC 7位编码，获取详细的基础信息。如果该PMC编码已配置过管系规格书，则同时返回配置信息；如果未配置，则只返回基础信息。
+
+#### 基本信息
+
+- **接口地址**: `GET /api/PmcSpec/Analyze/{pmcCode}`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+#### 请求参数
+
+| 参数名  | 类型   | 位置 | 必填 | 说明        | 示例    |
+| ------- | ------ | ---- | ---- | ----------- | ------- |
+| pmcCode | string | Path | 是   | PMC 7位编码 | A1B2C3D |
+
+#### 请求示例
+
+```
+GET /api/PmcSpec/Analyze/A1B2C3D
+```
+
+#### 响应数据
+
+**成功响应 (200) - 已配置**
+
+```json
+{
+  "code": 200,
+  "message": "解析成功",
+  "data": {
+    "baseInfo": {
+      "pmcCode": "A1B2C3D",
+      "shipNumber": "H1234",
+      "status": "已配置",
+      "pipingClass": "150#",
+      "materialGrade": "A105",
+      "pressureRating": "Class 150",
+      "pipeStandard": "ASME B36.10",
+      "materialCategory": "Carbon Steel",
+      "wallThickness": "Sch40"
+    },
+    "configStatus": "review",
+    "configurations": [
+      {
+        "componentType": "Elbow",
+        "fullConfig": {
+          "standardFileConfigs": [
+            {
+              "standardFile": "ASME B16.9",
+              "material": "Carbon Steel"
+            }
+          ]
+        }
+      },
+      {
+        "componentType": "Tee",
+        "fullConfig": {
+          "standardFileConfigs": [
+            {
+              "standardFile": "ASME B16.9",
+              "material": "Stainless Steel 304"
+            }
+          ]
+        }
+      }
+    ],
+    "isConfigured": true
+  },
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A9"
+}
+```
+
+**注意：** 当前模块已简化配置，响应中仅包含标准名称和材料信息，不包含通径范围（`minNpdValue`、`maxNpdValue`）和重复范围默认配置（`duplicateRangeDefaults`）。
+
+**成功响应 (200) - 未配置**
+
+```json
+{
+  "code": 200,
+  "message": "解析成功",
+  "data": {
+    "baseInfo": {
+      "pmcCode": "A1B2C3D",
+      "shipNumber": "H1234",
+      "status": "未配置",
+      "pipingClass": "150#",
+      "materialGrade": "A105",
+      "pressureRating": "Class 150",
+      "pipeStandard": "ASME B36.10",
+      "materialCategory": "Carbon Steel",
+      "wallThickness": "Sch40"
+    },
+    "configurations": [],
+    "configStatus": "pending",
+    "isConfigured": false
+  },
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1A9"
+}
+```
+
+**失败响应 (400) - 格式错误**
+
+```json
+{
+  "code": 400,
+  "message": "PMC编码格式不正确，请检查编码是否为7位有效字符",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AA"
+}
+```
+
+#### TypeScript类型定义
+
+```typescript
+type AnalyzePmcCodeResponse = ApiResponse<PmcInfoWithConfig>;
+
+interface PmcInfoWithConfig {
+  baseInfo: PmcBaseInfo;
+  configurations: ComponentTypeConfiguration[];
+  configStatus: 'pending' | 'review' | 'approved';  // 规格书配置状态：pending-待配置, review-待审核, approved-已审核
+  isConfigured: boolean;
+}
+
+interface PmcBaseInfo {
+  pmcCode: string;
+  shipNumber?: string;
+  status?: string;
+  pipingClass?: string;
+  materialGrade?: string;
+  pressureRating?: string;
+  pipeStandard?: string;
+  materialCategory?: string;
+  wallThickness?: string;
+}
+
+interface ComponentTypeConfiguration {
+  componentTypeId?: number;   // 部件类型 ID，保存时请原样回传
+  componentType?: string;     // 部件类型名称（展示用）
+  configResult?: string;
+  fullConfig?: ComponentFullConfiguration;
+}
+
+interface ComponentFullConfiguration {
+  standardFileIds?: any[];
+  standardFileConfigs?: StandardFileConfig[];
+  // 注意：duplicateRangeDefaults 在简化配置中不再返回
+}
+
+interface StandardFileConfig {
+  standardFile?: any;        // 标准文件ID或名称（必填）
+  material?: any;            // 材料ID或名称（必填）
+  // 注意：minNpdValue、maxNpdValue、bendRadiusMultiple 在简化配置中不再返回
+}
+```
+
+**简化配置说明：**
+
+- 响应中仅包含标准名称（`standardFile`）和材料信息（`material`）
+- 不包含通径范围相关字段（`minNpdValue`、`maxNpdValue`）
+- 不包含重复范围默认配置（`duplicateRangeDefaults`）
+- 不包含弯管半径倍数（`bendRadiusMultiple`）
+
+---
+
+### 4.5 获取NPD信息
+
+根据端面标准和壁厚系列获取通径、外径、壁厚信息。
+
+#### 基本信息
+
+- **接口地址**: `GET /api/PmcSpec/NPDInfo`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+#### 请求参数
+
+| 参数名      | 类型   | 位置  | 必填 | 说明                | 示例       |
+| ----------- | ------ | ----- | ---- | ------------------- | ---------- |
+| endStandard | string | Query | 是   | 端面标准，长度≤255 | ASME B16.9 |
+| schedule    | string | Query | 是   | 壁厚系列，长度≤255 | Sch40      |
+
+#### 请求示例
+
+```
+GET /api/PmcSpec/NPDInfo?endStandard=ASME%20B16.9&schedule=Sch40
+```
+
+#### 响应数据
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "endStandard": "ASME B16.9",
+    "schedule": "Sch40",
+    "npd": [15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150],
+    "outsideDiameter": [21.3, 26.9, 33.7, 42.4, 48.3, 60.3, 76.1, 88.9, 114.3, 141.3, 168.3],
+    "wallThickness": [2.77, 2.87, 3.38, 3.56, 3.68, 3.91, 5.16, 5.49, 6.02, 6.55, 7.11]
+  },
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AB"
+}
+```
+
+**失败响应 (400) - 参数验证失败**
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "endStandard",
+      "message": "端面标准不能为空",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AC"
+}
+```
+
+**失败响应 (404) - 未找到数据**
+
+```json
+{
+  "code": 404,
+  "message": "未找到对应的NPD信息",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AD"
+}
+```
+
+#### TypeScript类型定义
+
+```typescript
+type GetNPDInfoResponse = ApiResponse<SpecNPDInfo>;
+
+interface SpecNPDInfo {
+  endStandard?: string;
+  schedule?: string;
+  npd?: number[];
+  outsideDiameter?: number[];
+  wallThickness?: number[];
+}
+```
+
+---
+
+### 4.6 获取管附件规格
+
+根据部件类型获取对应的标准列表和材料列表。
+
+#### 基本信息
+
+- **接口地址**: `GET /api/PmcSpec/PipeFittingSpec`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+#### 请求参数
+
+| 参数名            | 类型   | 位置  | 必填 | 说明                    | 示例  |
+| ----------------- | ------ | ----- | ---- | ----------------------- | ----- |
+| componentTypeName | string | Query | 是   | 部件类型名称，长度≤255 | Elbow |
+
+#### 请求示例
+
+```
+GET /api/PmcSpec/PipeFittingSpec?componentTypeName=Elbow
+```
+
+#### 响应数据
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [
+    {
+      "standardName": "ASME B16.9",
+      "materialList": [
+        "Carbon Steel",
+        "Stainless Steel 304",
+        "Stainless Steel 316"
+      ]
+    },
+    {
+      "standardName": "JIS B2311",
+      "materialList": [
+        "Carbon Steel",
+        "Stainless Steel"
+      ]
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AE"
+}
+```
+
+**失败响应 (400) - 参数验证失败**
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "componentTypeName",
+      "message": "部件类型名称不能为空",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AF"
+}
+```
+
+**失败响应 (404) - 未找到数据**
+
+```json
+{
+  "code": 404,
+  "message": "未找到对应的标准列表和材料列表",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AG"
+}
+```
+
+#### TypeScript类型定义
+
+```typescript
+type GetPipeFittingSpecResponse = ApiResponse<PipeFittingSpec[]>;
+
+interface PipeFittingSpec {
+  standardName: string;
+  materialList: string[];
+}
+```
+
+---
+
+### 4.7 保存规格书配置
+
+保存管系规格书的配置信息（简化版：仅包含标准名称和材料信息，不包含通径范围）。后端按 `(pmcCode, shipType, shipNumber)` 精确匹配数据库中已存在的记录进行更新，**请确保该组合对应的 PMC 数据已预先存在**。
+
+> **注意**：当前模块已简化配置，仅保存标准名称和材料信息。完整的配置格式（包含通径范围）已保留给后续模块使用。
+
+#### 基本信息
+
+- **接口地址**: `POST /api/PmcSpec/SpecRules`
+- **请求方式**: POST
+- **权限要求**: 需要登录
+- **内容类型**: application/json
+
+#### 请求参数
+
+| 参数名         | 类型   | 位置 | 必填 | 说明                                                        |
+| -------------- | ------ | ---- | ---- | ----------------------------------------------------------- |
+| shipType       | string | Body | 是   | 船型，长度≤255                                             |
+| shipNumber     | string | Body | 是   | 船号，长度≤255                                             |
+| pmcCode        | string | Body | 是   | PMC编码，长度≤255                                          |
+| configurations | array  | Body | 是   | 部件类型配置列表（至少1项；每项须带 `componentTypeId` 或 `componentType`） |
+| metadata       | object | Body | 否   | 可选元数据                                                  |
+
+**configurations 每项约定：**
+
+- **推荐**：只传 `componentTypeId`（来自 GET 部件类型列表的 `data[].id`），后端按 ID 写入，不依赖英文名。
+- **兼容**：可传 `componentType`（字符串）；与 `componentTypeId` 二选一，至少填一个。若仅传 `componentType` 且后端无法解析为 ID，该条配置会被跳过并记入日志。
+
+#### 请求体示例
+
+**推荐写法（使用 componentTypeId，避免英文名差异）：**
+
+```json
+{
+  "shipType": "散货船",
+  "shipNumber": "H1234",
+  "pmcCode": "A1B2C3D",
+  "configurations": [
+    {
+      "componentTypeId": 1,
+      "configResult": "配置成功",
+      "fullConfig": {
+        "standardFileConfigs": [
+          { "standardFile": "ASME B16.9", "material": "Carbon Steel" },
+          { "standardFile": "JIS B2311", "material": "Carbon Steel" }
+        ]
+      }
+    },
+    {
+      "componentTypeId": 2,
+      "fullConfig": {
+        "standardFileConfigs": [
+          { "standardFile": "ASME B16.9", "material": "Stainless Steel 304" }
+        ]
+      }
+    }
+  ],
+  "metadata": { "source": "web", "operator": "admin" }
+}
+```
+
+**兼容写法（仅传 componentType，不推荐）：**
+
+```json
+{
+  "shipType": "散货船",
+  "shipNumber": "H1234",
+  "pmcCode": "A1B2C3D",
+  "configurations": [
+    {
+      "componentType": "Elbow",
+      "fullConfig": {
+        "standardFileConfigs": [
+          { "standardFile": "ASME B16.9", "material": "Carbon Steel" }
+        ]
+      }
+    }
+  ]
+}
+```
+
+**说明**：
+
+- `componentTypeId` 与 GET `/api/PmcSpec/ComponentTypes` 返回的 `data[].id` 一一对应。
+- `standardFile` 可为标准文件 ID（number）或名称（string）；`material` 可为材料 ID 或名称。
+- 不包含通径范围时可不传 `minNpdValue`、`maxNpdValue` 及 `duplicateRangeDefaults`。
+
+#### 响应数据
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "规格书配置保存成功",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AH"
+}
+```
+
+**失败响应 (400) - 参数验证失败**
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "shipType",
+      "message": "船型不能为空",
+      "errorCode": "VALIDATION_ERROR"
+    },
+    {
+      "field": "configurations",
+      "message": "请至少配置一个部件类型",
+      "errorCode": "VALIDATION_ERROR"
+    },
+    {
+      "field": "configurations[].componentTypeId",
+      "message": "每个部件类型配置需提供 ComponentTypeId 或 ComponentType",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AI"
+}
+```
+
+> 当某一项既未传 `componentTypeId` 也未传 `componentType`（或 `componentType` 为空）时，会返回「每个部件类型配置需提供 ComponentTypeId 或 ComponentType」。
+
+**失败响应 (400) - 业务规则失败（如记录不存在）**
+
+```json
+{
+  "code": 400,
+  "message": "未找到PMC编码 A1B2C3D（船型: 散货船, 船号: H1234）对应的数据",
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AJ"
+}
+```
+
+> **说明**：后端按 `(pmcCode, shipType, shipNumber)` 精确查找记录，三者须与数据库中已存在的数据一致。
+
+#### TypeScript类型定义
+
+```typescript
+type SaveSpecRulesResponse = ApiResponse<null>;
+
+interface SavePipeSpecSimpleRequest {
+  shipType: string;      // 船型（必填，长度≤255）
+  shipNumber: string;    // 船号（必填，长度≤255）
+  pmcCode: string;        // PMC编码（必填，长度≤255）
+  configurations: SimpleComponentTypeConfiguration[]; // 部件类型配置列表（至少1个）
+  metadata?: Record<string, any>; // 可选元数据
+}
+
+interface SimpleComponentTypeConfiguration {
+  componentTypeId?: number;  // 部件类型 ID（推荐），与 GET /api/PmcSpec/ComponentTypes 返回的 id 一致
+  componentType?: string;    // 部件类型名称（兼容/展示），与 componentTypeId 二选一，至少填一个
+  configResult?: string;     // 配置结果描述（可选）
+  standards: SimpleStandardConfig[]; // 标准配置列表（至少1个）
+}
+
+interface SimpleStandardConfig {
+  standardFile: string | number; // 标准文件ID或名称（必填）
+  material: string | number;     // 材料ID或名称（必填）
+}
+```
+
+**简化配置说明**：
+
+- 仅包含标准名称（`standardFile`）和材料信息（`material`）
+- 不包含通径范围相关字段（`minNpdValue`、`maxNpdValue`）
+- 不包含重复范围默认配置（`duplicateRangeDefaults`）
+- 不包含弯管半径倍数（`bendRadiusMultiple`）
+- 每个 `configurations[]` 项必须提供 `componentTypeId` 或 `componentType` 至少其一；推荐仅使用 `componentTypeId`，以避免前后端或上下游英文描述差异导致保存时无法匹配到正确部件类型。
+
+---
+
+### 4.8 模板预览与导出
+
+规格书保存后，可通过**模板预览**与**模板导出**接口，将已保存的规格书数据填入预设 Excel 模板。**业务数据填入在预览环节完成**；导出直接导出用户确认后的预览结果，使用与预览相同的 pmcCode。
+
+**流程说明**：1）用户传入 pmcCode 获取预览（含已填充表单数据）；2）用户确认预览无误；3）用户点击导出，传入相同 pmcCode，导出确认后的表格。
+
+模板内数据位置使用 `{{key}}` 占位符；填入内容与保存接口（SavePipeSpecSimpleRequest）一致，仅包含**标准类型、标准名字、标准材料**，标准信息格式为「**标准名 材料**」，同一类型多个标准时用英文逗号分隔（如 `GB/T 8163 20#, GB/T 3091 Q235`）。
+
+#### 4.8.1 获取模板预览
+
+获取指定模板的预览数据（单元格、合并区域、样式等），**必须传入 pmcCode** 以获取已保存的规格书数据，占位符在预览环节完成替换，返回含业务表单数据的预览结果。
+
+**基本信息**
+
+- **接口地址**: `GET /api/template-preview/{templateId}`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+**请求参数**
+
+| 参数名     | 类型   | 位置  | 必填 | 说明                                                        |
+| ---------- | ------ | ----- | ---- | ----------------------------------------------------------- |
+| templateId | string | Path  | 是   | 模板唯一标识，仅允许字母、数字、下划线、中划线              |
+| pmcCode    | string | Query | 是   | PMC 编码，用于获取已保存的规格书数据并填充模板占位符        |
+
+**请求示例**
+
+```
+GET /api/template-preview/pipe-spec?pmcCode=A1B2C3D
+```
+
+**响应数据 - 成功 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "templateId": "pipe-spec",
+    "title": "管系规格书",
+    "orientation": "rowHeader",
+    "grid": { "rowCount": 10, "columnCount": 5 },
+    "mergedCells": [
+      { "startRow": 0, "endRow": 0, "startColumn": 0, "endColumn": 2, "value": "标题", "style": null }
+    ],
+    "cells": [
+      { "row": 0, "column": 0, "value": "PMC编码", "isHeader": true, "isData": false, "field": "col1", "style": null },
+      { "row": 1, "column": 0, "value": "A1B2C3D", "isHeader": false, "isData": true, "field": "col1", "style": null }
+    ]
+  },
+  "timestamp": "2026-02-06T10:00:00Z",
+  "traceId": "0HMVD7K3QH1AX"
+}
+```
+
+**规格书驱动时的占位符约定（模板中可用的 `{{key}}`）**
+
+| 占位符                                                               | 说明                                                            | 示例值                        |
+| -------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------- |
+| `{{pmcCode}}`                                                      | PMC 编码                                                        | A1B2C3D                       |
+| `{{shipNumber}}`                                                   | 船号                                                            | H1234                         |
+| `{{pipingClass}}`                                                  | 管道等级                                                        | 150#                          |
+| `{{materialGrade}}`                                                | 牌号                                                            | A105                          |
+| `{{pressureRating}}`                                               | 法兰压力等级                                                    | Class 150                     |
+| `{{pipeStandard}}`                                                 | 管材标准                                                        | ASME B36.10                   |
+| `{{materialCategory}}`                                             | 管材材料                                                        | Carbon Steel                  |
+| `{{wallThickness}}`                                                | 壁厚系列                                                        | Sch40                         |
+| `{{material}}`                                                     | 首条规格的材料                                                  | 20#                           |
+| `{{standard_1}}`                                                   | 第 1 条标准（标准名 材料）                                      | GB/T 8163 20#                 |
+| `{{standard_2}}`                                                   | 第 2 条标准                                                     | GB/T 3091 Q235                |
+| `{{standardName_N}}` / `{{standardType_N}}` / `{{material_N}}` | 第 N 条的标准名、类型、材料（N 为 1-based）                     | —                            |
+| `{{standard_Pipe}}`                                                | 类型为 Pipe 的所有标准，逗号分隔                                | GB/T 8163 20#, GB/T 3091 Q235 |
+| `{{standard_Elbow}}`                                               | 类型为 Elbow 的所有标准                                         | GB/T 12459 20#                |
+| `{{standard_<类型名>}}`                                            | 其他类型，类型名与配置中的 componentType 一致（空格转为下划线） | —                            |
+| **通径范围信息**                                               |                                                                 |                               |
+| `{{npd}}`                                                          | 通径列表（逗号分隔，单位：mm）                                  | 15, 20, 25, 32, 40, 50        |
+| `{{npd_1}}`, `{{npd_2}}`, ...                                    | 第 N 个通径值（N 从 1 开始，单位：mm）                          | 15, 20, ...                   |
+| `{{outsideDiameter}}`                                              | 外径列表（逗号分隔，单位：mm）                                  | 21.3, 26.9, 33.7, 42.4        |
+| `{{outsideDiameter_1}}`, `{{outsideDiameter_2}}`, ...            | 第 N 个外径值（N 从 1 开始，单位：mm）                          | 21.3, 26.9, ...               |
+| `{{wallThicknessList}}`                                            | 壁厚列表（逗号分隔，单位：mm）                                  | 2.77, 2.87, 3.38, 3.56        |
+| `{{wallThicknessList_1}}`, `{{wallThicknessList_2}}`, ...        | 第 N 个壁厚值（N 从 1 开始，单位：mm）                          | 2.77, 2.87, ...               |
+| `{{endStandard}}`                                                  | 端面标准（几何工业标准）                                        | ASME B16.9                    |
+| `{{schedule}}`                                                     | 壁厚系列                                                        | Sch40                         |
+
+**注意**：
+
+- 通径范围信息根据 PMC 基础信息中的 `pipeStandard`（端面标准）和 `wallThickness`（壁厚系列）自动获取
+- 如果缺少端面标准或壁厚系列，通径相关占位符将为空字符串
+- 通径、外径、壁厚列表按数值大小排序
+- 通径值保留 1 位小数，外径和壁厚值保留 2 位小数
+
+---
+
+#### 4.8.2 导出模板为 Excel
+
+导出用户确认后的预览表格结果为 xlsx 文件。使用与预览相同的 pmcCode 获取规格书数据，导出内容与预览展示一致。
+
+**基本信息**
+
+- **接口地址**: `GET /api/template-preview/{templateId}/export`
+- **请求方式**: GET
+- **权限要求**: 无
+- **响应内容类型**: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet（成功时）；application/json（错误时）
+
+**请求参数**
+
+| 参数名     | 类型   | 位置  | 必填 | 说明                                                            |
+| ---------- | ------ | ----- | ---- | --------------------------------------------------------------- |
+| templateId | string | Path  | 是   | 模板唯一标识                                                    |
+| pmcCode    | string | Query | 是   | PMC 编码，需与预览时传入的 pmcCode 一致，导出确认后的表格结果   |
+
+**请求示例**
+
+```
+GET /api/template-preview/pipe-spec/export?pmcCode=A1B2C3D
+```
+
+**响应**
+
+- **成功 (200)**：直接返回 Excel 文件流，文件名形如 `pipe-spec_20260206120000.xlsx`。
+- **失败 (400/404/500)**：返回 JSON，格式同通用错误响应。
+
+**前端调用示例（下载文件）**
+
+```typescript
+// 按规格书导出并下载
+async function exportTemplateBySpec(templateId: string, pmcCode: string) {
+  const url = `/api/template-preview/${templateId}/export?pmcCode=${encodeURIComponent(pmcCode)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || '导出失败');
+  }
+  const blob = await res.blob();
+  const name = res.headers.get('Content-Disposition')?.match(/filename="?([^";]+)"?/)?.[1]
+    || `${templateId}_${new Date().toISOString().slice(0,10)}.xlsx`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+```
+
+#### TypeScript 类型定义（模板预览）
+
+```typescript
+type GetTemplatePreviewResponse = ApiResponse<TemplatePreviewResponse>;
+
+interface TemplatePreviewResponse {
+  templateId: string;
+  title?: string;
+  orientation: string;
+  grid?: { rowCount: number; columnCount: number };
+  mergedCells?: MergedCell[];
+  cells?: PreviewCell[];
+}
+
+interface MergedCell {
+  startRow: number;
+  endRow: number;
+  startColumn: number;
+  endColumn: number;
+  value?: string;
+  style?: CellStyle | null;
+}
+
+interface PreviewCell {
+  row: number;
+  column: number;
+  value?: string;
+  isHeader: boolean;
+  isData: boolean;
+  field?: string;
+  style?: CellStyle | null;
+}
+
+interface CellStyle {
+  bgColor?: string;
+  textAlign?: string;
+  fontWeight?: string;
+}
+```
+
+---
+
+### 4.9 接受规格书审核
+
+接受规格书审核（占位接口，默认审核成功，后续接入审核系统流程）。
+
+**规格书配置状态说明：**
+
+| 状态码    | 中文描述 | 说明                                                     |
+| --------- | -------- | -------------------------------------------------------- |
+| `pending` | 待配置   | 用户未对 PMC 编码对应的规格书进行配置保存或生成时默认状态 |
+| `review`  | 待审核   | 用户保存或生成规格书后                                   |
+| `approved`| 已审核   | 接受审核流程通过后                                       |
+
+**基本信息**
+
+- **接口地址**: `POST /api/PmcSpec/AcceptReview`
+- **请求方式**: POST
+- **权限要求**: 无
+- **内容类型**: application/json
+
+**请求体**
+
+| 参数名    | 类型   | 必填 | 说明                                                         |
+| --------- | ------ | ---- | ------------------------------------------------------------ |
+| pmcCode   | string | 是   | PMC 7位编码                                                  |
+| shipType  | string | 否   | 船型，与 shipNumber 同时提供时按 (pmcCode, shipType, shipNumber) 精确匹配 |
+| shipNumber| string | 否   | 船号                                                         |
+
+**请求示例**
+
+```json
+{
+  "pmcCode": "A1B2C3D",
+  "shipType": "邮轮",
+  "shipNumber": "H1508"
+}
+```
+
+**响应**
+
+- **成功 (200)**：`{ "code": 200, "message": "审核已通过", "data": null }`
+- **失败 (400)**：未找到对应记录或参数错误
+
+---
+
+### 4.10 规格书版本管理
+
+管系规格书支持版本管理：每次保存前自动生成历史快照，可查看历史版本列表、版本详情，并使用历史版本覆盖当前配置。
+
+#### 4.10.1 获取历史版本列表
+
+按 PMC 编码查询历史版本列表，支持分页及船型、船号精确匹配。
+
+**基本信息**
+
+- **接口地址**: `GET /api/PmcSpec/{pmcCode}/versions`
+- **请求方式**: GET
+- **权限要求**: 无
+
+**请求参数**
+
+| 参数名     | 类型   | 位置 | 必填 | 说明 |
+| ---------- | ------ | ---- | ---- | ---- |
+| pmcCode    | string | path | 是   | PMC 7 位编码 |
+| shipType   | string | query| 否   | 船型，与 shipNumber 同时提供时精确匹配 |
+| shipNumber | string | query| 否   | 船号 |
+| pageIndex  | int    | query| 否   | 页码，从 1 开始，默认 1 |
+| pageSize   | int    | query| 否   | 每页条数，默认 20 |
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "查询成功",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "pmcCode": "1C1B1AB",
+        "shipType": "邮轮",
+        "shipNo": "H1509",
+        "version": 2,
+        "createdAt": "2026-02-26T10:30:00Z",
+        "createdBy": null,
+        "comment": null
+      }
+    ],
+    "totalCount": 1
+  }
+}
+```
+
+#### 4.10.2 获取历史版本详情
+
+根据版本记录主键 Id 获取完整快照，结构与 `AnalyzeCodeFromPMCWithConfig` 类似。
+
+**基本信息**
+
+- **接口地址**: `GET /api/PmcSpec/{pmcCode}/versions/{versionId}`
+- **请求方式**: GET
+- **权限要求**: 无
+
+**路径参数**
+
+| 参数名    | 类型 | 必填 | 说明 |
+| --------- | ---- | ---- | ---- |
+| pmcCode   | string | 是 | PMC 7 位编码 |
+| versionId | int    | 是 | 版本记录主键 Id |
+
+**成功响应 (200)**
+
+```json
+{
+  "code": 200,
+  "message": "查询成功",
+  "data": {
+    "id": 1,
+    "version": 2,
+    "createdAt": "2026-02-26T10:30:00Z",
+    "createdBy": null,
+    "comment": null,
+    "baseInfo": { /* PmcBaseInfoDto */ },
+    "configurations": [ /* ComponentTypeConfiguration[] */ ],
+    "configStatus": "review",
+    "isConfigured": true
+  }
+}
+```
+
+**失败 (404)**：版本不存在或 PMC 编码与版本不匹配
+
+#### 4.10.3 使用历史版本覆盖当前版本
+
+将指定历史版本的配置写回主表，当前配置被覆盖，状态置为 review。
+
+**基本信息**
+
+- **接口地址**: `POST /api/PmcSpec/{pmcCode}/versions/{versionId}/revert`
+- **请求方式**: POST
+- **权限要求**: 无
+- **内容类型**: application/json
+
+**路径参数**
+
+| 参数名    | 类型 | 必填 | 说明 |
+| --------- | ---- | ---- | ---- |
+| pmcCode   | string | 是 | PMC 7 位编码 |
+| versionId | int    | 是 | 版本记录主键 Id |
+
+**请求体（可选）**
+
+```typescript
+interface RevertToVersionRequest {
+  shipType?: string;    // 船型，与 shipNumber 同时提供时精确匹配主表记录
+  shipNumber?: string;  // 船号
+}
+```
+
+**成功响应 (200)**：`{ "code": 200, "message": "已使用历史版本覆盖当前配置" }`
+
+**失败 (404)**：版本或主表记录不存在，无法回滚
+
+---
+
+## 5. 错误码说明
+
+### 5.1 HTTP状态码对应关系
+
+| HTTP状态码 | 业务Code | 说明             | 前端处理建议       |
+| ---------- | -------- | ---------------- | ------------------ |
+| 200        | 200      | 成功             | 正常处理           |
+| 400        | 400      | 参数验证错误     | 显示字段级错误信息 |
+| 404        | 404      | 资源未找到       | 提示用户资源不存在 |
+| 400        | 1001     | 业务规则校验失败 | 显示错误消息       |
+| 500        | 500      | 服务器内部错误   | 提示用户稍后重试   |
+
+### 5.2 常见错误处理
+
+#### 参数验证错误 (400)
+
+常见错误包括必填项为空、字符串超长等。字符串字段（如 shipType、shipNumber、pmcCode、endStandard、schedule、componentTypeName）长度不得超过 255 个字符。
+
+**示例 - 必填项为空：**
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "shipType",
+      "message": "船型不能为空",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ]
+}
+```
+
+**示例 - 长度超限：**
+
+```json
+{
+  "code": 400,
+  "message": "请求参数验证失败",
+  "data": [
+    {
+      "field": "shipType",
+      "message": "船型长度不能超过255个字符",
+      "errorCode": "VALIDATION_ERROR"
+    }
+  ]
+}
+```
+
+**前端处理：**
+
+```typescript
+if (response.data.code === 400 && Array.isArray(response.data.data)) {
+  // 显示字段级错误
+  response.data.data.forEach(error => {
+    showFieldError(error.field, error.message);
+  });
+}
+```
+
+#### 资源未找到 (404)
+
+```json
+{
+  "code": 404,
+  "message": "未找到船型船号信息"
+}
+```
+
+**前端处理：**
+
+```typescript
+if (response.data.code === 404) {
+  showMessage('warning', response.data.message);
+}
+```
+
+---
+
+## 6. 前端调用示例
+
+### 6.1 Axios封装
+
+```typescript
+// api/client.ts
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+
+const apiClient: AxiosInstance = axios.create({
+  baseURL: '/api',
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 请求拦截器
+apiClient.interceptors.request.use(
+  (config) => {
+    // 添加token
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 响应拦截器
+apiClient.interceptors.response.use(
+  (response: AxiosResponse<ApiResponse<any>>) => {
+    const { code, message } = response.data;
+  
+    if (code === 200) {
+      return response;
+    } else {
+      // 处理业务错误
+      ElMessage.error(message || '操作失败');
+      return Promise.reject(new Error(message));
+    }
+  },
+  (error) => {
+    // 处理HTTP错误
+    if (error.response) {
+      const { status, data } = error.response;
+      switch (status) {
+        case 401:
+          ElMessage.error('未授权，请重新登录');
+          // 跳转登录页
+          router.push('/login');
+          break;
+        case 403:
+          ElMessage.error('无权限访问');
+          break;
+        case 404:
+          ElMessage.error(data.message || '资源不存在');
+          break;
+        case 500:
+          ElMessage.error('服务器错误，请稍后重试');
+          break;
+        default:
+          ElMessage.error(data.message || '请求失败');
+      }
+    } else {
+      ElMessage.error('网络错误，请检查网络连接');
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+```
+
+### 6.2 API封装
+
+```typescript
+// api/pmcSpec.ts
+import apiClient from './client';
+import type {
+  ShipInfo,
+  ComponentTypeInfo,
+  PmcSelectInfo,
+  PmcBaseInfo,
+  SpecNPDInfo,
+  PipeFittingSpec,
+  SavePipeSpecRequest,
+  ApiResponse
+} from '@/types';
+
+export const pmcSpecApi = {
+  // 获取船型船号信息
+  getShipInfos() {
+    return apiClient.get<ApiResponse<ShipInfo[]>>('/PmcSpec/ShipInfos');
+  },
+
+  // 获取部件类型列表
+  getComponentTypes() {
+    return apiClient.get<ApiResponse<ComponentTypeInfo[]>>('/PmcSpec/ComponentTypes');
+  },
+
+  // 根据船号获取PMC编码
+  getPmcRulesByShipNumber(shipNumber: string) {
+    return apiClient.get<ApiResponse<PmcSelectInfo[]>>(`/PmcSpec/PmcRules/${shipNumber}`);
+  },
+
+  // 解析PMC编码
+  analyzePmcCode(pmcCode: string) {
+    return apiClient.get<ApiResponse<PmcBaseInfo>>(`/PmcSpec/Analyze/${pmcCode}`);
+  },
+
+  // 获取NPD信息
+  getNPDInfo(params: { endStandard: string; schedule: string }) {
+    return apiClient.get<ApiResponse<SpecNPDInfo>>('/PmcSpec/NPDInfo', { params });
+  },
+
+  // 获取管附件规格
+  getPipeFittingSpec(componentTypeName: string) {
+    return apiClient.get<ApiResponse<PipeFittingSpec[]>>('/PmcSpec/PipeFittingSpec', {
+      params: { componentTypeName }
+    });
+  },
+
+  // 保存规格书配置
+  saveSpecRules(data: SavePipeSpecRequest) {
+    return apiClient.post<ApiResponse<null>>('/PmcSpec/SpecRules', data);
+  },
+
+  // 获取模板预览（pmcCode 必填，用于获取规格书数据并填充表单）
+  getTemplatePreview(templateId: string, pmcCode: string) {
+    return apiClient.get<ApiResponse<TemplatePreviewResponse>>(
+      `/template-preview/${templateId}?pmcCode=${encodeURIComponent(pmcCode)}`
+    );
+  },
+
+  // 导出模板为 Excel（pmcCode 必填，与预览时传入的一致，导出确认后的表格结果）
+  exportTemplate(templateId: string, pmcCode: string) {
+    return apiClient.get(
+      `/template-preview/${templateId}/export?pmcCode=${encodeURIComponent(pmcCode)}`,
+      { responseType: 'blob' }
+    );
+  }
+};
+```
+
+### 6.3 Vue 3 使用示例
+
+```vue
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { pmcSpecApi } from '@/api/pmcSpec';
+import type { ShipInfo, SavePipeSpecRequest } from '@/types';
+
+// 船型船号列表
+const shipInfos = ref<ShipInfo[]>([]);
+const loading = ref(false);
+
+// 获取船型船号信息
+const fetchShipInfos = async () => {
+  loading.value = true;
+  try {
+    const response = await pmcSpecApi.getShipInfos();
+    shipInfos.value = response.data.data || [];
+  } catch (error) {
+    console.error('获取船型船号失败:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 保存规格书配置
+const saveConfig = async (formData: SavePipeSpecRequest) => {
+  loading.value = true;
+  try {
+    const response = await pmcSpecApi.saveSpecRules(formData);
+    ElMessage.success(response.data.message || '保存成功');
+    // 执行后续操作
+  } catch (error) {
+    console.error('保存失败:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchShipInfos();
+});
+</script>
+```
+
+### 6.4 React使用示例
+
+```typescript
+// hooks/usePmcSpec.ts
+import { useState, useEffect } from 'react';
+import { pmcSpecApi } from '@/api/pmcSpec';
+import type { ShipInfo, SavePipeSpecRequest } from '@/types';
+
+export const usePmcSpec = () => {
+  const [shipInfos, setShipInfos] = useState<ShipInfo[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 获取船型船号信息
+  const fetchShipInfos = async () => {
+    setLoading(true);
+    try {
+      const response = await pmcSpecApi.getShipInfos();
+      setShipInfos(response.data.data || []);
+    } catch (error) {
+      console.error('获取船型船号失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 保存规格书配置
+  const saveSpecRules = async (data: SavePipeSpecRequest) => {
+    setLoading(true);
+    try {
+      const response = await pmcSpecApi.saveSpecRules(data);
+      message.success(response.data.message || '保存成功');
+      return true;
+    } catch (error) {
+      console.error('保存失败:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShipInfos();
+  }, []);
+
+  return {
+    shipInfos,
+    loading,
+    fetchShipInfos,
+    saveSpecRules
+  };
+};
+```
+
+---
+
+## 附录
+
+### A. TypeScript完整类型定义
+
+```typescript
+// types/api.ts
+
+// ============ 通用响应类型 ============
+export interface ApiResponse<T = any> {
+  code: number;
+  message?: string;
+  data?: T;
+  timestamp: string;
+  traceId?: string;
+}
+
+export interface ValidationError {
+  field: string;
+  message?: string;
+  errorCode: string;
+}
+
+// ============ 数据模型 ============
+export interface ShipInfo {
+  shipNumber: string;
+  shipType: string;
+}
+
+export interface ComponentTypeInfo {
+  id: number;                    // 部件类型主键，保存规格书时传此值作为 configurations[].componentTypeId
+  componentTypeName: string;
+  componentTypeDescription: string;
+}
+
+export interface PmcSelectInfo {
+  pmcCode: string;
+  shipNumber: string;
+  material: string;
+  pipeStandard: string;
+  status: string;
+}
+
+export interface PmcBaseInfo {
+  pmcCode: string;
+  shipNumber?: string;
+  status?: string;
+  pipingClass?: string;
+  materialGrade?: string;
+  pressureRating?: string;
+  pipeStandard?: string;
+  materialCategory?: string;
+  wallThickness?: string;
+}
+
+export interface SpecNPDInfo {
+  endStandard?: string;
+  schedule?: string;
+  npd?: number[];
+  outsideDiameter?: number[];
+  wallThickness?: number[];
+}
+
+export interface PipeFittingSpec {
+  standardName: string;
+  materialList: string[];
+}
+
+export interface DiameterRange {
+  minNpdValue: number;
+  maxNpdValue: number;
+  diameterUnit?: string;
+  standardFile?: any;
+}
+
+export interface StandardFileConfig {
+  standardFile?: any;
+  material?: any;
+  minNpdValue?: number;
+  maxNpdValue?: number;
+  bendRadiusMultiple?: any;
+}
+
+export interface DuplicateRangeDefault {
+  overlapMin: number;
+  overlapMax: number;
+  defaultStandardFileId?: any;
+  defaultStandardFileName?: string;
+  ranges?: DiameterRange[];
+  standardFiles?: any[];
+  rangeKey?: string;
+}
+
+export interface ComponentFullConfiguration {
+  standardFileIds?: any[];
+  standardFileConfigs?: StandardFileConfig[];
+  duplicateRangeDefaults?: DuplicateRangeDefault[];
+}
+
+export interface ComponentTypeConfiguration {
+  componentTypeId?: number;     // 推荐：与 GetComponentTypes 返回的 id 一致，避免英文名差异导致匹配失败
+  componentType?: string;      // 可选：与 componentTypeId 二选一
+  configResult?: string;
+  fullConfig?: ComponentFullConfiguration;
+}
+
+/** 保存规格书请求；shipType、shipNumber、pmcCode 长度均≤255；configurations 每项须带 componentTypeId 或 componentType */
+export interface SavePipeSpecRequest {
+  shipType: string;
+  shipNumber: string;
+  pmcCode: string;
+  configurations: ComponentTypeConfiguration[];
+  metadata?: Record<string, any>;
+}
+
+// ============ 模板预览与导出 ============
+export interface TemplatePreviewResponse {
+  templateId: string;
+  title?: string;
+  orientation: string;
+  grid?: { rowCount: number; columnCount: number };
+  mergedCells?: MergedCell[];
+  cells?: PreviewCell[];
+}
+
+export interface MergedCell {
+  startRow: number;
+  endRow: number;
+  startColumn: number;
+  endColumn: number;
+  value?: string;
+  style?: CellStyle | null;
+}
+
+export interface PreviewCell {
+  row: number;
+  column: number;
+  value?: string;
+  isHeader: boolean;
+  isData: boolean;
+  field?: string;
+  style?: CellStyle | null;
+}
+
+export interface CellStyle {
+  bgColor?: string;
+  textAlign?: string;
+  fontWeight?: string;
+}
+```
+
+### B. 更新日志
+
+| 版本 | 日期       | 修改内容                                                                                                                                                                                                                                                                                                                       | 修改人       |
+| ---- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| v1.0 | 2026-02-03 | 初始版本，定义所有7个API接口                                                                                                                                                                                                                                                                                                   | AI Assistant |
+| v1.1 | 2026-02-04 | SaveSpecRules: 补充 StandardFileConfig 定义；npdRange 支持 string；componentType 支持类型及规范化说明；业务规则失败错误消息含船型船号；明确 (pmcCode, shipType, shipNumber) 精确匹配规则                                                                                                                                       | AI Assistant |
+| v1.2 | 2026-02-04 | SaveSpecRules: 移除 StandardFileConfiguration，统一使用 StandardFileConfig 作为标准文件配置数据模型                                                                                                                                                                                                                            | AI Assistant |
+| v1.3 | 2026-02-04 | 请求参数长度约束：SavePipeSpecRequest（shipType/shipNumber/pmcCode）、GetNPDInfoRequest（endStandard/schedule）、GetPipeFittingSpecRequest（componentTypeName）均增加长度≤255 的校验与契约说明                                                                                                                                | AI Assistant |
+| v1.4 | 2026-02-06 | 新增模板预览与导出：GET /api/template-preview/{templateId}、GET /api/template-preview/{templateId}/export；支持 pmcCode（规格书填充）或 parameters（自定义占位符）；占位符约定：标准信息格式「标准名 材料」、同类型多标准逗号分隔；standard_N、standard_&lt;类型&gt; 及 PMC 基础信息占位符；补充前端调用示例与 TypeScript 类型 | AI Assistant |
+| v1.5 | 2026-02-06 | 模板预览与导出增强：新增通径范围信息占位符（NPD、外径、壁厚）；支持列表格式（{{npd}}、{{outsideDiameter}}、{{wallThicknessList}}）和索引格式（{{npd_N}}、{{outsideDiameter_N}}、{{wallThicknessList_N}}）；根据 PMC 基础信息中的 pipeStandard 和 wallThickness 自动获取通径数据；更新占位符说明文档                            | AI Assistant |
+| v1.6 | 2026-02-25 | 模板预览与导出需求变更：预览需包含用户表单数据，pmcCode 改为必填；导出直接导出用户确认后的预览结果，pmcCode 必填；移除 parameters 可选参数；Pipe-Spec 模板占位符标准化；移除占位符别名映射                                          | AI Assistant |
+| v1.7 | 2026-02-25 | **部件类型按 ID 标识**：① 获取部件类型列表 GET /api/PmcSpec/ComponentTypes 响应项新增 `id`（部件类型主键）。② 保存规格书 POST /api/PmcSpec/SpecRules 请求体 configurations 每项新增可选 `componentTypeId`（推荐），与上述 `id` 一致；`componentType` 改为可选，与 `componentTypeId` 二选一，至少其一。③ 校验规则：每项未传 componentTypeId 且 componentType 为空时返回「每个部件类型配置需提供 ComponentTypeId 或 ComponentType」。④ 前端适配建议：下拉使用 ComponentTypes 的 id + componentTypeName，提交时传 componentTypeId，避免英文描述差异导致保存匹配失败。                               | AI Assistant |
+| v1.8 | 2026-02-26 | **规格书配置状态管理**：① 三种状态：pending-待配置、review-待审核、approved-已审核。② 未配置/保存/生成时默认 pending；保存或生成后设为 review；接受审核后设为 approved。③ GET /api/PmcSpec/Analyze/{pmcCode} 响应新增 `configStatus`。④ 新增 POST /api/PmcSpec/AcceptReview 接受审核接口（占位，默认成功）。⑤ 模板导出时自动将状态设为 review。 | AI Assistant |
+| v1.9 | 2026-02-26 | **规格书版本管理**：① 每次保存规格书前自动生成历史快照。② 新增 GET /api/PmcSpec/{pmcCode}/versions 获取历史版本列表（分页，支持 shipType/shipNumber 精确匹配）。③ 新增 GET /api/PmcSpec/{pmcCode}/versions/{versionId} 获取版本详情。④ 新增 POST /api/PmcSpec/{pmcCode}/versions/{versionId}/revert 使用历史版本覆盖当前配置。 | AI Assistant |
+
+---
+
+**文档结束**

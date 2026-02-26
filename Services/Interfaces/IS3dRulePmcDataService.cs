@@ -1,5 +1,5 @@
 using PMCSystem_Backend.Common.Models;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {

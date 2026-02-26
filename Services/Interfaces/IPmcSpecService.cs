@@ -1,3 +1,5 @@
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
@@ -16,6 +18,12 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <returns>船型信息</returns>
         List<PMCSystem_Backend.Entities.PipeSpecConfig.ShipInfo> GetShipInfos();
 
+        /// <summary>
+        /// 获取所有部件类型信息
+        /// </summary>
+        /// <returns>部件类型列表</returns>
+        List<ComponentTypeInfoDto> GetComponentTypes();
+
 
         /// <summary>
         /// 根据船号选择，获取PMC编码信息
@@ -31,6 +39,13 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <param name="PmcCode">pmc编码</param>
         /// <returns></returns>
         PmcBaseInfoDto AnalyzeCodeFromPMC(string PmcCode);
+
+        /// <summary>
+        /// 解析PMC编码并返回基础信息和配置信息
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <returns>包含基础信息和配置信息的DTO</returns>
+        PmcInfoWithConfigDto AnalyzeCodeFromPMCWithConfig(string pmcCode);
 
         /// <summary>
         /// 根据PMC内包含的标准信息和壁厚系列获取对应的通径范围
@@ -51,12 +66,18 @@ namespace PMCSystem_Backend.Services.Interfaces
 
 
         /// <summary>
-        /// 保存页面配置的管系规格书信息
+        /// 保存页面配置的管系规格书信息（完整版，包含通径范围，保留给后续模块使用）
         /// </summary>
-        /// <param name="pmcCode">PMC编码</param>
-        /// <param name="standardInfos">配置的标准信息列表</param>
+        /// <param name="request">管系规格书保存请求</param>
         /// <returns></returns>
-        bool SaveSpecRules(string pmcCode, List<PmcStandardInfo> standardInfos);
+        bool SaveSpecRules(SavePipeSpecRequest request);
+
+        /// <summary>
+        /// 保存页面配置的管系规格书信息（简化版，仅包含标准名称和材料信息）
+        /// </summary>
+        /// <param name="request">简化的管系规格书保存请求</param>
+        /// <returns></returns>
+        bool SaveSpecRulesSimple(SavePipeSpecSimpleRequest request);
 
 
         /// <summary>
@@ -73,5 +94,24 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <returns></returns>
         bool GeneratePipeSpecTable();
+
+        /// <summary>
+        /// 设置规格书配置状态
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="status">状态：pending/review/approved</param>
+        /// <param name="shipType">船型（可选，与 shipNumber 同时提供时精确匹配）</param>
+        /// <param name="shipNumber">船号（可选）</param>
+        /// <returns>是否更新成功</returns>
+        bool SetSpecConfigStatus(string pmcCode, string status, string? shipType = null, string? shipNumber = null);
+
+        /// <summary>
+        /// 接受审核（占位，默认审核成功，后续接入审核系统）
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <param name="shipType">船型（可选）</param>
+        /// <param name="shipNumber">船号（可选）</param>
+        /// <returns>是否更新成功</returns>
+        bool AcceptSpecReview(string pmcCode, string? shipType = null, string? shipNumber = null);
     }
 }

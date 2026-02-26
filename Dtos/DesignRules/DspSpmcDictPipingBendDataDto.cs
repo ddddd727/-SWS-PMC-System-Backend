@@ -1,6 +1,6 @@
-namespace PMCSystem_Backend.Models
+namespace PMCSystem_Backend.Dtos.DesignRules
 {
-    public class S3dDictPipingBendDataDto
+    public class DspSpmcDictPipingBendDataDto
     {
         public int Id { get; set; }
         public decimal? OutSideDiameter { get; set; }
@@ -11,7 +11,7 @@ namespace PMCSystem_Backend.Models
         public bool? Status { get; set; }
     }
 
-    public class CreateS3dDictPipingBendDataDto
+    public class CreateDspSpmcDictPipingBendDataDto
     {
         public decimal? OutSideDiameter { get; set; }
         public string? OutSideDiameterUnit { get; set; }
@@ -21,7 +21,7 @@ namespace PMCSystem_Backend.Models
         public bool? Status { get; set; }
     }
 
-    public class UpdateS3dDictPipingBendDataDto : CreateS3dDictPipingBendDataDto
+    public class UpdateDspSpmcDictPipingBendDataDto : CreateDspSpmcDictPipingBendDataDto
     {
         public int Id { get; set; }
     }
