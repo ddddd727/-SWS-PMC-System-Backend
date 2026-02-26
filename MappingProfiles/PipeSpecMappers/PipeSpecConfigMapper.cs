@@ -63,6 +63,7 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
 
                     standardInfos.Add(new PmcStandardInfo
                     {
+                        ComponentTypeId = config.ComponentTypeId,
                         StandardType = NormalizeComponentType(config.ComponentType),
                         StandardName = stdConfig.StandardFile?.ToString() ?? string.Empty,
                         Material = stdConfig.Material?.ToString(),
@@ -106,6 +107,7 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
             {
                 var standardInfo = new PmcStandardInfo
                 {
+                    ComponentTypeId = config.ComponentTypeId,
                     StandardType = NormalizeComponentType(config.ComponentType),
                     StandardName = duplicateDefault.DefaultStandardFileName,
                     Material = null, // 重复范围默认配置通常没有材料信息
@@ -155,7 +157,8 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
                     // 只提取标准名称和材料信息，不包含通径范围
                     standardInfos.Add(new PmcStandardInfo
                     {
-                        StandardType = NormalizeComponentType(config.ComponentType),
+                        ComponentTypeId = config.ComponentTypeId,
+                        StandardType = NormalizeComponentType(config.ComponentType ?? string.Empty),
                         StandardName = standard.StandardFile?.ToString() ?? string.Empty,
                         Material = standard.Material?.ToString(),
                         DiameterRange = null, // 简化版不包含通径范围
@@ -200,11 +203,12 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
                 return (false, "请至少配置一个部件类型");
             }
 
-            // 验证每个配置的部件类型是否为空
-            var invalidConfig = request.Configurations.FirstOrDefault(c => string.IsNullOrWhiteSpace(c.ComponentType));
+            // 每个配置需提供部件类型：ComponentTypeId 或 ComponentType 至少其一
+            var invalidConfig = request.Configurations.FirstOrDefault(c =>
+                (c.ComponentTypeId == null || c.ComponentTypeId.Value <= 0) && string.IsNullOrWhiteSpace(c.ComponentType));
             if (invalidConfig != null)
             {
-                return (false, "部件类型不能为空");
+                return (false, "每个部件类型配置需提供 ComponentTypeId 或 ComponentType");
             }
 
             return (true, string.Empty);
@@ -242,11 +246,12 @@ namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
                 return (false, "请至少配置一个部件类型");
             }
 
-            // 验证每个配置的部件类型是否为空
-            var invalidConfig = request.Configurations.FirstOrDefault(c => string.IsNullOrWhiteSpace(c.ComponentType));
+            // 每个配置需提供部件类型：ComponentTypeId 或 ComponentType 至少其一
+            var invalidConfig = request.Configurations.FirstOrDefault(c =>
+                (c.ComponentTypeId == null || c.ComponentTypeId.Value <= 0) && string.IsNullOrWhiteSpace(c.ComponentType));
             if (invalidConfig != null)
             {
-                return (false, "部件类型不能为空");
+                return (false, "每个部件类型配置需提供 ComponentTypeId 或 ComponentType");
             }
 
             // 验证每个配置是否至少包含一个标准

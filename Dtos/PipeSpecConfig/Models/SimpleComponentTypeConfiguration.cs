@@ -8,10 +8,14 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig.Models
     public class SimpleComponentTypeConfiguration
     {
         /// <summary>
-        /// 部件类型（必填）
+        /// 部件类型 ID（S3D_Dict_PipingComponentType.ID），推荐使用；与 ComponentType 二选一
         /// </summary>
-        [Required(ErrorMessage = "部件类型不能为空")]
-        public string ComponentType { get; set; } = string.Empty;
+        public int? ComponentTypeId { get; set; }
+
+        /// <summary>
+        /// 部件类型名称（展示或兼容旧请求，保存时优先以 ComponentTypeId 为准）
+        /// </summary>
+        public string? ComponentType { get; set; }
 
         /// <summary>
         /// 配置结果描述（可选）

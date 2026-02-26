@@ -4,7 +4,7 @@
 
 | 项目               | 内容                                        |
 | ------------------ | ------------------------------------------- |
-| **版本号**   | v1.6                                        |
+| **版本号**   | v1.7                                        |
 | **生成日期** | 2026-02-03                                  |
 | **基础路径** | `/api/PmcSpec`、`/api/template-preview` |
 | **协议**     | HTTP/HTTPS                                  |
@@ -50,6 +50,16 @@
 - **后端框架**: ASP.NET Core 6.0+
 - **前端建议**: Vue 3 / React 18+
 - **HTTP客户端**: Axios / Fetch API
+
+### 1.3 v1.7 接口变更对前端的影响（部件类型按 ID 标识）
+
+| 接口 | 变更类型 | 对请求/响应数据的影响 |
+|------|----------|------------------------|
+| **GET /api/PmcSpec/ComponentTypes** | 响应增强 | 响应 `data[]` 每项**新增 `id`**（number）。前端保存规格书时应将用户选中的部件类型对应的 `id` 作为 `componentTypeId` 传入。 |
+| **POST /api/PmcSpec/SpecRules** | 请求变更 | `configurations[]` 每项**新增可选 `componentTypeId`**（number，推荐）；**`componentType` 改为可选**（与 `componentTypeId` 二选一，至少填一个）。仅传 `componentType` 时后端会尝试解析为 ID，解析失败则该条被跳过。 |
+| **GET /api/PmcSpec/PmcRules/ByPmcCodeWithConfig/{pmcCode}** | 响应增强 | 返回的 `configurations[]` 可能包含 **`componentTypeId`**，再次保存时请原样回传以保持按 ID 匹配。 |
+
+**前端适配建议：** 部件类型下拉数据源使用 GET ComponentTypes，选项的 value 使用 `id`，保存时在 `configurations[].componentTypeId` 中传该 `id`，不再依赖 `componentType` 字符串匹配。
 
 ---
 
@@ -159,9 +169,12 @@ interface ShipInfo {
 
 ### 3.2 ComponentTypeInfo - 部件类型信息
 
+用于「获取部件类型列表」接口的响应项。**保存规格书时请使用 `id` 作为 `componentTypeId` 传入，避免因英文名称差异导致匹配失败。**
+
 ```typescript
 interface ComponentTypeInfo {
-  componentTypeName: string;         // 部件类型名称，如: "Elbow"
+  id: number;                        // 部件类型主键，保存规格书时必传（configurations[].componentTypeId）
+  componentTypeName: string;         // 部件类型名称，如: "Elbow"（展示用）
   componentTypeDescription: string;  // 部件类型描述，如: "弯头"
 }
 ```
@@ -170,6 +183,7 @@ interface ComponentTypeInfo {
 
 ```json
 {
+  "id": 1,
   "componentTypeName": "Elbow",
   "componentTypeDescription": "弯头"
 }
@@ -310,6 +324,8 @@ interface PipeFittingSpec {
 
 **当前模块简化配置约定：** 必填项为**标准名称、部件类型、材料信息**；通径相关字段（`npdRange` / `minNpdValue` / `maxNpdValue`）为**可选**。若提供通径则一并保存，供后续「标准+通径范围→管系」模块使用。
 
+**部件类型标识（重要）：** 每个 `configurations[]` 项必须提供 **`componentTypeId` 或 `componentType` 至少其一**。**推荐仅传 `componentTypeId`**（来自「获取部件类型列表」返回的 `id`），后端按 ID 精确写入，不依赖英文名称，可避免前后端或上下游部件类型英文描述不一致导致的匹配失败。若只传 `componentType`（字符串），后端会尝试从字典表解析为 ID，解析失败时该配置会被跳过并记入日志。
+
 ```typescript
 interface SavePipeSpecRequest {
   shipType: string;                           // 船型（必填，长度≤255）
@@ -320,9 +336,8 @@ interface SavePipeSpecRequest {
 }
 
 interface ComponentTypeConfiguration {
-  componentType: string;                     // 部件类型（必填），支持首字母大写规范化，如 "elbow"→"Elbow"
-                                            // 支持: Elbow, Reducer, Tee, Pipe, Sleeve, Bosses, Saddles, Caps,
-                                            //       Overpass, Accessories, Flange, BlindFlange, Gasket, Bolt, Nut, Washer
+  componentTypeId?: number;                   // 部件类型 ID（推荐），与 GetComponentTypes 返回的 id 一致
+  componentType?: string;                     // 部件类型名称（展示或兼容），与 componentTypeId 二选一
   configResult?: string;                     // 配置结果描述
   fullConfig?: ComponentFullConfiguration;   // 完整配置信息
 }
@@ -539,14 +554,17 @@ const result: GetShipInfosResponse = await response.json();
   "message": "获取成功",
   "data": [
     {
+      "id": 1,
       "componentTypeName": "Elbow",
       "componentTypeDescription": "弯头"
     },
     {
+      "id": 2,
       "componentTypeName": "Tee",
       "componentTypeDescription": "三通"
     },
     {
+      "id": 3,
       "componentTypeName": "Reducer",
       "componentTypeDescription": "异径管"
     }
@@ -555,6 +573,8 @@ const result: GetShipInfosResponse = await response.json();
   "traceId": "0HMVD7K3QH1A4"
 }
 ```
+
+**前端适配说明：** 保存规格书时请将上述 `id` 作为 `configurations[].componentTypeId` 传入，以保证与后端字典表一致，避免部件类型英文名差异导致无法匹配。
 
 **失败响应 (404)**
 
@@ -573,6 +593,7 @@ const result: GetShipInfosResponse = await response.json();
 type GetComponentTypesResponse = ApiResponse<ComponentTypeInfo[]>;
 
 interface ComponentTypeInfo {
+  id: number;                    // 保存规格书时传此值作为 componentTypeId
   componentTypeName: string;
   componentTypeDescription: string;
 }
@@ -814,7 +835,8 @@ interface PmcBaseInfo {
 }
 
 interface ComponentTypeConfiguration {
-  componentType: string;
+  componentTypeId?: number;   // 部件类型 ID，保存时请原样回传
+  componentType?: string;     // 部件类型名称（展示用）
   configResult?: string;
   fullConfig?: ComponentFullConfiguration;
 }
@@ -1040,17 +1062,53 @@ interface PipeFittingSpec {
 
 #### 请求参数
 
-| 参数名         | 类型   | 位置 | 必填 | 说明                        |
-| -------------- | ------ | ---- | ---- | --------------------------- |
-| shipType       | string | Body | 是   | 船型，长度≤255             |
-| shipNumber     | string | Body | 是   | 船号，长度≤255             |
-| pmcCode        | string | Body | 是   | PMC编码，长度≤255          |
-| configurations | array  | Body | 是   | 部件类型配置列表（至少1个） |
-| metadata       | object | Body | 否   | 可选元数据                  |
+| 参数名         | 类型   | 位置 | 必填 | 说明                                                        |
+| -------------- | ------ | ---- | ---- | ----------------------------------------------------------- |
+| shipType       | string | Body | 是   | 船型，长度≤255                                             |
+| shipNumber     | string | Body | 是   | 船号，长度≤255                                             |
+| pmcCode        | string | Body | 是   | PMC编码，长度≤255                                          |
+| configurations | array  | Body | 是   | 部件类型配置列表（至少1项；每项须带 `componentTypeId` 或 `componentType`） |
+| metadata       | object | Body | 否   | 可选元数据                                                  |
+
+**configurations 每项约定：**
+
+- **推荐**：只传 `componentTypeId`（来自 GET 部件类型列表的 `data[].id`），后端按 ID 写入，不依赖英文名。
+- **兼容**：可传 `componentType`（字符串）；与 `componentTypeId` 二选一，至少填一个。若仅传 `componentType` 且后端无法解析为 ID，该条配置会被跳过并记入日志。
 
 #### 请求体示例
 
-**简化配置示例（推荐）：**
+**推荐写法（使用 componentTypeId，避免英文名差异）：**
+
+```json
+{
+  "shipType": "散货船",
+  "shipNumber": "H1234",
+  "pmcCode": "A1B2C3D",
+  "configurations": [
+    {
+      "componentTypeId": 1,
+      "configResult": "配置成功",
+      "fullConfig": {
+        "standardFileConfigs": [
+          { "standardFile": "ASME B16.9", "material": "Carbon Steel" },
+          { "standardFile": "JIS B2311", "material": "Carbon Steel" }
+        ]
+      }
+    },
+    {
+      "componentTypeId": 2,
+      "fullConfig": {
+        "standardFileConfigs": [
+          { "standardFile": "ASME B16.9", "material": "Stainless Steel 304" }
+        ]
+      }
+    }
+  ],
+  "metadata": { "source": "web", "operator": "admin" }
+}
+```
+
+**兼容写法（仅传 componentType，不推荐）：**
 
 ```json
 {
@@ -1060,41 +1118,21 @@ interface PipeFittingSpec {
   "configurations": [
     {
       "componentType": "Elbow",
-      "configResult": "配置成功",
-      "standards": [
-        {
-          "standardFile": "ASME B16.9",
-          "material": "Carbon Steel"
-        },
-        {
-          "standardFile": "JIS B2311",
-          "material": "Carbon Steel"
-        }
-      ]
-    },
-    {
-      "componentType": "Tee",
-      "standards": [
-        {
-          "standardFile": "ASME B16.9",
-          "material": "Stainless Steel 304"
-        }
-      ]
+      "fullConfig": {
+        "standardFileConfigs": [
+          { "standardFile": "ASME B16.9", "material": "Carbon Steel" }
+        ]
+      }
     }
-  ],
-  "metadata": {
-    "source": "web",
-    "operator": "admin",
-    "timestamp": "2026-02-03T10:30:00Z"
-  }
+  ]
 }
 ```
 
 **说明**：
 
-- `standardFile` 可以是标准文件ID（number）或标准文件名称（string）
-- `material` 可以是材料ID（number）或材料名称（string）
-- 不包含通径范围（`minNpdValue`、`maxNpdValue`）和重复范围默认配置（`duplicateRangeDefaults`）
+- `componentTypeId` 与 GET `/api/PmcSpec/ComponentTypes` 返回的 `data[].id` 一一对应。
+- `standardFile` 可为标准文件 ID（number）或名称（string）；`material` 可为材料 ID 或名称。
+- 不包含通径范围时可不传 `minNpdValue`、`maxNpdValue` 及 `duplicateRangeDefaults`。
 
 #### 响应数据
 
@@ -1125,12 +1163,19 @@ interface PipeFittingSpec {
       "field": "configurations",
       "message": "请至少配置一个部件类型",
       "errorCode": "VALIDATION_ERROR"
+    },
+    {
+      "field": "configurations[].componentTypeId",
+      "message": "每个部件类型配置需提供 ComponentTypeId 或 ComponentType",
+      "errorCode": "VALIDATION_ERROR"
     }
   ],
   "timestamp": "2026-02-03T10:30:00Z",
   "traceId": "0HMVD7K3QH1AI"
 }
 ```
+
+> 当某一项既未传 `componentTypeId` 也未传 `componentType`（或 `componentType` 为空）时，会返回「每个部件类型配置需提供 ComponentTypeId 或 ComponentType」。
 
 **失败响应 (400) - 业务规则失败（如记录不存在）**
 
@@ -1159,8 +1204,9 @@ interface SavePipeSpecSimpleRequest {
 }
 
 interface SimpleComponentTypeConfiguration {
-  componentType: string;  // 部件类型（必填）
-  configResult?: string;  // 配置结果描述（可选）
+  componentTypeId?: number;  // 部件类型 ID（推荐），与 GET /api/PmcSpec/ComponentTypes 返回的 id 一致
+  componentType?: string;    // 部件类型名称（兼容/展示），与 componentTypeId 二选一，至少填一个
+  configResult?: string;     // 配置结果描述（可选）
   standards: SimpleStandardConfig[]; // 标准配置列表（至少1个）
 }
 
@@ -1176,6 +1222,7 @@ interface SimpleStandardConfig {
 - 不包含通径范围相关字段（`minNpdValue`、`maxNpdValue`）
 - 不包含重复范围默认配置（`duplicateRangeDefaults`）
 - 不包含弯管半径倍数（`bendRadiusMultiple`）
+- 每个 `configurations[]` 项必须提供 `componentTypeId` 或 `componentType` 至少其一；推荐仅使用 `componentTypeId`，以避免前后端或上下游英文描述差异导致保存时无法匹配到正确部件类型。
 
 ---
 
@@ -1720,6 +1767,7 @@ export interface ShipInfo {
 }
 
 export interface ComponentTypeInfo {
+  id: number;                    // 部件类型主键，保存规格书时传此值作为 configurations[].componentTypeId
   componentTypeName: string;
   componentTypeDescription: string;
 }
@@ -1789,12 +1837,13 @@ export interface ComponentFullConfiguration {
 }
 
 export interface ComponentTypeConfiguration {
-  componentType: string;
+  componentTypeId?: number;     // 推荐：与 GetComponentTypes 返回的 id 一致，避免英文名差异导致匹配失败
+  componentType?: string;      // 可选：与 componentTypeId 二选一
   configResult?: string;
   fullConfig?: ComponentFullConfiguration;
 }
 
-/** 保存规格书请求；shipType、shipNumber、pmcCode 长度均≤255 */
+/** 保存规格书请求；shipType、shipNumber、pmcCode 长度均≤255；configurations 每项须带 componentTypeId 或 componentType */
 export interface SavePipeSpecRequest {
   shipType: string;
   shipNumber: string;
@@ -1850,6 +1899,7 @@ export interface CellStyle {
 | v1.4 | 2026-02-06 | 新增模板预览与导出：GET /api/template-preview/{templateId}、GET /api/template-preview/{templateId}/export；支持 pmcCode（规格书填充）或 parameters（自定义占位符）；占位符约定：标准信息格式「标准名 材料」、同类型多标准逗号分隔；standard_N、standard_&lt;类型&gt; 及 PMC 基础信息占位符；补充前端调用示例与 TypeScript 类型 | AI Assistant |
 | v1.5 | 2026-02-06 | 模板预览与导出增强：新增通径范围信息占位符（NPD、外径、壁厚）；支持列表格式（{{npd}}、{{outsideDiameter}}、{{wallThicknessList}}）和索引格式（{{npd_N}}、{{outsideDiameter_N}}、{{wallThicknessList_N}}）；根据 PMC 基础信息中的 pipeStandard 和 wallThickness 自动获取通径数据；更新占位符说明文档                            | AI Assistant |
 | v1.6 | 2026-02-25 | 模板预览与导出需求变更：预览需包含用户表单数据，pmcCode 改为必填；导出直接导出用户确认后的预览结果，pmcCode 必填；移除 parameters 可选参数；Pipe-Spec 模板占位符标准化；移除占位符别名映射                                          | AI Assistant |
+| v1.7 | 2026-02-25 | **部件类型按 ID 标识**：① 获取部件类型列表 GET /api/PmcSpec/ComponentTypes 响应项新增 `id`（部件类型主键）。② 保存规格书 POST /api/PmcSpec/SpecRules 请求体 configurations 每项新增可选 `componentTypeId`（推荐），与上述 `id` 一致；`componentType` 改为可选，与 `componentTypeId` 二选一，至少其一。③ 校验规则：每项未传 componentTypeId 且 componentType 为空时返回「每个部件类型配置需提供 ComponentTypeId 或 ComponentType」。④ 前端适配建议：下拉使用 ComponentTypes 的 id + componentTypeName，提交时传 componentTypeId，避免英文描述差异导致保存匹配失败。                               | AI Assistant |
 
 ---
 

@@ -5,6 +5,9 @@ namespace PMCSystem_Backend.Dtos.PipeSpecConfig
     /// </summary>
     public class ComponentTypeInfoDto
     {
+        /// <summary>部件类型主键，保存规格时请传此 ID</summary>
+        public int Id { get; set; }
+
         public string ComponentTypeName { get; set; } = string.Empty;
 
         public string ComponentTypeDescription { get; set; } = string.Empty;
