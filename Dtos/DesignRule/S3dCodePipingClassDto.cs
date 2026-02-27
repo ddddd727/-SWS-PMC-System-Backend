@@ -9,4 +9,3 @@ namespace PMCSystem_Backend.Models
         public int CodeListNumber { get; set; }
     }
 }
-

@@ -10,4 +10,3 @@ namespace PMCSystem_Backend.Services.Interfaces
         Task<bool> DeleteAsync(int id);
     }
 }
-

@@ -46,7 +46,6 @@ namespace PMCSystem_Backend.Services.Implementations
 
         private async Task<IEnumerable<S3dCommonCodeListValueDto>> GetByTableNameAsync(string tableName)
         {
-            // 1. Find the ID from S3D_Common_CodeListTable where CodeListTableName matches
             var tableEntity = await _context.S3dCommonCodeListTables
                 .FirstOrDefaultAsync(t => t.CodeListTableName == tableName);
 
@@ -55,7 +54,6 @@ namespace PMCSystem_Backend.Services.Implementations
                 return Enumerable.Empty<S3dCommonCodeListValueDto>();
             }
 
-            // 2. Find all values from S3D_Common_CodeListValue where CodeListTableID matches
             var values = await _context.S3dCommonCodeListValues
                 .Where(v => v.CodeListTableId == tableEntity.Id)
                 .Select(v => new S3dCommonCodeListValueDto
