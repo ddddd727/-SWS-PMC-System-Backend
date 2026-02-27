@@ -369,3 +369,10 @@ appsettings.Development.json
 appsettings.*.json
 !appsettings.json
 !appsettings.Production.json
+
+_build_verify/
+
+# 仅排除 _diag 中的构建和输出，保留 Program.cs、.csproj
+_diag/ExportDiag/bin/
+_diag/ExportDiag/obj/
+_diag/out/

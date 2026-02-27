@@ -97,6 +97,8 @@ public partial class PmcContextCky : DbContext
             entity.Property(e => e.Major)
                 .HasMaxLength(10)
                 .HasDefaultValue("C");
+            
+            entity.Ignore(e => e.S3dCommonCodeListHierarchy);
         });
 
         modelBuilder.Entity<S3dCommonCodeListValue>(entity =>

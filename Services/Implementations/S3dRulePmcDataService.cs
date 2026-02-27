@@ -2,7 +2,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Common.Models;
 using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using PMCSystem_Backend.Services.Interfaces;
 

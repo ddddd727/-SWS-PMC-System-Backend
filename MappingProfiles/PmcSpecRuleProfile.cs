@@ -1,4 +1,5 @@
 using AutoMapper;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
@@ -17,8 +18,9 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dRulePmcData, PmcSelectInfoDto>()
                 .ForMember(dest => dest.PmcCode, opt => opt.MapFrom(src => src.Pmccode))
                 .ForMember(dest => dest.ShipNumber, opt => opt.MapFrom(src => src.ShipNo))
-                .ForMember(dest => dest.PipeStadard, opt => opt.MapFrom(src => src.PipeStandard))
-                .ForMember(dest => dest.status, opt => opt.MapFrom(src => src.Status));
+                .ForMember(dest => dest.PipeStandard, opt => opt.MapFrom(src => src.PipingStandardName))
+                .ForMember(dest => dest.status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.Material, opt => opt.MapFrom(src => src.MaterialsCategoryName));
 
             // S3dRulePmcData CRUD 映射
             // Entity -> DTO

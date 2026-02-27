@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
+namespace PMCSystem_Backend.Dtos.PipeSpecConfig
 {
     /// <summary>
     /// S3dRulePmcData 响应DTO
@@ -96,8 +96,9 @@ namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
         [MaxLength(255, ErrorMessage = "材料等级名称长度不能超过255个字符")]
         public string? MaterialsGradeName { get; set; }
 
+        [Required(ErrorMessage = "法兰标准名称不能为空")]
         [MaxLength(255, ErrorMessage = "法兰标准名称长度不能超过255个字符")]
-        public string? FlangeStandardName { get; set; }
+        public string FlangeStandardName { get; set; }
 
         [MaxLength(255, ErrorMessage = "压力等级名称长度不能超过255个字符")]
         public string? PressureRatingName { get; set; }
@@ -163,7 +164,10 @@ namespace PMCSystem_Backend.Dtos.PmcSpecRuleConfig
         [MaxLength(255, ErrorMessage = "材料类别名称长度不能超过255个字符")]
         public string? MaterialsCategoryName { get; set; }
 
-        public List<PmcStandardInfo>? PipingStandardName { get; set; }
+        /// <summary>
+        /// 管系标准名称（与实体存储一致，为字符串；创建/响应使用列表）
+        /// </summary>
+        public string? PipingStandardName { get; set; }
 
         [MaxLength(255, ErrorMessage = "材料等级名称长度不能超过255个字符")]
         public string? MaterialsGradeName { get; set; }
