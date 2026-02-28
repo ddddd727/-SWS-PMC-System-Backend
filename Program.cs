@@ -98,17 +98,8 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowVueFrontend", policy =>
-        {
-            policy.WithOrigins(
-                "http://localhost:5173",   // Vite 默认端口
-                "http://localhost:3000",   // 一些前端工具默认端口
-                "http://localhost:8080"    // Vue 
-                                           // CLI 默认端口
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-        });
+        options.AddPolicy("AllowVueFrontend",
+        policy => policy.WithOrigins("http://10.8.98.105").AllowAnyHeader().AllowAnyMethod());
     });
 
     //  DbContext
