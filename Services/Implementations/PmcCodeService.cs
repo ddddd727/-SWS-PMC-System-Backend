@@ -230,7 +230,8 @@ namespace PMCSystem_Backend.Services.Impletation
                         {
                             ShipType = shipType,
                             ShipNo = shipNo,
-                            Pmccode = item.PmcCode
+                            Pmccode = item.PmcCode,
+                            IsByRule = item.IsByRule
                         };
                         _context.S3dRulePmcdata.Add(entity);
                         // Update dict to avoid duplicates if input has dupes (though frontend should handle)
@@ -245,6 +246,7 @@ namespace PMCSystem_Backend.Services.Impletation
                     entity.FlangeStandardName = item.FlangeStandardName;
                     entity.PressureRatingName = item.PressureRatingName;
                     entity.ScheduleThicknessName = item.ScheduleThicknessName;
+                    entity.IsByRule = item.IsByRule;
                 }
 
                 _context.SaveChanges();
@@ -269,7 +271,8 @@ namespace PMCSystem_Backend.Services.Impletation
                     MaterialsGradeName = x.MaterialsGradeName,
                     FlangeStandardName = x.FlangeStandardName,
                     PressureRatingName = x.PressureRatingName,
-                    ScheduleThicknessName = x.ScheduleThicknessName
+                    ScheduleThicknessName = x.ScheduleThicknessName,
+                    IsByRule = x.IsByRule
                 })
                 .ToList();
         }
@@ -396,6 +399,7 @@ namespace PMCSystem_Backend.Services.Impletation
                     FlangeStandardName = src.FlangeStandardName,
                     PressureRatingName = src.PressureRatingName,
                     ScheduleThicknessName = src.ScheduleThicknessName,
+                    IsByRule = src.IsByRule
                 }).ToList();
 
                 // 3. 批量插入

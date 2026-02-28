@@ -281,6 +281,8 @@ namespace PMCSystem_Backend.Services.Implementations
                 entity.NutStandard = dto.NutStandard ?? entity.NutStandard;
                 entity.WasherStandard = dto.WasherStandard ?? entity.WasherStandard;
                 entity.Status = dto.Status ?? entity.Status;
+                entity.VersionNum = dto.VersionNum ?? entity.VersionNum;
+                entity.IsByRule = dto.IsByRule ?? entity.IsByRule;
                 entity.JsonData = dto.JsonData ?? entity.JsonData;
 
                 await _context.SaveChangesAsync();

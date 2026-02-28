@@ -48,6 +48,8 @@ namespace PMCSystem_Backend.Models
         public string FlangeStandardName { get; set; } = string.Empty;
         public string PressureRatingName { get; set; } = string.Empty;
         public string ScheduleThicknessName { get; set; } = string.Empty;
+
+        public bool IsByRule { get; set; }
     }
 
     public class PmcOptionDto
@@ -73,6 +75,8 @@ namespace PMCSystem_Backend.Models
         public string PressureRatingName { get; set; } = string.Empty;
 
         public string ScheduleThicknessName { get; set; } = string.Empty;
+
+        public bool IsByRule { get; set; }
     }
 
     public class PmcCodeSaveRequest
