@@ -38,7 +38,11 @@ public partial class PmcContext : DbContext
 
     public virtual DbSet<S3dRulePmcData> S3dRulePmcdata { get; set; }
 
-    public virtual DbSet<S3dRuleShortCodeMap> S3dRuleShortCodeMaps { get; set; }
+    public virtual DbSet<S3dRuleShortCodeHierarchyRule> S3dRuleShortCodeHierarchyRules { get; set; }
+
+        public virtual DbSet<PMCSystem_Backend.Entities.S3dRuleShortCodeMap> S3dRuleShortCodeMaps { get; set; }
+
+        public virtual DbSet<S3dRulePipingBendParameter> S3dRulePipingBendParameters { get; set; }
 
     public virtual DbSet<S3dRulePipingCompStandard> S3dRulePipingCompStandards { get; set; }
 
@@ -261,9 +265,9 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.VersionNum).HasDefaultValue(1);
         });
 
-        modelBuilder.Entity<S3dRuleShortCodeMap>(entity =>
+        modelBuilder.Entity<PMCSystem_Backend.Entities.S3dRuleShortCodeMap>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_Rule__3214EC2738D19ED1");
+            entity.HasKey(e => e.Id);
 
             entity.ToTable("S3D_Rule_ShortCodeMap");
 
@@ -274,18 +278,19 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.ShortCode).HasMaxLength(50);
         });
 
-        modelBuilder.Entity<S3dRulePipingCompStandard>(entity =>
+        modelBuilder.Entity<S3dRulePipingBendParameter>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_Rule__3214EC27723621A9");
+            entity.HasKey(e => e.Id);
 
-            entity.ToTable("S3D_Rule_PipingCompStandard");
-
-            entity.HasIndex(e => new { e.GeometricIndustryStandardCl, e.ComponentTypeId, e.MaterialsCategoryCl }, "UQ_PipingCompStandard_GeometricIndustryStandard_ComponentType_MaterialsCategory").IsUnique();
+            entity.ToTable("S3D_Rule_PipingBendParameter");
 
             entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.ComponentTypeId).HasColumnName("ComponentTypeID");
             entity.Property(e => e.GeometricIndustryStandardCl).HasColumnName("GeometricIndustryStandard_CL");
-            entity.Property(e => e.MaterialsCategoryCl).HasColumnName("MaterialsCategory_CL");
+            entity.Property(e => e.MaterialsGradeCl).HasColumnName("MaterialsGrade_CL");
+            entity.Property(e => e.WallThicknessFrom).HasColumnName("WallThicknessFrom");
+            entity.Property(e => e.WallThicknessTo).HasColumnName("WallThicknessTo");
+            entity.Property(e => e.NormalDiameter).HasColumnName("NormalDiameter");
+            entity.Property(e => e.BendRadiusMultiplier).HasColumnName("BendRadiusMultiplier");
             entity.Property(e => e.Status).HasDefaultValue(true);
         });
 
@@ -318,6 +323,11 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.Major)
                 .HasMaxLength(10)
                 .HasDefaultValue("C");
+
+            entity.HasOne(e => e.S3dCommonCodeListHierarchy)
+                .WithOne()
+                .HasForeignKey<S3dCommonCodeListHierarchy>(h => h.CodeListTableId)
+                .HasPrincipalKey<S3dCommonCodeListTable>(t => t.Id);
         });
 
         modelBuilder.Entity<S3dCommonCodeListValue>(entity =>
