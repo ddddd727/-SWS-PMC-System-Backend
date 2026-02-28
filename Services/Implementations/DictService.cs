@@ -1,214 +1,286 @@
-﻿using Dapper;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using PMCSystem_Backend.Services.Interfaces;
-using System.Data;
-using System.Data.Common; // 添加此引用以支持 DbDataReader
-using System.Text.Json;
+
 
 namespace PMCSystem_Backend.Services.Implementations
 {
     public class DictService : IDictService
     {
         private readonly PmcContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly DictConfigManager _configManager;
+        private readonly DictStrategyFactory _strategyFactory;
 
-        public DictService(PmcContext context, IConfiguration configuration)
+        public DictService(PmcContext context,
+            DictConfigManager configManager,
+            DictStrategyFactory strategyFactory)
         {
             _context = context;
-            _configuration = configuration;
+            _configManager = configManager;
+            _strategyFactory = strategyFactory;
         }
 
-        private DictItemConfig GetConfig(string type)
-        {
-            var root = _configuration.Get<RootDictConfig>();
-            if (root?.DictConfiguration == null || !root.DictConfiguration.TryGetValue(type, out var config))
-                throw new Exception($"未找到字典配置: {type}");
-            return config;
-        }
+        #region 1. 查询 (GetTableData)
 
-        // 辅助：获取物理表结构 (仅用于写入时的校验)
-        // 🛠️ 修复：改用原生 ADO.NET，解决 Dapper 不支持 CommandBehavior 参数的问题
-        private async Task<List<string>> GetTableSchemaAsync(IDbConnection conn, string tableName)
-        {
-            if (conn.State != ConnectionState.Open)
-                conn.Open();
-
-            // 使用原生 Command 以支持 SchemaOnly
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = $"SELECT * FROM [{tableName}]";
-
-            // ExecuteReaderAsync 在这里需要转为 DbCommand 才能使用 CommandBehavior 的异步重载，
-            // 或者直接使用同步 ExecuteReader (SchemaOnly 极快，同步通常无影响)，
-            // 为了稳妥，这里使用同步 ExecuteReader 配合 Task.Run 或者直接用 CommandBehavior
-            // 注意：Dapper 的 conn.ExecuteReaderAsync 不接受 CommandBehavior。
-
-            using var reader = await Task.Run(() => cmd.ExecuteReader(CommandBehavior.SchemaOnly | CommandBehavior.KeyInfo));
-
-            var columns = new List<string>();
-            for (int i = 0; i < reader.FieldCount; i++) columns.Add(reader.GetName(i));
-            return columns;
-        }
-
-        // 辅助：视图名 -> 物理表名
-        private string GetPhysicalTableName(string configTableName)
-        {
-            if (configTableName.StartsWith("View_", StringComparison.OrdinalIgnoreCase))
-                return configTableName.Replace("View_", "S3D_", StringComparison.OrdinalIgnoreCase);
-            return configTableName;
-        }
-
-        // ==========================================================
-        // 🟢 查 (Read)
-        // ==========================================================
-        // 🛠️ 修复：添加 keyword 参数以匹配 IDictService 接口 (CS0535 错误)
         public async Task<DictTableDto> GetTableDataAsync(string type, string? keyword = null)
         {
+            // 1. 获取配置
             var config = GetConfig(type);
-            var viewName = config.TableName;
 
-            // 1. 准备前端列定义
-            var frontendColumns = new List<DictColumnDto>();
-            var allowedFields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrEmpty(config.ViewName))
+                throw new Exception($"配置错误：类型 '{type}' 缺少 ViewName，无法查询数据。");
 
-            if (config.Columns != null)
-            {
-                foreach (var colConfig in config.Columns)
-                {
-                    allowedFields.Add(colConfig.DbField);
-                    frontendColumns.Add(new DictColumnDto
-                    {
-                        Prop = colConfig.DbField,
-                        Label = colConfig.Title,
-                        Show = !colConfig.IsHidden,
-                        UiType = colConfig.UiType ?? "Input",
-                        Required = colConfig.IsRequired,
-                        IsPrimaryKey = colConfig.IsPrimaryKey,
-                        DataSource = colConfig.DataSource,
-                        IsReadOnly = colConfig.IsReadOnly // 🛠️ 这里现在可以正常通过编译了
-                    });
-                }
-            }
+            string viewName = config.ViewName;
+            var result = new DictTableDto();
+
+            // ✅ 核心修复：必须填充 Columns，否则前端不知道怎么渲染表头
+            result.Columns = config.Columns
+     .Where(c => !c.DbField.Equals("JsonData", StringComparison.OrdinalIgnoreCase))
+     .Select(c => new DictColumnDto
+     {
+         Prop = c.DbField,
+         Label = c.Title,
+         Show = !c.IsHidden,
+         UiType = c.UiType ?? "Input",
+         Required = c.IsRequired,
+         IsPrimaryKey = c.IsPrimaryKey,
+         IsReadOnly = c.IsReadOnly,
+
+         // ✅ 映射 Options：把配置里的选项传给前端
+         Options = c.Options,
+
+         DataSource = c.DataSource == null ? null : new DictDataSourceDto
+         {
+             Url = c.DataSource.Url,
+             LabelField = c.DataSource.LabelField,
+             ValueField = c.DataSource.ValueField,
+             ValueMapping = c.DataSource.ValueMapping
+         }
+     }).ToList();
 
             using var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
-            // 2. 查全量数据
-            // 注意：如果 keyword 有值，建议在这里拼接 SQL WHERE 或者在内存中过滤
-            // 简单起见，这里保持原有逻辑，你可以在后续添加 keyword 的过滤逻辑
-            string sql = $"SELECT * FROM [{viewName}]";
-            var rawRows = await conn.QueryAsync(sql);
+            // 2. 构建基础 SQL
+            string sql = $"SELECT * FROM [{viewName}] WHERE 1=1";
+            var parameters = new DynamicParameters();
 
-            // 3. 数据清洗
-            var filteredRows = new List<Dictionary<string, object>>();
-
-            foreach (var row in rawRows)
+            // 3. 处理关键字搜索
+            if (!string.IsNullOrWhiteSpace(keyword))
             {
-                var rawDict = (IDictionary<string, object>)row;
-                var newDict = new Dictionary<string, object>();
+                var searchConditions = new List<string>();
 
-                // 简单的内存关键字过滤示例 (可选)
-                bool matchKeyword = string.IsNullOrWhiteSpace(keyword);
-
-                foreach (var field in allowedFields)
+                // 只对 Input 类型且未隐藏的列进行模糊搜索，防止对非文本列进行 LIKE 操作报错
+                foreach (var col in config.Columns.Where(c => c.UiType == "Input" && !c.IsHidden))
                 {
-                    var dbKey = rawDict.Keys.FirstOrDefault(k => k.Equals(field, StringComparison.OrdinalIgnoreCase));
-                    var val = dbKey != null ? rawDict[dbKey] : null;
-                    newDict[field] = val;
-
-                    // 如果有关键字，简单检查是否有列包含该值
-                    if (!matchKeyword && val != null && val.ToString().Contains(keyword, StringComparison.OrdinalIgnoreCase))
-                    {
-                        matchKeyword = true;
-                    }
+                    // 建议：如果全是文本列可以直接用；如果有数字列，SQL Server 需要 CAST([...T] as NVARCHAR)
+                    searchConditions.Add($"[{col.DbField}] LIKE @Kw");
                 }
 
-                if (matchKeyword)
+                if (searchConditions.Any())
                 {
-                    filteredRows.Add(newDict);
+                    sql += " AND ( " + string.Join(" OR ", searchConditions) + " )";
+                    parameters.Add("Kw", $"%{keyword}%");
                 }
             }
 
-            return new DictTableDto { Columns = frontendColumns, Rows = filteredRows };
+            // 4. 排序 (默认按 ID 倒序，防止无序跳动)
+            // 确保视图里有 ID 列，如果没有 ID 列，这里需要根据 IsPrimaryKey 配置动态找
+            if (config.Columns.Any(c => c.DbField == "ID"))
+            {
+                sql += " ORDER BY ID DESC";
+            }
+
+            // 5. 执行查询
+            var rows = await conn.QueryAsync(sql, parameters);
+
+            // 6. 转换结果
+            result.Rows = rows
+        .Select(row => (IDictionary<string, object>)row)
+        .Select(d => new Dictionary<string, object>(d))
+        .ToList();
+
+            // 7. 处理 JsonData (扩展列展平)
+            foreach (var row in result.Rows)
+            {
+                // 1. 如果有 JsonData，先把它“掏空”并合并到 row 中
+                if (row.ContainsKey("JsonData") && row["JsonData"] is string jsonStr && !string.IsNullOrEmpty(jsonStr))
+                {
+                    try
+                    {
+                        var jsonObj = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonStr);
+                        if (jsonObj != null)
+                        {
+                            foreach (var kvp in jsonObj)
+                            {
+                                // 只有当主表中没有这个字段时，才使用扩展字段，防止覆盖物理主键等
+                                if (!row.ContainsKey(kvp.Key))
+                                {
+                                    // 💡 System.Text.Json 反序列化后的 Value 是 JsonElement
+                                    // 这里建议做一个简单的拆箱，方便前端处理（可选）
+                                    row[kvp.Key] = UnwrapJsonElement(kvp.Value);
+                                }
+                            }
+                        }
+                    }
+                    catch { /* 忽略脏数据解析错误 */ }
+                }
+
+                // 2. 彻底移除 JsonData 字段，前端根本看不到它
+                if (row.ContainsKey("JsonData"))
+                {
+                    row.Remove("JsonData");
+                }
+            }
+
+            return result;
         }
 
-        // ==========================================================
-        // 🟡 增/改/删 (保持不变)
-        // ==========================================================
+        #endregion
+
+        #region 2. 新增 (Add)
+
         public async Task<int> AddAsync(string type, DictInputDto data)
         {
             var config = GetConfig(type);
-            var physicalTable = GetPhysicalTableName(config.TableName);
-
-            using var conn = _context.Database.GetDbConnection();
-            var dbColumns = await GetTableSchemaAsync(conn, physicalTable);
-
-            var validCols = dbColumns
-                .Where(c => !c.Equals("Id", StringComparison.OrdinalIgnoreCase) &&
-                            data.Keys.Any(k => k.Equals(c, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-
-            if (!validCols.Any()) throw new Exception("没有有效的插入字段");
-
-            var colNames = validCols.Select(c => $"[{c}]");
-            var paramNames = validCols.Select(c => $"@{c}");
-            string sql = $"INSERT INTO [{physicalTable}] ({string.Join(",", colNames)}) VALUES ({string.Join(",", paramNames)})";
-
-            var parameters = new DynamicParameters();
-            foreach (var col in validCols)
-            {
-                var key = data.Keys.First(k => k.Equals(col, StringComparison.OrdinalIgnoreCase));
-                parameters.Add(col, DataToSqlValue(data[key]));
-            }
-
-            return await conn.ExecuteAsync(sql, parameters);
+            ValidateInput(config, data);
+            var strategy = _strategyFactory.GetStrategy(config.HandlerType);
+            return await strategy.AddAsync(type, config, data);
         }
+
+        #endregion
+
+        #region 3. 修改 (Update)
 
         public async Task<int> UpdateAsync(string type, int id, DictInputDto data)
         {
             var config = GetConfig(type);
-            var physicalTable = GetPhysicalTableName(config.TableName);
-
-            using var conn = _context.Database.GetDbConnection();
-            var pkCol = config.Columns?.FirstOrDefault(c => c.IsPrimaryKey)?.DbField ?? "Id";
-            var dbColumns = await GetTableSchemaAsync(conn, physicalTable);
-
-            var validCols = dbColumns
-                .Where(c => !c.Equals(pkCol, StringComparison.OrdinalIgnoreCase) &&
-                            data.Keys.Any(k => k.Equals(c, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-
-            if (!validCols.Any()) throw new Exception("没有需要更新的字段");
-
-            var setClause = string.Join(", ", validCols.Select(c => $"[{c}] = @{c}"));
-            string sql = $"UPDATE [{physicalTable}] SET {setClause} WHERE [{pkCol}] = @Id";
-
-            var parameters = new DynamicParameters();
-            parameters.Add("Id", id);
-            foreach (var col in validCols)
-            {
-                var key = data.Keys.First(k => k.Equals(col, StringComparison.OrdinalIgnoreCase));
-                parameters.Add(col, DataToSqlValue(data[key]));
-            }
-
-            return await conn.ExecuteAsync(sql, parameters);
+            ValidateInput(config, data);
+            var strategy = _strategyFactory.GetStrategy(config.HandlerType);
+            return await strategy.UpdateAsync(type, id, config, data);
         }
+
+        #endregion
+
+
+
+        #region 4. 删除 (Delete)
 
         public async Task<int> DeleteAsync(string type, int id)
         {
             var config = GetConfig(type);
-            var physicalTable = GetPhysicalTableName(config.TableName);
-            var pkCol = config.Columns?.FirstOrDefault(c => c.IsPrimaryKey)?.DbField ?? "Id";
-
-            string sql = $"DELETE FROM [{physicalTable}] WHERE [{pkCol}] = @Id";
-            using var conn = _context.Database.GetDbConnection();
-            return await conn.ExecuteAsync(sql, new { Id = id });
+            var strategy = _strategyFactory.GetStrategy(config.HandlerType);
+            return await strategy.DeleteAsync(type, id, config);
         }
 
-        private object DataToSqlValue(object val)
+        #endregion
+
+        #region 辅助方法
+
+        private object UnwrapJsonElement(object val)
         {
-            if (val is JsonElement je) return je.ToString();
+            if (val is JsonElement je)
+            {
+                return je.ValueKind switch
+                {
+                    JsonValueKind.String => je.GetString(),
+                    JsonValueKind.Number => je.GetDecimal(), // 或 GetDouble/GetInt32
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.Null => null,
+                    _ => je.ToString()
+                };
+            }
             return val;
         }
+        private DictItemConfig GetConfig(string type)
+        {
+            return _configManager.GetConfig(type);
+        }
+
+        private async Task<List<string>> GetTableSchemaAsync(IDbConnection conn, string tableName)
+        {
+            if (conn.State != ConnectionState.Open)
+            {
+                if (conn is System.Data.Common.DbConnection dbConn) await dbConn.OpenAsync();
+                else conn.Open();
+            }
+            var result = await conn.QueryAsync<string>(
+                @"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TableName",
+                new { TableName = tableName });
+            return result.ToList();
+        }
+        private void ValidateInput(DictItemConfig config, DictInputDto data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data), "提交数据不能为空");
+
+            var errors = new List<string>();
+
+            foreach (var column in config.Columns)
+            {
+                // 只校验标记为必填 (IsRequired=true) 且非隐藏 (IsHidden=false) 的字段
+                // 注意：有时候 ID 是 PK 但 IsHidden=false，需要排除 ID
+                if (column.IsRequired && !column.IsPrimaryKey)
+                {
+                    // 检查 data 中是否包含该 Key，且值不为空
+                    if (!data.TryGetValue(column.DbField, out var value) || IsNullOrEmpty(value))
+                    {
+                        errors.Add($"字段 '{column.Title}' ({column.DbField}) 不能为空");
+                    }
+                }
+            }
+
+            if (errors.Any())
+            {
+                // 抛出异常，Controller 会捕获并返回 400
+                throw new Exception($"数据校验失败: {string.Join("; ", errors)}");
+            }
+        }
+
+        // ✅ 新增：判空辅助方法 (兼容 null, 空字符串, JsonElement Null)
+        private bool IsNullOrEmpty(object? value)
+        {
+            if (value == null) return true;
+            if (value is string str && string.IsNullOrWhiteSpace(str)) return true;
+
+            // 处理 System.Text.Json 的 JsonElement
+            if (value is JsonElement je)
+            {
+                return je.ValueKind == JsonValueKind.Null ||
+                       je.ValueKind == JsonValueKind.Undefined ||
+                       (je.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(je.GetString()));
+            }
+
+            return false;
+        }
+        private object DataToSqlValue(object val)
+        {
+            if (val is JsonElement je)
+            {
+                return je.ValueKind switch
+                {
+                    JsonValueKind.String => je.GetString(),
+                    JsonValueKind.Number => je.GetDecimal(),
+                    JsonValueKind.True => 1,
+                    JsonValueKind.False => 0,
+                    JsonValueKind.Null => null,
+                    _ => je.ToString()
+                };
+            }
+            if (val is bool b) return b ? 1 : 0;
+            return val;
+        }
+
+        #endregion
     }
 }

@@ -56,5 +56,23 @@ namespace PMCSystem_Backend.Controllers
             var result = await _service.GetShortCodeHierarchyClassAsync();
             return Ok(result);
         }
+
+        [HttpGet("options/{tableName}")]
+        public async Task<IActionResult> GetOptions(string tableName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(tableName))
+                    return BadRequest("Table name cannot be empty");
+
+                // 直接去查库，不关心你是哪个业务模块的
+                var result = await _service.GetOptionsAsync(tableName);
+                return Ok(result);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
     }
 }
