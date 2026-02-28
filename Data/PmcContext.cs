@@ -1,4 +1,12 @@
-﻿using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.Extensions.Configuration;
+using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Entities;
+using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Entities.TempEntities;
+using PMCSystem_Backend.Models;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -295,11 +303,6 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.Id).HasColumnName("ID");
             entity.Property(e => e.CodeListTableId).HasColumnName("CodeListTableID");
             entity.Property(e => e.ParentCodeListTableId).HasColumnName("ParentCodeListTableID");
-
-            entity.HasOne(d => d.CodeListTable).WithOne(p => p.S3dCommonCodeListHierarchy)
-                .HasForeignKey<S3dCommonCodeListHierarchy>(d => d.CodeListTableId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("DSP_CodeListHierarchy_DSP_CodeListTable_FK");
         });
 
         modelBuilder.Entity<PMCSystem_Backend.Entities.PipeSpecConfig.S3dCommonCodeListTable>(entity =>

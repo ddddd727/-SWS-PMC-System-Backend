@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PMCSystem_Backend.Entities.PipeSpecConfig;
+namespace PMCSystem_Backend.Entities.TempEntities;
 
 public partial class S3dCommonCodeListHierarchy
 {
@@ -10,6 +10,4 @@ public partial class S3dCommonCodeListHierarchy
     public int CodeListTableId { get; set; }
 
     public int? ParentCodeListTableId { get; set; }
-
-    public virtual S3dCommonCodeListTable CodeListTable { get; set; } = null!;
 }
