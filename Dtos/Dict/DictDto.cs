@@ -22,6 +22,7 @@ namespace PMCSystem_Backend.Dtos.Dict
 
         // ✅ 修复：改为对象类型
         public DictDataSourceDto? DataSource { get; set; }
+        public List<string>? Options { get; set; }
     }
 
     // ✅ 新增：对应前端需要的下拉配置结构

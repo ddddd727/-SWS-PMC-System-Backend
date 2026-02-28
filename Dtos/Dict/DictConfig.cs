@@ -31,6 +31,7 @@ namespace PMCSystem_Backend.Dtos.Dict
 
         // ✅ 修复：改为对象类型，匹配 dicts.json 中的结构
         public DictDataSourceConfig? DataSource { get; set; }
+        public List<string>? Options { get; set; }
     }
 
     // ✅ 新增：下拉源配置类

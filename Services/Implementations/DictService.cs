@@ -38,24 +38,29 @@ namespace PMCSystem_Backend.Services.Implementations
             var result = new DictTableDto();
 
             // ✅ 核心修复：必须填充 Columns，否则前端不知道怎么渲染表头
-            result.Columns = config.Columns.Select(c => new DictColumnDto
-            {
-                Prop = c.DbField,
-                Label = c.Title,
-                Show = !c.IsHidden,
-                UiType = c.UiType ?? "Input",
-                Required = c.IsRequired,
-                IsPrimaryKey = c.IsPrimaryKey,
-                IsReadOnly = c.IsReadOnly,
-                // 映射下拉框配置对象
-                DataSource = c.DataSource == null ? null : new DictDataSourceDto
-                {
-                    Url = c.DataSource.Url,
-                    LabelField = c.DataSource.LabelField,
-                    ValueField = c.DataSource.ValueField,
-                    ValueMapping = c.DataSource.ValueMapping
-                }
-            }).ToList();
+            result.Columns = config.Columns
+     .Where(c => !c.DbField.Equals("JsonData", StringComparison.OrdinalIgnoreCase))
+     .Select(c => new DictColumnDto
+     {
+         Prop = c.DbField,
+         Label = c.Title,
+         Show = !c.IsHidden,
+         UiType = c.UiType ?? "Input",
+         Required = c.IsRequired,
+         IsPrimaryKey = c.IsPrimaryKey,
+         IsReadOnly = c.IsReadOnly,
+
+         // ✅ 映射 Options：把配置里的选项传给前端
+         Options = c.Options,
+
+         DataSource = c.DataSource == null ? null : new DictDataSourceDto
+         {
+             Url = c.DataSource.Url,
+             LabelField = c.DataSource.LabelField,
+             ValueField = c.DataSource.ValueField,
+             ValueMapping = c.DataSource.ValueMapping
+         }
+     }).ToList();
 
             using var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
@@ -95,13 +100,14 @@ namespace PMCSystem_Backend.Services.Implementations
 
             // 6. 转换结果
             result.Rows = rows
-                .Select(row => (IDictionary<string, object>)row)
-                .Select(d => new Dictionary<string, object>(d))
-                .ToList();
+        .Select(row => (IDictionary<string, object>)row)
+        .Select(d => new Dictionary<string, object>(d))
+        .ToList();
 
             // 7. 处理 JsonData (扩展列展平)
             foreach (var row in result.Rows)
             {
+                // 1. 如果有 JsonData，先把它“掏空”并合并到 row 中
                 if (row.ContainsKey("JsonData") && row["JsonData"] is string jsonStr && !string.IsNullOrEmpty(jsonStr))
                 {
                     try
@@ -111,14 +117,23 @@ namespace PMCSystem_Backend.Services.Implementations
                         {
                             foreach (var kvp in jsonObj)
                             {
+                                // 只有当主表中没有这个字段时，才使用扩展字段，防止覆盖物理主键等
                                 if (!row.ContainsKey(kvp.Key))
                                 {
-                                    row[kvp.Key] = kvp.Value;
+                                    // 💡 System.Text.Json 反序列化后的 Value 是 JsonElement
+                                    // 这里建议做一个简单的拆箱，方便前端处理（可选）
+                                    row[kvp.Key] = UnwrapJsonElement(kvp.Value);
                                 }
                             }
                         }
                     }
-                    catch { /* 忽略 Json 解析错误 */ }
+                    catch { /* 忽略脏数据解析错误 */ }
+                }
+
+                // 2. 彻底移除 JsonData 字段，前端根本看不到它
+                if (row.ContainsKey("JsonData"))
+                {
+                    row.Remove("JsonData");
                 }
             }
 
@@ -131,66 +146,110 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<int> AddAsync(string type, DictInputDto data)
         {
+            // 1. 获取配置与校验
             var config = GetConfig(type);
-            string tableName = config.PhysicalTableName;
+            ValidateInput(config, data);
 
+            string tableName = config.PhysicalTableName;
             using var conn = _context.Database.GetDbConnection();
 
-            // 1. 获取物理表的列 (S3D_Dict_...)
+            // 2. 获取物理表 Schema
             var dbColumns = await GetTableSchemaAsync(conn, tableName);
             var dbColSet = new HashSet<string>(dbColumns, StringComparer.OrdinalIgnoreCase);
-
-            // 2. 获取配置文件中定义的所有列 (包含 Short, Long 等视图列)
-            // 💡 关键点：建立一个“已知列”的清单
-            var definedColSet = config.Columns
-                .Select(c => c.DbField)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var insertDict = new Dictionary<string, object>();
             var jsonDict = new Dictionary<string, object>();
 
+            // 🌟 核心新增：准备接收前端的“填缝假 ID”
+            bool hasExplicitId = false;
+            int explicitId = 0;
+
             foreach (var kvp in data)
             {
                 if (string.IsNullOrWhiteSpace(kvp.Key)) continue;
-                if (kvp.Key.Equals("ID", StringComparison.OrdinalIgnoreCase)) continue;
 
-                // A. 如果是物理列 -> 存入 SQL
+                // 🌟 拦截门槛：判断是否是前端传来的有效 ID
+                if (kvp.Key.Equals("ID", StringComparison.OrdinalIgnoreCase))
+                {
+                    // 脱下 JSON 马甲，尝试解析为数字
+                    var idVal = DataToSqlValue(kvp.Value);
+                    if (idVal != null && int.TryParse(idVal.ToString(), out explicitId) && explicitId > 0)
+                    {
+                        // 只有大于 0 的正整数，才被认为是前端算好的填缝 ID，收下它！
+                        insertDict["ID"] = explicitId;
+                        hasExplicitId = true;
+                    }
+                    continue; // ID 处理完毕，直接跳过后面的逻辑
+                }
+
+                // 🚪 第一道门槛：查户口（只放行真正的物理列）
                 if (dbColSet.Contains(kvp.Key))
                 {
                     insertDict[kvp.Key] = DataToSqlValue(kvp.Value);
                 }
-                // B. 💡 关键修正：如果不是物理列，但在 dicts.json 里定义过 (如 Short, Long)
-                // -> 说明它是视图展示列，直接忽略 (Do Nothing)，千万别进 JSON！
-                else if (definedColSet.Contains(kvp.Key))
+                // 🚪 第二道门槛：对暗号（放行 Ext_）
+                else if (kvp.Key.StartsWith("Ext_", StringComparison.OrdinalIgnoreCase))
+                {
+                    jsonDict[kvp.Key] = DataToSqlValue(kvp.Value);
+                }
+                // 🚪 第三道门槛：垃圾桶
+                else
                 {
                     continue;
                 }
-                // C. 既不是物理列，也没在配置里定义 -> 才是真正的前端新增列 (Extension)
-                // -> 存入 JsonData
-                else
-                {
-                    jsonDict[kvp.Key] = kvp.Value;
-                }
             }
 
-            // 3. 处理 JsonData
+            // 组装 JsonData
             if (jsonDict.Any() && dbColSet.Contains("JsonData"))
             {
                 insertDict["JsonData"] = JsonSerializer.Serialize(jsonDict);
             }
 
-            // 4. 自动填充系统字段
+            // 自动填充系统字段
             if (dbColSet.Contains("CreatedTime")) insertDict["CreatedTime"] = DateTime.Now;
-            if (dbColSet.Contains("CreatedBy")) insertDict["CreatedBy"] = "System"; // 后面可以改成当前用户
+            if (dbColSet.Contains("CreatedBy")) insertDict["CreatedBy"] = "System";
             if (dbColSet.Contains("Status") && !insertDict.ContainsKey("Status")) insertDict["Status"] = 1;
 
-            // 5. 生成 SQL 并执行
+            // 提取列名和参数名
             var colNames = insertDict.Keys.Select(c => $"[{c}]");
             var paramNames = insertDict.Keys.Select(c => $"@{c}");
 
-            string sql = $"INSERT INTO [{tableName}] ({string.Join(",", colNames)}) VALUES ({string.Join(",", paramNames)}); SELECT CAST(SCOPE_IDENTITY() as int)";
+            string sql = "";
 
-            return await conn.QuerySingleAsync<int>(sql, new DynamicParameters(insertDict));
+            // 🌟 核心分流：决定怎么执行 SQL
+            if (hasExplicitId)
+            {
+                // A 计划：前端传了算好的 3！
+                // 开启 IDENTITY_INSERT 权限，把 3 强行塞进去，完事后再关闭权限。
+                sql = $@"
+            SET IDENTITY_INSERT [{tableName}] ON;
+            INSERT INTO [{tableName}] ({string.Join(",", colNames)}) VALUES ({string.Join(",", paramNames)});
+            SET IDENTITY_INSERT [{tableName}] OFF;
+            SELECT {explicitId}; 
+        ";
+            }
+            else
+            {
+                // B 计划：前端没传真 ID（防呆机制），交给数据库自己顺延
+                sql = $"INSERT INTO [{tableName}] ({string.Join(",", colNames)}) VALUES ({string.Join(",", paramNames)}); SELECT CAST(SCOPE_IDENTITY() as int)";
+            }
+
+            try
+            {
+                // 执行插入
+                return await conn.QuerySingleAsync<int>(sql, new DynamicParameters(insertDict));
+            }
+            catch (Exception ex)
+            {
+                // 🛡️ 终极防御：万一你的这张表根本没有设置 IDENTITY（自增）属性，开启 IDENTITY_INSERT 就会报错。
+                // 如果触发了这个报错，我们直接退级成普通插入，依然能保证数据安全入库！
+                if (ex.Message.Contains("does not have the identity property", StringComparison.OrdinalIgnoreCase))
+                {
+                    sql = $"INSERT INTO [{tableName}] ({string.Join(",", colNames)}) VALUES ({string.Join(",", paramNames)}); SELECT {explicitId};";
+                    return await conn.QuerySingleAsync<int>(sql, new DynamicParameters(insertDict));
+                }
+                throw; // 其他真实的报错依然抛出
+            }
         }
 
         #endregion
@@ -199,7 +258,12 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<int> UpdateAsync(string type, int id, DictInputDto data)
         {
+            // 1. 获取配置
             var config = GetConfig(type);
+
+            // ✅ 新增：服务端必填项校验
+            ValidateInput(config, data);
+
             if (string.IsNullOrEmpty(config.PhysicalTableName))
                 throw new Exception($"配置错误：类型 '{type}' 缺少 PhysicalTableName");
 
@@ -207,15 +271,11 @@ namespace PMCSystem_Backend.Services.Implementations
 
             using var conn = _context.Database.GetDbConnection();
 
-            // 1. 获取物理表的列 (S3D_Dict_...)
+            // ... (后续逻辑保持不变) ...
             var dbColumns = await GetTableSchemaAsync(conn, tableName);
             var dbColSet = new HashSet<string>(dbColumns, StringComparer.OrdinalIgnoreCase);
+            var definedColSet = config.Columns.Select(c => c.DbField).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            // 2. 获取配置文件中定义的“已知列” (包含 Short, Long 等视图列)
-            // 用于识别哪些是“展示字段”，需要被忽略
-            var definedColSet = config.Columns
-                .Select(c => c.DbField)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var updateDict = new Dictionary<string, object>();
             var jsonDict = new Dictionary<string, object>();
@@ -223,46 +283,53 @@ namespace PMCSystem_Backend.Services.Implementations
             foreach (var kvp in data)
             {
                 if (string.IsNullOrWhiteSpace(kvp.Key)) continue;
-                // 排除主键，防止用户尝试修改 ID
                 if (kvp.Key.Equals("ID", StringComparison.OrdinalIgnoreCase)) continue;
 
-                // A. 如果是物理列 -> 更新它
+                // 🚪 第一道门槛：查户口（只放行真正的物理列）
                 if (dbColSet.Contains(kvp.Key))
                 {
+                    // 比如：Status、PipingStandardCode 等真实存在于表里的字段
                     updateDict[kvp.Key] = DataToSqlValue(kvp.Value);
+                    // 注意：AddAsync 里面这里是 insertDict
                 }
-                // B. 如果不是物理列，但在 dicts.json 里定义过 -> 说明是视图展示列，忽略！
-                else if (definedColSet.Contains(kvp.Key))
+                // 🚪 第二道门槛：对暗号（只放行以 Ext_ 开头的真扩展列）
+                else if (kvp.Key.StartsWith("Ext_", StringComparison.OrdinalIgnoreCase))
                 {
-                    continue;
+                    // 比如：前端新加的 Ext_4e9ef6e7，这是我们要存在 JsonData 里的
+                    jsonDict[kvp.Key] = DataToSqlValue(kvp.Value);
                 }
-                // C. 既不是物理列，也没配置过 -> 认为是扩展数据，进 JsonData
+                // 🚪 第三道门槛：垃圾桶（所有不认识的字段，一律丢弃）
                 else
                 {
-                    jsonDict[kvp.Key] = kvp.Value;
+                    // 🚨 重点在这里！
+                    // 像 GeometricIndustryPractice_Parent、PipingClass_Short 这种：
+                    // 1. 不是物理列
+                    // 2. 也不叫 Ext_xxx
+                    // 它们走到这里，直接被 continue 跳过，绝对不可能再混进 jsonDict 里！
+                    continue;
                 }
             }
 
-            // 3. 处理 JsonData (Update 时通常是覆盖整个 JSON)
-            // 如果你想做“局部更新” (Merge)，逻辑会复杂很多，这里先按“前端传什么就存什么”处理
-            if (jsonDict.Any() && dbColSet.Contains("JsonData"))
+            // 处理 JsonData 字段的写入
+            if (dbColSet.Contains("JsonData"))
             {
-                updateDict["JsonData"] = JsonSerializer.Serialize(jsonDict);
-            }
-            else if (dbColSet.Contains("JsonData") && !jsonDict.Any())
-            {
-                // 如果前端传了数据但把扩展字段都清空了，也可以考虑把数据库的 JsonData 置空
-                // updateDict["JsonData"] = DBNull.Value; // 视业务需求而定，暂时不强制清空
+                // 只要有动态列数据就序列化，哪怕全被清空了，存个 "{}" 也好过不管
+                if (jsonDict.Any())
+                {
+                    updateDict["JsonData"] = JsonSerializer.Serialize(jsonDict);
+                }
+                else
+                {
+                    // 如果前端传过来的所有 Ext_ 值都被清空了，就存个空 JSON 对象
+                    updateDict["JsonData"] = "{}";
+                }
             }
 
-            // 4. 自动更新时间
             if (dbColSet.Contains("UpdatedTime")) updateDict["UpdatedTime"] = DateTime.Now;
-            // 记录修改人 (如果实现了用户系统，这里填当前用户)
             if (dbColSet.Contains("UpdatedBy")) updateDict["UpdatedBy"] = "System";
 
-            if (!updateDict.Any()) return 0; // 没有有效字段需要更新
+            if (!updateDict.Any()) return 0;
 
-            // 5. 构造 SQL
             var setClauses = updateDict.Keys.Select(k => $"[{k}] = @{k}");
             string sql = $"UPDATE [{tableName}] SET {string.Join(", ", setClauses)} WHERE ID = @Id";
 
@@ -295,6 +362,22 @@ namespace PMCSystem_Backend.Services.Implementations
 
         #region 辅助方法
 
+        private object UnwrapJsonElement(object val)
+        {
+            if (val is JsonElement je)
+            {
+                return je.ValueKind switch
+                {
+                    JsonValueKind.String => je.GetString(),
+                    JsonValueKind.Number => je.GetDecimal(), // 或 GetDouble/GetInt32
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.Null => null,
+                    _ => je.ToString()
+                };
+            }
+            return val;
+        }
         private DictItemConfig GetConfig(string type)
         {
             var config = _configuration.GetSection($"DictConfiguration:{type}").Get<DictItemConfig>();
@@ -317,7 +400,49 @@ namespace PMCSystem_Backend.Services.Implementations
                 new { TableName = tableName });
             return result.ToList();
         }
+        private void ValidateInput(DictItemConfig config, DictInputDto data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data), "提交数据不能为空");
 
+            var errors = new List<string>();
+
+            foreach (var column in config.Columns)
+            {
+                // 只校验标记为必填 (IsRequired=true) 且非隐藏 (IsHidden=false) 的字段
+                // 注意：有时候 ID 是 PK 但 IsHidden=false，需要排除 ID
+                if (column.IsRequired && !column.IsPrimaryKey)
+                {
+                    // 检查 data 中是否包含该 Key，且值不为空
+                    if (!data.TryGetValue(column.DbField, out var value) || IsNullOrEmpty(value))
+                    {
+                        errors.Add($"字段 '{column.Title}' ({column.DbField}) 不能为空");
+                    }
+                }
+            }
+
+            if (errors.Any())
+            {
+                // 抛出异常，Controller 会捕获并返回 400
+                throw new Exception($"数据校验失败: {string.Join("; ", errors)}");
+            }
+        }
+
+        // ✅ 新增：判空辅助方法 (兼容 null, 空字符串, JsonElement Null)
+        private bool IsNullOrEmpty(object? value)
+        {
+            if (value == null) return true;
+            if (value is string str && string.IsNullOrWhiteSpace(str)) return true;
+
+            // 处理 System.Text.Json 的 JsonElement
+            if (value is JsonElement je)
+            {
+                return je.ValueKind == JsonValueKind.Null ||
+                       je.ValueKind == JsonValueKind.Undefined ||
+                       (je.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(je.GetString()));
+            }
+
+            return false;
+        }
         private object DataToSqlValue(object val)
         {
             if (val is JsonElement je)
