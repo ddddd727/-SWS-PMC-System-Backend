@@ -15,6 +15,8 @@ namespace PMCSystem_Backend.Dtos.Dict
         public string ViewName { get; set; } = string.Empty;
         public string PhysicalTableName { get; set; } = string.Empty;
         public string CodeListTableName { get; set; } = string.Empty;
+
+        public string HandlerType { get; set; }
         public List<DictColumnConfig> Columns { get; set; } = new();
     }
 
