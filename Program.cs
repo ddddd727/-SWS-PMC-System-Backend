@@ -9,6 +9,7 @@ using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Services.Implementations;
 using PMCSystem_Backend.Services.Impletation;
 using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using OfficeOpenXml;
 
 // 设置 EPPlus 许可证上下文（必须在创建任何 ExcelPackage 之前设置）
@@ -35,6 +36,16 @@ try
         .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
+
+
+    builder.Services.AddSingleton<PMCSystem_Backend.Services.Implementations.DictConfigManager>();
+    builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.DictStrategyFactory>();
+    builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.AttributeDictStrategy>();
+    builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.FittingDictStrategy>();
+    builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.FlangeDictStrategy>();
+    builder.Services.AddScoped<PMCSystem_Backend.Services.Interfaces.IDictService, PMCSystem_Backend.Services.Implementations.DictService>();
+
+    // 这是你本来就有的（确保工厂注册在它的上面或附近）
     builder.Services.AddScoped<IDictService, DictService>();
 
     // Add services to the container.

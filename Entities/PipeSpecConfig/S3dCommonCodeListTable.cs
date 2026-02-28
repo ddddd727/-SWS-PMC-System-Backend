@@ -13,6 +13,6 @@ public partial class S3dCommonCodeListTable
 
     public string Major { get; set; } = null!;
 
-    public virtual S3dCommonCodeListHierarchy? S3dCommonCodeListHierarchy { get; set; }
+    
     public virtual ICollection<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; } = new List<S3dCommonCodeListValue>();
 }
