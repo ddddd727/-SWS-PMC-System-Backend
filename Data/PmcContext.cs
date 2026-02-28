@@ -323,11 +323,6 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.Major)
                 .HasMaxLength(10)
                 .HasDefaultValue("C");
-
-            entity.HasOne(e => e.S3dCommonCodeListHierarchy)
-                .WithOne()
-                .HasForeignKey<S3dCommonCodeListHierarchy>(h => h.CodeListTableId)
-                .HasPrincipalKey<S3dCommonCodeListTable>(t => t.Id);
         });
 
         modelBuilder.Entity<S3dCommonCodeListValue>(entity =>
