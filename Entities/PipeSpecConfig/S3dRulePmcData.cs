@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Dtos.PipeSpecConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using System;
 using System.Collections.Generic;
 
@@ -61,6 +61,10 @@ public partial class S3dRulePmcData
     public List<PmcStandardInfo>? WasherStandard { get; set; }
 
     public string? Status { get; set; }
+
+    public int VersionNum { get; set; }
+
+    public bool IsByRule { get; set; }
 
     public string? JsonData { get; set; }
 }
