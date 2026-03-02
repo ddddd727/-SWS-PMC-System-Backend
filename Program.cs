@@ -110,17 +110,8 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowVueFrontend", policy =>
-        {
-            policy.WithOrigins(
-                "http://localhost:5173",   // Vite 默认端口
-                "http://localhost:3000",   // 一些前端工具默认端口
-                "http://localhost:8080",   // Vue CLI 默认端口
-                "https://your-domain.com"  // 生产前端域名，部署时替换为实际地址
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-        });
+        options.AddPolicy("AllowVueFrontend",
+        policy => policy.WithOrigins("http://10.8.98.105").AllowAnyHeader().AllowAnyMethod());
     });
 
     //  DbContext
@@ -184,15 +175,12 @@ try
 
     app.UseForwardedHeaders();
 
-    if (app.Environment.IsDevelopment())
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            options.RoutePrefix = "swagger";
-        });
-    }
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+        options.RoutePrefix = "swagger";
+    });
     // 配置中间件
 
     // Configure the HTTP request pipeline.
