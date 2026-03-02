@@ -39,6 +39,7 @@ public partial class PmcContextCky : DbContext
 
     public virtual DbSet<S3dRuleShortCodeHierarchyRule> S3dRuleShortCodeHierarchyRules { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<S3dCodeWallThickness>(entity =>
@@ -97,8 +98,6 @@ public partial class PmcContextCky : DbContext
             entity.Property(e => e.Major)
                 .HasMaxLength(10)
                 .HasDefaultValue("C");
-            
-            entity.Ignore(e => e.S3dCommonCodeListHierarchy);
         });
 
         modelBuilder.Entity<S3dCommonCodeListValue>(entity =>
