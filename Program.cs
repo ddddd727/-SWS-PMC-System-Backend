@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
@@ -24,7 +25,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .WriteTo.Console()
-    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateBootstrapLogger();
 
 try
@@ -37,7 +38,7 @@ try
         .ReadFrom.Services(services) // 从DI容器注入配置的Sink和Enricher
         .Enrich.FromLogContext()
         .WriteTo.Console()
-        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
+        .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
 
@@ -114,8 +115,8 @@ try
             policy.WithOrigins(
                 "http://localhost:5173",   // Vite 默认端口
                 "http://localhost:3000",   // 一些前端工具默认端口
-                "http://localhost:8080"    // Vue 
-                                           // CLI 默认端口
+                "http://localhost:8080",   // Vue CLI 默认端口
+                "https://your-domain.com"  // 生产前端域名，部署时替换为实际地址
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -152,6 +153,14 @@ try
 
     builder.Configuration.AddJsonFile("Configs/dicts.json", optional: true, reloadOnChange: true);
 
+    // 配置反向代理转发头（使用 Nginx/IIS 反向代理时必须）
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
     // 配置JSON序列化
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -167,29 +176,21 @@ try
     // 注册日志服务
     builder.Services.AddLogging();
 
+    // 健康检查（供负载均衡/容器编排探测）
+    builder.Services.AddHealthChecks();
+
 
     var app = builder.Build();
 
-
+    app.UseForwardedHeaders();
 
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            // 设置Swagger UI 的根路径为 /swagger
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            options.RoutePrefix = "swagger";        // 访问http://localhost:xxxx/swagger 即可打开UI
-        });
-    }
-    else
-    {
-        // 生产环境也可以开启，根据需求关闭或限制访问
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
             options.RoutePrefix = "swagger";
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
         });
     }
     // 配置中间件
@@ -199,18 +200,15 @@ try
     // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
     app.UseMiddleware<ExceptionMiddleware>();
 
-    // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
-    app.UseMiddleware<ExceptionMiddleware>();
-
-    // app.UseHttpsRedirection();
-
-    app.UseMiddleware<ExceptionMiddleware>();
+    app.UseHttpsRedirection();
 
     app.UseCors("AllowVueFrontend");
 
     app.UseAuthorization();
 
     app.MapControllers();
+
+    app.MapHealthChecks("/health");
 
     app.Run();
 }
