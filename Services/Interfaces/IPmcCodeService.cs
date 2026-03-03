@@ -9,6 +9,7 @@ namespace PMCSystem_Backend.Services.Interface
     IEnumerable<PmcCodeQueryItem> GetPmcCodes(string shipType, string shipNo);
     IEnumerable<PmcOptionDto> GetOptions(string type, string? parentDesc = null);
     void SavePmcCodes(PmcCodeSaveRequest request);
+    int DeletePmcCodes(PmcCodeDeleteRequest request);
     List<ShipInfo> GetShipInfos();
     int CopyRules(CopyRuleRequest request);
     }
