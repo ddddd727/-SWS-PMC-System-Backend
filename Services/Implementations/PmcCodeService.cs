@@ -211,42 +211,36 @@ namespace PMCSystem_Backend.Services.Impletation
                 var existingByCode = existing.ToDictionary(x => x.Pmccode, x => x);
 
                 // 2. Determine Add / Update / Delete
-                var newCodes = new HashSet<string>(items.Select(x => x.PmcCode));
-                
-                // Delete: existing in DB but not in current list
-                var toDelete = existing.Where(x => !newCodes.Contains(x.Pmccode)).ToList();
-                if (toDelete.Count > 0)
-                {
-                    _context.S3dRulePmcdata.RemoveRange(toDelete);
-                }
+                // Modified: Changed to Append-Only mode as per requirement.
+                // - If PMC exists: Do nothing (keep existing)
+                // - If PMC not exists: Add new
+                // - Do NOT delete any existing records not in the list
 
                 // Upsert
                 foreach (var item in items)
                 {
                     if (!existingByCode.TryGetValue(item.PmcCode, out var entity))
                     {
-                        // Add
+                        // Add only if not exists
                         entity = new S3dRulePmcdatum
                         {
                             ShipType = shipType,
                             ShipNo = shipNo,
                             Pmccode = item.PmcCode,
+                            PipingClassName = item.PipingClassName,
+                            MaterialsCategoryName = item.MaterialsCategoryName,
+                            PipingStandardName = item.PipingStandardName,
+                            MaterialsGradeName = item.MaterialsGradeName,
+                            FlangeStandardName = item.FlangeStandardName,
+                            PressureRatingName = item.PressureRatingName,
+                            ScheduleThicknessName = item.ScheduleThicknessName,
                             IsByRule = item.IsByRule
                         };
                         _context.S3dRulePmcdata.Add(entity);
-                        // Update dict to avoid duplicates if input has dupes (though frontend should handle)
+                        // Update dict to avoid duplicates if input has dupes
                         existingByCode[item.PmcCode] = entity;
                     }
-
-                    // Update fields
-                    entity.PipingClassName = item.PipingClassName;
-                    entity.MaterialsCategoryName = item.MaterialsCategoryName;
-                    entity.PipingStandardName = item.PipingStandardName;
-                    entity.MaterialsGradeName = item.MaterialsGradeName;
-                    entity.FlangeStandardName = item.FlangeStandardName;
-                    entity.PressureRatingName = item.PressureRatingName;
-                    entity.ScheduleThicknessName = item.ScheduleThicknessName;
-                    entity.IsByRule = item.IsByRule;
+                    // Else: Exists -> Do nothing
                 }
 
                 _context.SaveChanges();
@@ -254,6 +248,41 @@ namespace PMCSystem_Backend.Services.Impletation
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in SavePmcCodes for ShipType={ShipType}, ShipNo={ShipNo}", request?.ShipType, request?.ShipNo);
+                throw;
+            }
+        }
+
+        public int DeletePmcCodes(PmcCodeDeleteRequest request)
+        {
+            try
+            {
+                if (request == null) throw new ArgumentNullException(nameof(request));
+                var shipType = (request.ShipType ?? string.Empty).Trim();
+                var shipNo = (request.ShipNo ?? string.Empty).Trim();
+                var pmcCodes = request.PmcCodes ?? new List<string>();
+
+                if (string.IsNullOrWhiteSpace(shipType) || string.IsNullOrWhiteSpace(shipNo))
+                    throw new ArgumentException("ShipType or ShipNo is empty.");
+
+                var distinctCodes = pmcCodes.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList();
+
+                if (distinctCodes.Count == 0) return 0;
+
+                var toDelete = _context.S3dRulePmcdata
+                    .Where(x => x.ShipType == shipType && x.ShipNo == shipNo && distinctCodes.Contains(x.Pmccode))
+                    .ToList();
+
+                if (toDelete.Count > 0)
+                {
+                    _context.S3dRulePmcdata.RemoveRange(toDelete);
+                    _context.SaveChanges();
+                }
+
+                return toDelete.Count;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DeletePmcCodes for ShipType={ShipType}, ShipNo={ShipNo}", request?.ShipType, request?.ShipNo);
                 throw;
             }
         }
@@ -385,10 +414,19 @@ namespace PMCSystem_Backend.Services.Impletation
                     throw new Exception($"未查到源船型船号 ({sourceShipType} - {sourceShipNo}) 的数据");
                 }
 
-                // 2. 准备新数据
+                // 2. 删除目标船型船号的现有数据 (Overwrite Mode)
+                var existingTargetItems = _context.S3dRulePmcdata
+                    .Where(x => x.ShipType == targetShipType && x.ShipNo == targetShipNo)
+                    .ToList();
+                
+                if (existingTargetItems.Count > 0)
+                {
+                    _context.S3dRulePmcdata.RemoveRange(existingTargetItems);
+                }
+
+                // 3. 准备新数据
                 var newItems = sourceItems.Select(src => new S3dRulePmcdatum
                 {
-                    // ID 自增，不设置
                     ShipType = targetShipType,
                     ShipNo = targetShipNo,
                     Pmccode = src.Pmccode,
@@ -402,7 +440,7 @@ namespace PMCSystem_Backend.Services.Impletation
                     IsByRule = src.IsByRule
                 }).ToList();
 
-                // 3. 批量插入
+                // 4. 批量插入
                 _context.S3dRulePmcdata.AddRange(newItems);
                 _context.SaveChanges();
 
