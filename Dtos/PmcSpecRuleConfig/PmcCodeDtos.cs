@@ -79,6 +79,13 @@ namespace PMCSystem_Backend.Models
         public bool IsByRule { get; set; }
     }
 
+    public class PmcCodeDeleteRequest
+    {
+        public string ShipType { get; set; } = string.Empty;
+        public string ShipNo { get; set; } = string.Empty;
+        public List<string> PmcCodes { get; set; } = new List<string>();
+    }
+
     public class PmcCodeSaveRequest
     {
         public string ShipType { get; set; } = string.Empty;
