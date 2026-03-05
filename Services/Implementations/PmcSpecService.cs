@@ -179,47 +179,60 @@ namespace PMCSystem_Backend.Services.Implementations
             return result;
         }
 
-        public List<PipeFittingSpecDto> GetPipeFittingSpec(string compnentType)
+        public List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName)
         {
-            if (string.IsNullOrWhiteSpace(compnentType))
+            if (componentTypeId == null && string.IsNullOrWhiteSpace(componentTypeName))
             {
-                _logger.LogError("compnentType 不能为空");
-                throw new ArgumentException("compnentType 不能为空");
+                _logger.LogError("部件类型不能为空");
+                throw new ArgumentException("部件类型不能为空");
             }
 
-            // 通过部件类型获取对应的 ComponentTypeId
-            var compType = _context.S3dDictPipingComponentTypes
-                .AsNoTracking()
-                .FirstOrDefault(x => x.ComponentTypeName == compnentType);
+            int resolvedComponentTypeId;
 
-            if (compType == null)
+            if (componentTypeId.HasValue)
             {
-                // 未找到对应的部件类型，返回空列表
-                return new List<PipeFittingSpecDto>();
+                resolvedComponentTypeId = componentTypeId.Value;
+            }
+            else
+            {
+                var normalizedName = componentTypeName?.Trim();
+                if (string.IsNullOrWhiteSpace(normalizedName))
+                {
+                    _logger.LogError("部件类型名称不能为空");
+                    throw new ArgumentException("部件类型名称不能为空");
+                }
+
+                var compType = _context.S3dDictPipingComponentTypes
+                    .AsNoTracking()
+                    .FirstOrDefault(x => x.ComponentTypeName == normalizedName);
+
+                if (compType == null)
+                {
+                    // 未找到对应的部件类型，返回空列表
+                    _logger.LogWarning("未找到对应的部件类型: {ComponentTypeName}", normalizedName);
+                    return new List<string>();
+                }
+
+                resolvedComponentTypeId = compType.Id;
             }
 
-            var componentTypeId = compType.Id;
-
-            // 在标准表中查找该部件类型下的所有标准条目
             var standards = _context.S3dRulePipingCompStandards
                 .AsNoTracking()
-                .Where(x => x.ComponentTypeId == componentTypeId)
+                .Where(x => x.ComponentTypeId == resolvedComponentTypeId)
                 .ToList();
 
-            // 提取标准的 CodeList 值（假设存储在 GeometricIndustryStandardCl 字段）
             var codeValues = standards
                 .Select(x => x.GeometricIndustryStandardCl)
                 .Where(v => v > 0)
                 .Distinct()
                 .ToList();
 
-            var result = new List<PipeFittingSpecDto>();
+            var standardNames = new List<string>();
 
             foreach (var code in codeValues)
             {
                 string standardName = code.ToString();
 
-                // 先尝试通过表名+值的短描述方法
                 try
                 {
                     var shortDescTask = _codelistService.GetShortDesciptionByCodelistValue("GeometricIndustryStandard", code.ToString());
@@ -234,11 +247,9 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
                 catch
                 {
-                    // 忽略异常，尝试其他方式
-                    _logger.LogWarning(code.ToString() + "无法通过表名+值的短描述方法获取标准名称");
+                    _logger.LogWarning("{Code} 无法通过表名+值的短描述方法获取标准名称", code);
                 }
 
-                // 若仍为 code 字符串，则尝试按列名查询描述
                 if (standardName == code.ToString())
                 {
                     try
@@ -253,38 +264,36 @@ namespace PMCSystem_Backend.Services.Implementations
                     }
                     catch
                     {
-                        _logger.LogWarning(code.ToString() + "无法通过列名查询描述方法获取标准名称");
+                        _logger.LogWarning("{Code} 无法通过列名查询描述方法获取标准名称", code);
                     }
                 }
 
-                // 如果查找均为将code转换为对应的短描述，则说明未成功查询到符合条件的标准
                 if (standardName == code.ToString())
                 {
-                    return new List<PipeFittingSpecDto>();
+                    return new List<string>();
                 }
 
-                // 通过 GetMaterialListByStandard 方法获取材料列表，不进行 commodityType 过滤
-                List<string> materialList = new List<string>();
-
-
-                try
-                {
-                    materialList = GetMaterialListByStandard(standardName, compnentType, string.Empty);
-                }
-                catch (Exception ex)
-                {
-                    // 如果获取材料列表失败，记录警告但继续处理，使用空列表
-                    _logger.LogWarning(ex, "获取标准 {StandardName} 的材料列表失败", standardName);
-                }
-
-                result.Add(new PipeFittingSpecDto
-                {
-                    StandardName = standardName,
-                    MaterialList = materialList
-                });
+                standardNames.Add(standardName);
             }
 
-            return result.OrderBy(x => x.StandardName).ToList();
+            return standardNames
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+        }
+
+        public List<string> GetMaterialsGrades()
+        {
+            var grades = _ckyContext.S3dClMaterialsGrades
+                .AsNoTracking()
+                .Select(x => x.ShortStringValue)
+                .Where(x => x != null && x != string.Empty)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            return grades!;
         }
 
         /// <summary>

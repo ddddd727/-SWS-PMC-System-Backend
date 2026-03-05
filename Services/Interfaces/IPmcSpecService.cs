@@ -58,11 +58,18 @@ namespace PMCSystem_Backend.Services.Interfaces
 
 
         /// <summary>
-        /// 获取PMC编码对应的基础管附件标准信息
+        /// 获取指定部件类型对应的管附件标准名称列表。
         /// </summary>
-        /// <param name="compnentType"> 部件类型 </param>
-        /// <returns></returns>
-        List<PipeFittingSpecDto> GetPipeFittingSpec(string compnentType);
+        /// <param name="componentTypeId">部件类型 ID（推荐），与 S3D_Dict_PipingComponentType.ID 一致</param>
+        /// <param name="componentTypeName">部件类型名称（兼容旧逻辑），与 componentTypeId 二选一</param>
+        /// <returns>标准名称列表</returns>
+        List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName);
+
+        /// <summary>
+        /// 获取所有材料牌号列表（来自视图 S3D_CL_MaterialsGrade，仅返回 ShortStringValue）。
+        /// </summary>
+        /// <returns>材料牌号列表</returns>
+        List<string> GetMaterialsGrades();
 
 
         /// <summary>
