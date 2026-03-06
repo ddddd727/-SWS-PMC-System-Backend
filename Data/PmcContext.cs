@@ -382,13 +382,13 @@ public partial class PmcContext : DbContext
             entity.Property(e => e.GeometricIndustryStandard).HasMaxLength(255);
             entity.Property(e => e.GeometricIndustryStandardCl).HasColumnName("GeometricIndustryStandard_CL");
             entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.NormalDiameter).HasColumnType("decimal(10, 3)");
-            entity.Property(e => e.PipingOutsideDiameter).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.NormalDiameter).HasColumnType("float");
+            entity.Property(e => e.PipingOutsideDiameter).HasColumnType("float");
             entity.Property(e => e.ScheduleThickness).HasMaxLength(255);
             entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
             entity.Property(e => e.UnitType).HasMaxLength(100);
             entity.Property(e => e.Version).HasMaxLength(100);
-            entity.Property(e => e.WallThickness).HasColumnType("decimal(10, 3)");
+            entity.Property(e => e.WallThickness).HasColumnType("float");
         });
 
         modelBuilder.Entity<PipeSpecVersion>(entity =>

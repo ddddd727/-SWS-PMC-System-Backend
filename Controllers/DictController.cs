@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration; // ✅ 核心：用于读取 JSON 配置
+using Microsoft.AspNetCore.Mvc;
 using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Services.Implementations;
 using PMCSystem_Backend.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -14,17 +14,17 @@ namespace PMCSystem_Backend.Controllers
     {
         private readonly IDictService _dictService;
         private readonly IS3dCommonCodeListValueService _codeListService;
-        private readonly IConfiguration _configuration;
+        private readonly DictConfigManager _dictConfigManager;
 
-        // 构造函数注入：业务服务 + 下拉框服务 + 配置读取器
+        // 构造函数注入：业务服务 + 下拉框服务 + 字典配置管理器
         public DictController(
             IDictService dictService,
             IS3dCommonCodeListValueService codeListService,
-            IConfiguration configuration)
+            DictConfigManager dictConfigManager)
         {
             _dictService = dictService;
             _codeListService = codeListService;
-            _configuration = configuration;
+            _dictConfigManager = dictConfigManager;
         }
 
         // =================================================================
@@ -36,17 +36,31 @@ namespace PMCSystem_Backend.Controllers
         {
             try
             {
-                // A. 【查配置】根据业务代号 (std-series) 获取真实 CodeList 表名
-                // 路径对应 dicts.json: DictConfiguration -> std-series -> CodeListTableName
-                var codeListTableName = _configuration[$"DictConfiguration:{type}:CodeListTableName"];
-
-                if (string.IsNullOrEmpty(codeListTableName))
+                // A. 【查配置】通过 DictConfigManager 根据 type 获取元数据
+                //    统一从 Configs/DictConfigs/*.json 中解析，而不是直接访问 IConfiguration
+                PMCSystem_Backend.Dtos.Dict.DictItemConfig config;
+                try
                 {
-                    return NotFound(new { message = $"未找到业务类型 '{type}' 的 CodeListTableName 配置，请检查 dicts.json" });
+                    config = _dictConfigManager.GetConfig(type);
+                }
+                catch (Exception ex)
+                {
+                    // 未找到对应配置时返回 404
+                    return NotFound(new { message = ex.Message });
                 }
 
-                // B. 【查数据】调用通用服务获取下拉选项
-                var result = await _codeListService.GetOptionsAsync(codeListTableName);
+                // B. 校验是否配置了 CodeListTableName
+                if (string.IsNullOrWhiteSpace(config.CodeListTableName))
+                {
+                    // 该类型不依赖 CodeList，视为不支持 options 接口
+                    return NotFound(new
+                    {
+                        message = $"业务类型 '{type}' 未配置 CodeListTableName 或不支持下拉选项，请检查字典配置（Configs/DictConfigs 下相关 json）。"
+                    });
+                }
+
+                // C. 【查数据】调用通用服务获取下拉选项
+                var result = await _codeListService.GetOptionsAsync(config.CodeListTableName);
 
                 return Ok(result);
             }
