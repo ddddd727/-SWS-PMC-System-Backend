@@ -1,12 +1,51 @@
 {
-
     "part-elbow": {
         "DisplayName": "Elbow (弯头)",
         "ViewName": "View_Fitting_Elbow",
         "PhysicalTableName": "S3D_Rule_PipingComponent",
         "HandlerType": "Fitting",
         "Columns": [
-            // ... (把弯头的列配置粘贴过来) ...
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "standard",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "long",
+                    "ValueField": "value"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "type",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true
+            },
+            {
+                "DbField": "description",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true
+            },
+            {
+                "DbField": "mainMaterial",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "long",
+                    "ValueField": "value"
+                },
+                "IsRequired": true
+            }
         ]
     },
     "part-red": {
@@ -14,10 +53,6 @@
         "ViewName": "View_Fitting_Red",
         "PhysicalTableName": "S3D_Rule_PipingComponent",
         "HandlerType": "Fitting",
-        "Columns": [
-            // ...
-        ]
+        "Columns": []
     }
-    // ... part-tee, part-sleeve, part-bosses 等全部放这里，加上 "HandlerType": "Fitting"
-
 }

@@ -52,6 +52,8 @@ try
 
     // 这是你本来就有的（确保工厂注册在它的上面或附近）
     builder.Services.AddScoped<IDictService, DictService>();
+    // 注册DictPipingService
+    builder.Services.AddScoped<IDictPipingService, DictPipingService>();
 
     // Add services to the container.
     // 注册业务服务已移动到下方
