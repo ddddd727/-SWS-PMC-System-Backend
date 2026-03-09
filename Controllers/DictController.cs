@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration; // ✅ 核心：用于读取 JSON 配置
-using PMCSystem_Backend.Dtos.Dict;
-using PMCSystem_Backend.Services.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration; // ✅ 核心：用于读取 JSON 配置
+using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Services.Implementations;
+using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Controllers
 {
@@ -14,17 +15,17 @@ namespace PMCSystem_Backend.Controllers
     {
         private readonly IDictService _dictService;
         private readonly IS3dCommonCodeListValueService _codeListService;
-        private readonly IConfiguration _configuration;
+        private readonly DictConfigManager _configManager;
 
         // 构造函数注入：业务服务 + 下拉框服务 + 配置读取器
         public DictController(
             IDictService dictService,
             IS3dCommonCodeListValueService codeListService,
-            IConfiguration configuration)
+           DictConfigManager configManager)
         {
             _dictService = dictService;
             _codeListService = codeListService;
-            _configuration = configuration;
+            _configManager = configManager;
         }
 
         // =================================================================
@@ -36,16 +37,15 @@ namespace PMCSystem_Backend.Controllers
         {
             try
             {
-                // A. 【查配置】根据业务代号 (std-series) 获取真实 CodeList 表名
-                // 路径对应 dicts.json: DictConfiguration -> std-series -> CodeListTableName
-                var codeListTableName = _configuration[$"DictConfiguration:{type}:CodeListTableName"];
+                // 🌟 3. 核心修改：通过配置管家去拿表名！
+                var config = _configManager.GetConfig(type);
+                var codeListTableName = config.CodeListTableName;
 
                 if (string.IsNullOrEmpty(codeListTableName))
                 {
-                    return NotFound(new { message = $"未找到业务类型 '{type}' 的 CodeListTableName 配置，请检查 dicts.json" });
+                    return NotFound(new { message = $"未找到业务类型 '{type}' 的 CodeListTableName 配置" });
                 }
 
-                // B. 【查数据】调用通用服务获取下拉选项
                 var result = await _codeListService.GetOptionsAsync(codeListTableName);
 
                 return Ok(result);
