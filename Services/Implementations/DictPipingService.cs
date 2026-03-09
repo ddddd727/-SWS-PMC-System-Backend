@@ -11,6 +11,10 @@ using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
+    /// <summary>
+    /// 管道字典服务实现类
+    /// 提供管道组件相关的数据访问和业务逻辑处理
+    /// </summary>
     public class DictPipingService(DictStrategyFactory strategyFactory, DictConfigManager configManager, PmcContext context) : IDictPipingService
     {
         // 常量定义
@@ -27,6 +31,12 @@ namespace PMCSystem_Backend.Services.Implementations
 
         #region 1. 查询 (GetTableData)
 
+        /// <summary>
+        /// 获取表格数据
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="keyword">搜索关键字</param>
+        /// <returns>表格数据DTO</returns>
         public async Task<DictTableDto> GetTableDataAsync(string type, string? keyword = null)
         {
             // 1. 获取配置
@@ -111,6 +121,10 @@ namespace PMCSystem_Backend.Services.Implementations
 
         #region 2. 获取弯头数据 (GetElbowData)
 
+        /// <summary>
+        /// 获取弯头数据
+        /// </summary>
+        /// <returns>弯头表格数据DTO</returns>
         public async Task<DictTableDto> GetElbowDataAsync()
         {
             return await GetTableDataAsync("part-elbow");
@@ -120,18 +134,80 @@ namespace PMCSystem_Backend.Services.Implementations
 
         #region 3. 新增 (Add)
 
+        /// <summary>
+        /// 新增管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="data">组件数据</param>
+        /// <returns>新记录ID</returns>
         public async Task<int> AddAsync(string type, DictInputDto data)
         {
-            var config = _configManager.GetConfig(type);
-            ValidateInput(config, data);
-            var strategy = _strategyFactory.GetStrategy(config.HandlerType);
-            return await strategy.AddAsync(type, config, data);
+            // 1. 输入验证
+            if (data == null || data.Count == 0)
+                throw new ArgumentNullException(nameof(data), "提交数据不能为空");
+
+            if (!data.TryGetValue("geometricIndustryStandardLong", out var standardValue) || IsNullOrEmpty(standardValue))
+                throw new ArgumentException("标准字段不能为空", nameof(data));
+
+            if (!data.TryGetValue("componentTypeId", out var componentTypeIdValue) || IsNullOrEmpty(componentTypeIdValue))
+                throw new ArgumentException("ComponentTypeID字段不能为空", nameof(data));
+
+            if (!data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) || IsNullOrEmpty(mainMaterialValue))
+                throw new ArgumentException("主材料字段不能为空", nameof(data));
+
+            // 2. 处理 JsonData 字段
+            var jsonDataValue = data.TryGetValue("JsonData", out var jsonData) && !IsNullOrEmpty(jsonData)
+                ? jsonData.ToString()
+                : null;
+
+            // 3. 转换 JsonElement 类型为 Dapper 可识别的类型
+            var geometricIndustryStandardCl = ConvertJsonElement(standardValue);
+            var componentTypeId = ConvertJsonElement(componentTypeIdValue);
+            var materialsCategoryCl = ConvertJsonElement(mainMaterialValue);
+
+            // 4. 执行插入操作
+            using var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+            using var transaction = conn.BeginTransaction();
+            try
+            {
+                // 使用参数化查询插入数据
+                string sql = @"
+                    INSERT INTO S3D_Rule_PipingCompStandard 
+                    (GeometricIndustryStandard_CL, ComponentTypeID, MaterialsCategory_CL, JsonData, CreatedDate, ModifiedDate, Status)
+                    VALUES (@GeometricIndustryStandard_CL, @ComponentTypeID, @MaterialsCategory_CL, @JsonData, GETDATE(), GETDATE(), 1);
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);
+                ";
+
+                int newId = await conn.ExecuteScalarAsync<int>(sql, new 
+                {
+                    GeometricIndustryStandard_CL = geometricIndustryStandardCl,
+                    ComponentTypeID = componentTypeId,
+                    MaterialsCategory_CL = materialsCategoryCl,
+                    JsonData = jsonDataValue
+                }, transaction);
+
+                transaction.Commit();
+                return newId;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         #endregion
 
         #region 4. 修改 (Update)
 
+        /// <summary>
+        /// 更新管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="id">记录ID</param>
+        /// <param name="data">更新的数据</param>
+        /// <returns>受影响的行数</returns>
         public async Task<int> UpdateAsync(string type, int id, DictInputDto data)
         {
             // 1. 输入验证
@@ -199,6 +275,12 @@ namespace PMCSystem_Backend.Services.Implementations
 
         #region 5. 删除 (Delete)
 
+        /// <summary>
+        /// 删除管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="id">记录ID</param>
+        /// <returns>受影响的行数</returns>
         public async Task<int> DeleteAsync(string type, int id)
         {
             var config = _configManager.GetConfig(type);
@@ -210,6 +292,12 @@ namespace PMCSystem_Backend.Services.Implementations
 
         #region 6. 批量删除 (Batch Delete)
 
+        /// <summary>
+        /// 批量删除管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="ids">记录ID列表</param>
+        /// <returns>受影响的行数</returns>
         public async Task<int> BatchDeleteAsync(string type, List<int> ids)
         {
             // 1. 输入验证
@@ -246,8 +334,31 @@ namespace PMCSystem_Backend.Services.Implementations
 
         #endregion
 
+        #region 7. 获取ComponentType列表
+
+        /// <summary>
+        /// 获取管道组件类型列表
+        /// </summary>
+        /// <returns>组件类型列表</returns>
+        public async Task<List<dynamic>> GetComponentTypeListAsync()
+        {
+            using var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+
+            string sql = "SELECT id, ComponentTypeName, ComponentTypeDescription FROM S3D_Dict_PipingComponentType WHERE status = 1";
+            var result = await conn.QueryAsync<dynamic>(sql);
+            return result.ToList();
+        }
+
+        #endregion
+
         #region 辅助方法
 
+        /// <summary>
+        /// 验证输入数据
+        /// </summary>
+        /// <param name="config">字典配置</param>
+        /// <param name="data">输入数据</param>
         private void ValidateInput(DictItemConfig config, DictInputDto data)
         {
             if (data == null)
@@ -272,6 +383,11 @@ namespace PMCSystem_Backend.Services.Implementations
             }
         }
 
+        /// <summary>
+        /// 检查值是否为空
+        /// </summary>
+        /// <param name="value">要检查的值</param>
+        /// <returns>是否为空</returns>
         private bool IsNullOrEmpty(object? value)
         {
             if (value == null) return true;
@@ -282,6 +398,8 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 转换 JsonElement 为 Dapper 可识别的类型
         /// </summary>
+        /// <param name="value">要转换的值</param>
+        /// <returns>转换后的值</returns>
         private static object ConvertJsonElement(object value)
         {
             // 检查是否为 JsonElement 类型

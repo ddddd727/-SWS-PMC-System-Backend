@@ -10,6 +10,10 @@ using System.Data;
 
 namespace PMCSystem_Backend.Controllers
 {
+    /// <summary>
+    /// 管道字典控制器
+    /// 提供管道组件相关的CRUD操作
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class DictPipingController(IDictPipingService dictPipingService, 
@@ -24,6 +28,11 @@ namespace PMCSystem_Backend.Controllers
         // 1. 下拉框选项接口 (Get Options)
         // URL: GET /api/dict/piping/options/std-series
         // =================================================================
+        /// <summary>
+        /// 获取下拉框选项
+        /// </summary>
+        /// <param name="type">业务类型</param>
+        /// <returns>下拉框选项列表</returns>
         [HttpGet("options/{type}")]
         public async Task<IActionResult> GetOptions(string type)
         {
@@ -53,6 +62,12 @@ namespace PMCSystem_Backend.Controllers
         // 2. 查询列表 (Get List)
         // URL: GET /api/dict/std-series?keyword=xxx
         // =================================================================
+        /// <summary>
+        /// 查询管道组件列表
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="keyword">搜索关键字</param>
+        /// <returns>组件列表数据</returns>
         [HttpGet("{type}")]
         public async Task<IActionResult> GetTable(string type, [FromQuery] string? keyword = null)
         {
@@ -73,6 +88,12 @@ namespace PMCSystem_Backend.Controllers
         // URL: POST /api/dict/std-series
         // Payload: { "GeometricIndustryPractice_CL": 10001, "Status": 1, ... }
         // =================================================================
+        /// <summary>
+        /// 新增管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="data">组件数据</param>
+        /// <returns>新增结果</returns>
         [HttpPost("{type}")]
         public async Task<IActionResult> Add(string type, [FromBody] DictInputDto data)
         {
@@ -97,6 +118,13 @@ namespace PMCSystem_Backend.Controllers
         // 4. 修改 (Update)
         // URL: PUT /api/dict/std-series/5
         // =================================================================
+        /// <summary>
+        /// 更新管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="id">记录ID</param>
+        /// <param name="data">更新的数据</param>
+        /// <returns>更新结果</returns>
         [HttpPut("{type}/{id}")]
         public async Task<IActionResult> Update(string type, int id, [FromBody] DictInputDto data)
         {
@@ -124,6 +152,12 @@ namespace PMCSystem_Backend.Controllers
         // 5. 删除 (Delete)
         // URL: DELETE /api/dict/std-series/5
         // =================================================================
+        /// <summary>
+        /// 删除管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="id">记录ID</param>
+        /// <returns>删除结果</returns>
         [HttpDelete("{type}/{id}")]
         public async Task<IActionResult> Delete(string type, int id)
         {
@@ -140,11 +174,18 @@ namespace PMCSystem_Backend.Controllers
                 return BadRequest(new { message = $"删除失败: {ex.Message}" });
             }
         }
+
         // =================================================================
         // 6. 批量删除 (Batch Delete)
         // URL: POST /api/dict/std-series/batch-delete
         // Payload: [1, 2, 3]
         // =================================================================
+        /// <summary>
+        /// 批量删除管道组件标准记录
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <param name="ids">记录ID列表</param>
+        /// <returns>批量删除结果</returns>
         [HttpPost("{type}/batch-delete")]
         public async Task<IActionResult> BatchDelete(string type, [FromBody] List<int> ids)
         {
@@ -162,6 +203,28 @@ namespace PMCSystem_Backend.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = $"批量删除失败: {ex.Message}" });
+            }
+        }
+
+        // =================================================================
+        // 7. 获取ComponentType列表
+        // URL: GET /api/dict/piping/componentType
+        // =================================================================
+        /// <summary>
+        /// 获取管道组件类型列表
+        /// </summary>
+        /// <returns>组件类型列表</returns>
+        [HttpGet("componentType")]
+        public async Task<IActionResult> GetComponentTypeList()
+        {
+            try
+            {
+                var result = await _dictPipingService.GetComponentTypeListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"获取ComponentType列表失败: {ex.Message}" });
             }
         }
 

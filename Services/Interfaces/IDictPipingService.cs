@@ -12,5 +12,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         Task<int> UpdateAsync(string type, int id, DictInputDto data);
         Task<int> DeleteAsync(string type, int id);
         Task<int> BatchDeleteAsync(string type, List<int> ids);
+        Task<List<dynamic>> GetComponentTypeListAsync();
     }
 }
