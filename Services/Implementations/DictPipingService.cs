@@ -146,14 +146,25 @@ namespace PMCSystem_Backend.Services.Implementations
             if (data == null || data.Count == 0)
                 throw new ArgumentNullException(nameof(data), "提交数据不能为空");
 
-            if (!data.TryGetValue("geometricIndustryStandardLong", out var standardValue) || IsNullOrEmpty(standardValue))
-                throw new ArgumentException("标准字段不能为空", nameof(data));
+            // 根据配置文件验证必填字段
+            var config = _configManager.GetConfig(type);
+            var errors = new List<string>();
 
-            if (!data.TryGetValue("componentTypeId", out var componentTypeIdValue) || IsNullOrEmpty(componentTypeIdValue))
-                throw new ArgumentException("ComponentTypeID字段不能为空", nameof(data));
+            foreach (var column in config.Columns)
+            {
+                if (column.IsRequired && !column.IsPrimaryKey)
+                {
+                    if (!data.TryGetValue(column.DbField, out var value) || IsNullOrEmpty(value))
+                    {
+                        errors.Add($"字段 '{column.Title}' ({column.DbField}) 不能为空");
+                    }
+                }
+            }
 
-            if (!data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) || IsNullOrEmpty(mainMaterialValue))
-                throw new ArgumentException("主材料字段不能为空", nameof(data));
+            if (errors.Any())
+            {
+                throw new Exception($"数据校验失败: {string.Join("; ", errors)}");
+            }
 
             // 2. 处理 JsonData 字段
             var jsonDataValue = data.TryGetValue("JsonData", out var jsonData) && !IsNullOrEmpty(jsonData)
@@ -161,9 +172,15 @@ namespace PMCSystem_Backend.Services.Implementations
                 : null;
 
             // 3. 转换 JsonElement 类型为 Dapper 可识别的类型
-            var geometricIndustryStandardCl = ConvertJsonElement(standardValue);
-            var componentTypeId = ConvertJsonElement(componentTypeIdValue);
-            var materialsCategoryCl = ConvertJsonElement(mainMaterialValue);
+            var geometricIndustryStandardCl = data.TryGetValue("geometricIndustryStandardLong", out var standardValue) && !IsNullOrEmpty(standardValue)
+                ? ConvertJsonElement(standardValue)
+                : null;
+            var componentTypeId = data.TryGetValue("componentTypeId", out var componentTypeIdValue) && !IsNullOrEmpty(componentTypeIdValue)
+                ? ConvertJsonElement(componentTypeIdValue)
+                : null;
+            var materialsCategoryCl = data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) && !IsNullOrEmpty(mainMaterialValue)
+                ? ConvertJsonElement(mainMaterialValue)
+                : null;
 
             // 4. 执行插入操作
             using var conn = _context.Database.GetDbConnection();
@@ -220,12 +237,25 @@ namespace PMCSystem_Backend.Services.Implementations
             if (id <= 0)
                 throw new ArgumentException("ID 必须为正整数", nameof(id));
 
-            // 2. 从数据中提取需要更新的字段
-            if (!data.TryGetValue("geometricIndustryStandardLong", out var standardValue) || IsNullOrEmpty(standardValue))
-                throw new ArgumentException("标准字段不能为空", nameof(data));
+            // 根据配置文件验证必填字段
+            var config = _configManager.GetConfig(type);
+            var errors = new List<string>();
 
-            if (!data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) || IsNullOrEmpty(mainMaterialValue))
-                throw new ArgumentException("主材料字段不能为空", nameof(data));
+            foreach (var column in config.Columns)
+            {
+                if (column.IsRequired && !column.IsPrimaryKey)
+                {
+                    if (!data.TryGetValue(column.DbField, out var value) || IsNullOrEmpty(value))
+                    {
+                        errors.Add($"字段 '{column.Title}' ({column.DbField}) 不能为空");
+                    }
+                }
+            }
+
+            if (errors.Any())
+            {
+                throw new Exception($"数据校验失败: {string.Join("; ", errors)}");
+            }
 
             // 3. 处理 JsonData 字段
             var jsonDataValue = data.TryGetValue("JsonData", out var jsonData) && !IsNullOrEmpty(jsonData)
@@ -233,8 +263,12 @@ namespace PMCSystem_Backend.Services.Implementations
                 : null;
 
             // 4. 转换 JsonElement 类型为 Dapper 可识别的类型
-            var geometricIndustryStandardCl = ConvertJsonElement(standardValue);
-            var materialsCategoryCl = ConvertJsonElement(mainMaterialValue);
+            var geometricIndustryStandardCl = data.TryGetValue("geometricIndustryStandardLong", out var standardValue) && !IsNullOrEmpty(standardValue)
+                ? ConvertJsonElement(standardValue)
+                : null;
+            var materialsCategoryCl = data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) && !IsNullOrEmpty(mainMaterialValue)
+                ? ConvertJsonElement(mainMaterialValue)
+                : null;
 
             // 5. 执行更新操作
             using var conn = _context.Database.GetDbConnection();

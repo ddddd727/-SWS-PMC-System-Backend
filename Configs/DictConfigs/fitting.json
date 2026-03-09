@@ -51,10 +51,54 @@
         ]
     },
     "part-red": {
-        "DisplayName": "Red (大小头)",
+        "DisplayName": "Red (异径)",
         "ViewName": "View_Fitting_Red",
         "PhysicalTableName": "S3D_Rule_PipingComponent",
         "HandlerType": "Fitting",
-        "Columns": []
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription", 
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            }
+        ]
     }
 }
