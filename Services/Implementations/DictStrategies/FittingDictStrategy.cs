@@ -5,16 +5,11 @@ using PMCSystem_Backend.Dtos.Dict;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Data;
 
-namespace PMCSystem_Backend.Services.Implementations.DictStrategies
+namespace PMCSystem_Backend.Services.Implementations.DictStrategies 
 {
-    public class FittingDictStrategy : IDictStrategy
+    public class FittingDictStrategy(PmcContext context) : IDictStrategy
     {
-        private readonly PmcContext _context;
-
-        public FittingDictStrategy(PmcContext context)
-        {
-            _context = context;
-        }
+        private readonly PmcContext _context = context;
 
         /// <summary>
         /// 查询 Piping Component Type 数据
@@ -27,10 +22,10 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
             string sql = @"
                 SELECT 
                     t1.ID as id, 
-                    v1.LongStringValue as standard, 
-                    t.ComponentTypeName as type, 
-                    t.ComponentTypeDescription as description, 
-                    v2.LongStringValue as mainMaterial,
+                    v1.LongStringValue as geometricIndustryStandardLong, 
+                    t.ComponentTypeName as componentTypeName, 
+                    t.ComponentTypeDescription as componentTypeDescription, 
+                    v2.LongStringValue as materialsCategoryLong,
                     t1.JsonData
                 FROM S3D_Dict_PipingComponentType t 
                 LEFT JOIN S3D_Rule_PipingCompStandard t1 ON t.id = t1.ComponentTypeID 

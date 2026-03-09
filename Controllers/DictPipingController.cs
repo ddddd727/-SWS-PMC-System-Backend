@@ -1,28 +1,24 @@
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PMCSystem_Backend.Data;
 using PMCSystem_Backend.Dtos.Dict;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Services.Implementations;
+using System.Data;
 
 
 namespace PMCSystem_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DictPipingController : ControllerBase
+    public class DictPipingController(IDictPipingService dictPipingService, 
+                                    IS3dCommonCodeListValueService codeListService, 
+                                    DictConfigManager dictConfigManager) : ControllerBase
     {
-        private readonly IDictPipingService _dictPipingService;
-        private readonly IS3dCommonCodeListValueService _codeListService;
-        private readonly DictConfigManager _dictConfigManager;
-
-        public DictPipingController(
-            IDictPipingService dictPipingService,
-            IS3dCommonCodeListValueService codeListService,
-            DictConfigManager dictConfigManager)
-        {
-            _dictPipingService = dictPipingService;
-            _codeListService = codeListService;
-            _dictConfigManager = dictConfigManager;
-        }
+        private readonly IDictPipingService _dictPipingService = dictPipingService;
+        private readonly IS3dCommonCodeListValueService _codeListService = codeListService;
+        private readonly DictConfigManager _dictConfigManager = dictConfigManager;
 
         // =================================================================
         // 1. 下拉框选项接口 (Get Options)
@@ -161,7 +157,7 @@ namespace PMCSystem_Backend.Controllers
                 if (affected == 0)
                     return NotFound(new { message = "未找到记录或已被删除" });
 
-                return Ok(new { message = "批量删除成功" });
+                return Ok(new { message = "批量删除成功", affected });
             }
             catch (Exception ex)
             {

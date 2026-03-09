@@ -11,18 +11,19 @@ using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
-    public class DictPipingService : IDictPipingService
+    public class DictPipingService(DictStrategyFactory strategyFactory, DictConfigManager configManager, PmcContext context) : IDictPipingService
     {
-        private readonly DictStrategyFactory _strategyFactory;
-        private readonly DictConfigManager _configManager;
-        private readonly PmcContext _context;
+        // 常量定义
+        private const string PART_PREFIX = "part-";
+        private const string CONNECT_TYPE_FLANGE = "法兰";
+        private const string STRATEGY_FLANGE = "Flange";
+        private const string STRATEGY_FITTING = "Fitting";
+        private const int STATUS_ACTIVE = 1;
+        private const int STATUS_INACTIVE = 0;
 
-        public DictPipingService(DictStrategyFactory strategyFactory, DictConfigManager configManager, PmcContext context)
-        {
-            _strategyFactory = strategyFactory;
-            _configManager = configManager;
-            _context = context;
-        }
+        private readonly DictStrategyFactory _strategyFactory = strategyFactory;
+        private readonly DictConfigManager _configManager = configManager;
+        private readonly PmcContext _context = context;
 
         #region 1. 查询 (GetTableData)
 
@@ -61,10 +62,10 @@ namespace PMCSystem_Backend.Services.Implementations
             using var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
-            var componentTypeName = type.Replace("part-", "");
+            var componentTypeName = type.Replace(PART_PREFIX, "");
             var componentTypeResult = await conn.QueryFirstOrDefaultAsync<dynamic>(
-                "SELECT ID, ConnectType FROM S3D_Dict_PipingComponentType WHERE ComponentTypeName = @ComponentTypeName and status = 1",
-                new { ComponentTypeName = componentTypeName });
+                "SELECT ID, ConnectType FROM S3D_Dict_PipingComponentType WHERE ComponentTypeName = @ComponentTypeName AND Status = @Status",
+                new { ComponentTypeName = componentTypeName, Status = STATUS_ACTIVE });
 
             if (componentTypeResult != null)
             {
@@ -72,18 +73,18 @@ namespace PMCSystem_Backend.Services.Implementations
                 var connectType = componentTypeResult.ConnectType;
 
                 // 根据 ConnectType 决定使用哪种策略
-                string strategyType = connectType == "法兰" ? "Flange" : "Fitting";
+                string strategyType = connectType == CONNECT_TYPE_FLANGE ? STRATEGY_FLANGE : STRATEGY_FITTING;
                 var pipingStrategy = _strategyFactory.GetStrategy(strategyType);
 
                 if (pipingStrategy != null)
                 {
                     // 根据策略类型调用相应的方法
                     IEnumerable<dynamic> pipingData;
-                    if (strategyType == "Fitting" && pipingStrategy is FittingDictStrategy fittingStrategy)
+                    if (strategyType == STRATEGY_FITTING && pipingStrategy is FittingDictStrategy fittingStrategy)
                     {
                         pipingData = await fittingStrategy.GetPipingComponentTypeDataAsync(componentTypeId);
                     }
-                    else if (strategyType == "Flange" && pipingStrategy is FlangeDictStrategy flangeStrategy)
+                    else if (strategyType == STRATEGY_FLANGE && pipingStrategy is FlangeDictStrategy flangeStrategy)
                     {
                         // 这里需要实现 FlangeDictStrategy 的相应方法
                         // 暂时使用相同的方法名，后续可以根据需要修改
@@ -133,10 +134,65 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<int> UpdateAsync(string type, int id, DictInputDto data)
         {
-            var config = _configManager.GetConfig(type);
-            ValidateInput(config, data);
-            var strategy = _strategyFactory.GetStrategy(config.HandlerType);
-            return await strategy.UpdateAsync(type, id, config, data);
+            // 1. 输入验证
+            if (data == null || data.Count == 0)
+                throw new ArgumentNullException(nameof(data), "提交数据不能为空");
+
+            if (string.IsNullOrEmpty(type))
+                throw new ArgumentNullException(nameof(type), "类型参数不能为空");
+
+            if (id <= 0)
+                throw new ArgumentException("ID 必须为正整数", nameof(id));
+
+            // 2. 从数据中提取需要更新的字段
+            if (!data.TryGetValue("geometricIndustryStandardLong", out var standardValue) || IsNullOrEmpty(standardValue))
+                throw new ArgumentException("标准字段不能为空", nameof(data));
+
+            if (!data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) || IsNullOrEmpty(mainMaterialValue))
+                throw new ArgumentException("主材料字段不能为空", nameof(data));
+
+            // 3. 处理 JsonData 字段
+            var jsonDataValue = data.TryGetValue("JsonData", out var jsonData) && !IsNullOrEmpty(jsonData)
+                ? jsonData.ToString()
+                : null;
+
+            // 4. 转换 JsonElement 类型为 Dapper 可识别的类型
+            var geometricIndustryStandardCl = ConvertJsonElement(standardValue);
+            var materialsCategoryCl = ConvertJsonElement(mainMaterialValue);
+
+            // 5. 执行更新操作
+            using var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+            using var transaction = conn.BeginTransaction();
+            try
+            {
+                // 使用参数化查询更新字段
+                string sql = @"
+                    UPDATE S3D_Rule_PipingCompStandard 
+                    SET 
+                        GeometricIndustryStandard_CL = @GeometricIndustryStandard_CL,
+                        MaterialsCategory_CL = @MaterialsCategory_CL,
+                        JsonData = @JsonData,
+                        ModifiedDate = GETDATE()
+                    WHERE ID = @Id
+                ";
+
+                int affected = await conn.ExecuteAsync(sql, new 
+                {
+                    GeometricIndustryStandard_CL = geometricIndustryStandardCl,
+                    MaterialsCategory_CL = materialsCategoryCl,
+                    JsonData = jsonDataValue,
+                    Id = id
+                }, transaction);
+
+                transaction.Commit();
+                return affected;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         #endregion
@@ -156,17 +212,36 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public async Task<int> BatchDeleteAsync(string type, List<int> ids)
         {
-            var config = _configManager.GetConfig(type);
-            var strategy = _strategyFactory.GetStrategy(config.HandlerType);
-            int totalAffected = 0;
+            // 1. 输入验证
+            if (ids == null || ids.Count == 0)
+                throw new ArgumentNullException(nameof(ids), "ID 列表不能为空");
 
-            foreach (var id in ids)
+            if (string.IsNullOrEmpty(type))
+                throw new ArgumentNullException(nameof(type), "类型参数不能为空");
+
+            // 验证 ids 列表中的值是否为有效整数
+            if (ids.Any(id => id <= 0))
+                throw new ArgumentException("ID 必须为正整数", nameof(ids));
+
+            // 2. 批量更新 status 为 0
+            using var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+            using var transaction = conn.BeginTransaction();
+            try
             {
-                int affected = await strategy.DeleteAsync(type, id, config);
-                totalAffected += affected;
-            }
+                // 使用参数化查询批量更新 status 为 0 和 ModifiedDate 为当前时间
+                string sql = "UPDATE S3D_Rule_PipingCompStandard SET Status = @Status, ModifiedDate = GETDATE() WHERE ID IN @Ids";
 
-            return totalAffected;
+                int affected = await conn.ExecuteAsync(sql, new { Status = STATUS_INACTIVE, Ids = ids }, transaction);
+
+                transaction.Commit();
+                return affected;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         #endregion
@@ -202,6 +277,57 @@ namespace PMCSystem_Backend.Services.Implementations
             if (value == null) return true;
             if (value is string str && string.IsNullOrWhiteSpace(str)) return true;
             return false;
+        }
+
+        /// <summary>
+        /// 转换 JsonElement 为 Dapper 可识别的类型
+        /// </summary>
+        private static object ConvertJsonElement(object value)
+        {
+            // 检查是否为 JsonElement 类型
+            if (value.GetType().FullName == "System.Text.Json.JsonElement")
+            {
+                // 获取 ValueKind 属性
+                var valueKindProperty = value.GetType().GetProperty("ValueKind");
+                if (valueKindProperty == null)
+                    return value.ToString();
+
+                var valueKind = valueKindProperty.GetValue(value, null);
+                var valueKindValue = Convert.ToInt32(valueKind);
+
+                // 根据 ValueKind 决定调用哪个方法
+                string methodName = valueKindValue switch
+                {
+                    1 => "GetString",
+                    2 => "GetInt32",
+                    3 => "GetInt32",
+                    4 => "GetInt32",
+                    5 => "GetInt32",
+                    6 => "GetInt32",
+                    7 => "GetInt64",
+                    8 => "GetDouble",
+                    9 => "GetBoolean",
+                    _ => "GetString"
+                };
+
+                var getValueMethod = value.GetType().GetMethod(methodName);
+                if (getValueMethod != null)
+                {
+                    try
+                    {
+                        return getValueMethod.Invoke(value, null);
+                    }
+                    catch
+                    {
+                        return value.ToString();
+                    }
+                }
+
+                return value.ToString();
+            }
+
+            // 如果不是 JsonElement，直接返回
+            return value;
         }
 
         #endregion

@@ -7,14 +7,9 @@ using System.Data;
 
 namespace PMCSystem_Backend.Services.Implementations.DictStrategies
 {
-    public class FlangeDictStrategy : IDictStrategy
+    public class FlangeDictStrategy(PmcContext context) : IDictStrategy
     {
-        private readonly PmcContext _context;
-
-        public FlangeDictStrategy(PmcContext context)
-        {
-            _context = context;
-        }
+        private readonly PmcContext _context = context;
 
         /// <summary>
         /// 查询 Piping Component Type 数据
@@ -27,10 +22,10 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
             string sql = @"
                 SELECT 
                     t1.ID as id, 
-                    v1.LongStringValue as standard, 
-                    t.ComponentTypeName as type, 
+                    v1.LongStringValue as geometricIndustryStandardLong, 
+                    t.ComponentTypeName as componentType, 
                     t.ComponentTypeDescription as description, 
-                    v2.LongStringValue as mainMaterial 
+                    v2.LongStringValue as materialsCategoryLong 
                 FROM S3D_Dict_PipingComponentType t 
                 LEFT JOIN S3D_Rule_PipingCompStandard t1 ON t.id = t1.ComponentTypeID 
                 LEFT JOIN S3D_CL_GeometricIndustryStandard v1 ON t1.GeometricIndustryStandard_CL = v1.CodeListNumber 
