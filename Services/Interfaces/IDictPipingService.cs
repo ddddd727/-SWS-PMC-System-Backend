@@ -7,7 +7,6 @@ namespace PMCSystem_Backend.Services.Interfaces
     public interface IDictPipingService
     {
         Task<DictTableDto> GetTableDataAsync(string type, string? keyword = null);
-        Task<DictTableDto> GetElbowDataAsync();
         Task<int> AddAsync(string type, DictInputDto data);
         Task<int> UpdateAsync(string type, int id, DictInputDto data);
         Task<int> DeleteAsync(string type, int id);

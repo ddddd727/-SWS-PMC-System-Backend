@@ -45,7 +45,8 @@ namespace PMCSystem_Backend.Services.Implementations
 
             // 2. 填充列配置
             result.Columns = config.Columns
-                .Where(c => !c.DbField.Equals("JsonData", StringComparison.OrdinalIgnoreCase))
+
+                // .Where(c => !c.DbField.Equals("JsonData", StringComparison.OrdinalIgnoreCase))
                 .Select(c => new DictColumnDto
                 {
                     Prop = c.DbField,
@@ -115,19 +116,6 @@ namespace PMCSystem_Backend.Services.Implementations
             }
 
             return result;
-        }
-
-        #endregion
-
-        #region 2. 获取弯头数据 (GetElbowData)
-
-        /// <summary>
-        /// 获取弯头数据
-        /// </summary>
-        /// <returns>弯头表格数据DTO</returns>
-        public async Task<DictTableDto> GetElbowDataAsync()
-        {
-            return await GetTableDataAsync("part-elbow");
         }
 
         #endregion
@@ -434,8 +422,11 @@ namespace PMCSystem_Backend.Services.Implementations
         /// </summary>
         /// <param name="value">要转换的值</param>
         /// <returns>转换后的值</returns>
-        private static object ConvertJsonElement(object value)
+        private static object? ConvertJsonElement(object? value)
         {
+            if (value == null)
+                return null;
+
             // 检查是否为 JsonElement 类型
             if (value.GetType().FullName == "System.Text.Json.JsonElement")
             {
@@ -444,7 +435,10 @@ namespace PMCSystem_Backend.Services.Implementations
                 if (valueKindProperty == null)
                     return value.ToString();
 
-                var valueKind = valueKindProperty.GetValue(value, null);
+                var valueKind = valueKindProperty?.GetValue(value, null);
+                if (valueKind == null)
+                    return value.ToString();
+
                 var valueKindValue = Convert.ToInt32(valueKind);
 
                 // 根据 ValueKind 决定调用哪个方法
