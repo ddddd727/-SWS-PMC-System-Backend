@@ -214,7 +214,7 @@
         "DisplayName": "B2-管材标准",
         "ViewName": "View_Dict_PipingStandard",
         "PhysicalTableName": "S3D_Dict_PipingStandard",
-        "CodeListTableName": "PipingStandard",
+        "CodeListTableName": "GeometricIndustryStandard",
         "HandlerType": "Attribute",
         "Columns": [
             {

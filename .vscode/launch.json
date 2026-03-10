@@ -20,7 +20,9 @@
                 "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "Console.OutputEncoding": "UTF-8",
+                "DOTNET_CONSOLE_ENCODING": "utf-8"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"

@@ -17,6 +17,9 @@ using OfficeOpenXml;
 
 // 注册编码提供程序，确保 EPPlus 处理 ZIP/xlsx 时正确解析编码（修复导出 Excel 无法打开问题）
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+// 设置控制台编码为 UTF-8，解决中文乱码问题
+Console.OutputEncoding = Encoding.UTF8;
+Console.InputEncoding = Encoding.UTF8;
 // 设置 EPPlus 许可证上下文（必须在创建任何 ExcelPackage 之前设置）
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业用途，如果是商业用途请使用 LicenseContext.Commercial
 
@@ -52,6 +55,8 @@ try
 
     // 这是你本来就有的（确保工厂注册在它的上面或附近）
     builder.Services.AddScoped<IDictService, DictService>();
+    // 注册DictPipingService
+    builder.Services.AddScoped<IDictPipingService, DictPipingService>();
 
     // Add services to the container.
     // 注册业务服务已移动到下方

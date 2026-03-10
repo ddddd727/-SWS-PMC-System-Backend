@@ -1,23 +1,16 @@
 {
-
     "part-flange": {
         "DisplayName": "Flange (法兰)",
         "ViewName": "View_Flange_Main",
         "PhysicalTableName": "S3D_Rule_Flange",
         "HandlerType": "Flange",
-        "Columns": [
-            // ...
-        ]
+        "Columns": []
     },
     "part-bolts": {
         "DisplayName": "Bolts (螺栓)",
         "ViewName": "View_Flange_Bolts",
         "PhysicalTableName": "S3D_Rule_Bolts",
         "HandlerType": "Flange",
-        "Columns": [
-            // ...
-        ]
+        "Columns": []
     }
-    // ... part-blind-flange, part-gasket 等全部放这里，加上 "HandlerType": "Flange"
-
 }
