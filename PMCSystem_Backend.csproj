@@ -37,4 +37,16 @@
     <None Include="appsettings.Development.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Configs\DictConfigs\attribute.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Configs\DictConfigs\fitting.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Configs\DictConfigs\flange.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,450 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Dictionary Configuration Schema",
+    "description": "Schema for validating dynamic dictionary table configurations.",
+    "type": "object",
+    "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+            "type": "object",
+            "required": [ "DisplayName", "Columns" ],
+            "properties": {
+
+                "DisplayName": {
+                    "type": "string",
+                    "description": "前端显示的标题名称"
+                },
+
+                "ViewName": {
+                    "type": "string",
+                    "description": "数据库视图名称"
+                },
+
+                "PhysicalTableName": {
+                    "type": "string",
+                    "description": "数据库物理表名称"
+                },
+
+                "CodeListTableName": {
+                    "type": "string",
+                    "description": "字典编码表名称（如果有）"
+                },
+
+                "HandlerType": {
+                    "type": "string",
+                    "enum": [ "Attribute", "Rule", "General" ],
+                    "description": "处理程序的类型分类"
+                },
+
+                "UniqueConstraints": {
+                    "type": "array",
+                    "description": "联合唯一约束，数组中每个子数组代表一组必须唯一的字段组合",
+                    "items": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "minItems": 1
+                    }
+                },
+
+                "Permissions": {
+                    "type": "object",
+                    "description": "表格级别的操作权限控制",
+                    "properties": {
+                        "AllowCreate": {
+                            "type": "boolean",
+                            "default": true,
+                            "description": "是否允许新增"
+                        },
+                        "AllowEdit": {
+                            "type": "boolean",
+                            "default": true,
+                            "description": "是否允许编辑"
+                        },
+                        "AllowDelete": {
+                            "type": "boolean",
+                            "default": true,
+                            "description": "是否允许删除"
+                        },
+                        "AllowExport": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "是否允许导出"
+                        },
+                        "AllowImport": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "是否允许导入"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+
+                "Pagination": {
+                    "type": "object",
+                    "description": "分页配置",
+                    "properties": {
+                        "DefaultPageSize": {
+                            "type": "integer",
+                            "default": 20,
+                            "description": "默认每页条数"
+                        },
+                        "PageSizeOptions": {
+                            "type": "array",
+                            "items": { "type": "integer" },
+                            "default": [ 10, 20, 50, 100 ],
+                            "description": "可选的每页条数列表"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+
+                "DefaultSort": {
+                    "type": "object",
+                    "description": "表格默认排序配置",
+                    "required": [ "Field", "Order" ],
+                    "properties": {
+                        "Field": {
+                            "type": "string",
+                            "description": "默认排序的字段名（对应 DbField）"
+                        },
+                        "Order": {
+                            "type": "string",
+                            "enum": [ "asc", "desc" ],
+                            "description": "排序方向"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+
+                "RowActions": {
+                    "type": "array",
+                    "description": "每行的自定义操作按钮列表",
+                    "items": {
+                        "type": "object",
+                        "required": [ "Key", "Label" ],
+                        "properties": {
+                            "Key": {
+                                "type": "string",
+                                "description": "操作的唯一标识，用于事件回调区分"
+                            },
+                            "Label": {
+                                "type": "string",
+                                "description": "按钮显示文字"
+                            },
+                            "Icon": {
+                                "type": "string",
+                                "description": "按钮图标名称（对应前端图标库的 key）"
+                            },
+                            "Type": {
+                                "type": "string",
+                                "enum": [ "default", "primary", "danger", "warning" ],
+                                "default": "default",
+                                "description": "按钮样式类型"
+                            },
+                            "ConfirmText": {
+                                "type": "string",
+                                "description": "点击后的二次确认提示文字，不填则直接触发"
+                            },
+                            "VisibleWhen": {
+                                "$ref": "#/definitions/ConditionRule",
+                                "description": "控制该按钮是否显示的行级条件"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+
+                "Columns": {
+                    "type": "array",
+                    "description": "列配置数组",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "required": [ "DbField", "Title" ],
+                        "properties": {
+
+                            "DbField": {
+                                "type": "string",
+                                "description": "对应数据库或后端的字段名"
+                            },
+
+                            "Title": {
+                                "type": "string",
+                                "description": "前端表格列的显示名称"
+                            },
+
+                            "Tooltip": {
+                                "type": "string",
+                                "description": "列标题旁的帮助提示文字（? 悬浮说明）"
+                            },
+
+                            "SortOrder": {
+                                "type": "integer",
+                                "description": "列在表格中的显示顺序，数字越小越靠前"
+                            },
+
+                            "UiType": {
+                                "type": "string",
+                                "enum": [
+                                    "Input",
+                                    "Textarea",
+                                    "Number",
+                                    "Switch",
+                                    "Select",
+                                    "MultiSelect",
+                                    "TreeSelect",
+                                    "DatePicker",
+                                    "DateTimePicker",
+                                    "Upload",
+                                    "JsonInput"
+                                ],
+                                "description": "前端 UI 组件类型"
+                            },
+
+                            "Format": {
+                                "type": "string",
+                                "description": "显示格式化字符串。日期示例：'YYYY-MM-DD'；数字示例：'#,##0.00'；枚举映射示例：'{0: 启用, 1: 禁用}'"
+                            },
+
+                            "IsPrimaryKey": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否为主键"
+                            },
+
+                            "IsHidden": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否在表格和表单中隐藏"
+                            },
+
+                            "IsReadOnly": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否为只读（仅展示，不可编辑）"
+                            },
+
+                            "IsRequired": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否为必填项"
+                            },
+
+                            "IsUnique": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "该列数据是否需要单独保证唯一（单列唯一约束）"
+                            },
+
+                            "IsSortable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否允许按该列排序"
+                            },
+
+                            "IsFilterable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否在列头或搜索栏中提供过滤/搜索入口"
+                            },
+
+                            "DefaultValue": {
+                                "description": "新增行时该字段的默认值",
+                                "type": [ "string", "number", "boolean", "null" ]
+                            },
+
+                            "Validation": {
+                                "type": "object",
+                                "description": "内置校验规则",
+                                "properties": {
+                                    "Min": {
+                                        "type": "number",
+                                        "description": "数值类型的最小值"
+                                    },
+                                    "Max": {
+                                        "type": "number",
+                                        "description": "数值类型的最大值"
+                                    },
+                                    "MinLength": {
+                                        "type": "integer",
+                                        "description": "字符串最小长度"
+                                    },
+                                    "MaxLength": {
+                                        "type": "integer",
+                                        "description": "字符串最大长度"
+                                    },
+                                    "Pattern": {
+                                        "type": "string",
+                                        "description": "正则表达式，不满足时触发校验失败"
+                                    },
+                                    "CustomMessage": {
+                                        "type": "string",
+                                        "description": "以上任一内置规则不满足时的统一自定义提示文字"
+                                    }
+                                },
+                                "additionalProperties": false
+                            },
+
+                            "CustomRules": {
+                                "type": "array",
+                                "description": "自定义校验规则列表，支持远程接口和前端表达式两种方式",
+                                "items": {
+                                    "type": "object",
+                                    "required": [ "Type", "Message" ],
+                                    "properties": {
+                                        "Type": {
+                                            "type": "string",
+                                            "enum": [ "Url", "Expression" ],
+                                            "description": "校验方式：Url=调用后端接口校验；Expression=前端表达式校验"
+                                        },
+                                        "Url": {
+                                            "type": "string",
+                                            "description": "Type=Url 时，POST 当前字段值及所在行数据到该接口，接口返回 { valid: boolean, message?: string }"
+                                        },
+                                        "Expression": {
+                                            "type": "string",
+                                            "description": "Type=Expression 时的 JS 表达式，可访问 value（当前值）和 row（当前行数据），返回 true 表示通过"
+                                        },
+                                        "Trigger": {
+                                            "type": "string",
+                                            "enum": [ "onChange", "onBlur", "onSubmit" ],
+                                            "default": "onSubmit",
+                                            "description": "校验触发时机"
+                                        },
+                                        "Message": {
+                                            "type": "string",
+                                            "description": "Expression 校验失败或 Url 接口未返回 message 时的默认提示文字"
+                                        }
+                                    },
+                                    "if": { "properties": { "Type": { "const": "Url" } } },
+                                    "then": { "required": [ "Url" ] },
+                                    "else": { "required": [ "Expression" ] }
+                                }
+                            },
+
+                            "VisibleWhen": {
+                                "$ref": "#/definitions/ConditionRule",
+                                "description": "字段显示条件，满足条件时才渲染该列"
+                            },
+
+                            "DataSource": {
+                                "type": "object",
+                                "description": "Select / MultiSelect / TreeSelect 的数据源配置（Url 和 Options 二选一）",
+                                "required": [ "LabelField", "ValueField" ],
+                                "properties": {
+                                    "Url": {
+                                        "type": "string",
+                                        "description": "动态数据源接口地址（与 Options 二选一）"
+                                    },
+                                    "Options": {
+                                        "type": "array",
+                                        "description": "静态选项列表（与 Url 二选一），适用于固定枚举",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [ "Label", "Value" ],
+                                            "properties": {
+                                                "Label": { "type": "string" },
+                                                "Value": {},
+                                                "Disabled": {
+                                                    "type": "boolean",
+                                                    "default": false
+                                                },
+                                                "Children": {
+                                                    "type": "array",
+                                                    "description": "TreeSelect 的子节点（递归结构）",
+                                                    "items": { "$ref": "#/definitions/TreeOptionNode" }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "LabelField": {
+                                        "type": "string",
+                                        "description": "选项显示文本对应的字段名"
+                                    },
+                                    "ValueField": {
+                                        "type": "string",
+                                        "description": "选项选中值对应的字段名"
+                                    },
+                                    "DependsOn": {
+                                        "type": "array",
+                                        "description": "级联依赖配置，当依赖字段值变化时重新请求 Url",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [ "Field", "ParamName" ],
+                                            "properties": {
+                                                "Field": {
+                                                    "type": "string",
+                                                    "description": "依赖的同行字段名（DbField）"
+                                                },
+                                                "ParamName": {
+                                                    "type": "string",
+                                                    "description": "该依赖值传入 Url 请求时的参数名"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "ValueMapping": {
+                                        "type": "object",
+                                        "description": "选中后需要同步映射到当前行其他字段的配置，key=目标 DbField，value=数据源响应中的字段名",
+                                        "additionalProperties": { "type": "string" }
+                                    }
+                                },
+                                "oneOf": [
+                                    { "required": [ "Url" ] },
+                                    { "required": [ "Options" ] }
+                                ]
+                            }
+                        },
+
+                        "if": {
+                            "properties": { "UiType": { "enum": [ "Select", "MultiSelect", "TreeSelect" ] } }
+                        },
+                        "then": {
+                            "required": [ "DataSource" ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "additionalProperties": false,
+
+    "definitions": {
+        "ConditionRule": {
+            "type": "object",
+            "description": "通用条件规则，用于 VisibleWhen / RowActions.VisibleWhen 等场景",
+            "required": [ "Field", "Operator", "Value" ],
+            "properties": {
+                "Field": {
+                    "type": "string",
+                    "description": "条件字段名（DbField）"
+                },
+                "Operator": {
+                    "type": "string",
+                    "enum": [ "eq", "neq", "in", "notIn", "gt", "gte", "lt", "lte", "contains" ],
+                    "description": "比较运算符"
+                },
+                "Value": {
+                    "description": "比较的目标值，in/notIn 时可为数组"
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "TreeOptionNode": {
+            "type": "object",
+            "required": [ "Label", "Value" ],
+            "properties": {
+                "Label": { "type": "string" },
+                "Value": {},
+                "Disabled": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "Children": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/TreeOptionNode" }
+                }
+            }
+        }
+    }
+}
