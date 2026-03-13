@@ -222,31 +222,67 @@ namespace PMCSystem_Backend.Services.Implementations
             // 2. 提取标准字段值
             var (jsonData, geometricIndustryStandardCl, componentTypeId, materialsCategoryCl) = ExtractStandardValues(data);
 
-            // 4. 执行插入操作
+            // 3. 检查数据是否存在
             try
             {
                 return await ExecuteInTransactionAsync(async (conn, transaction) =>
                 {
-                    string sql = @"
-                        INSERT INTO S3D_Rule_PipingCompStandard 
-                        (GeometricIndustryStandard_CL, ComponentTypeID, MaterialsCategory_CL, JsonData, CreatedDate, ModifiedDate, Status)
-                        VALUES (@GeometricIndustryStandard_CL, @ComponentTypeID, @MaterialsCategory_CL, @JsonData, GETDATE(), GETDATE(), 1);
-                        SELECT CAST(SCOPE_IDENTITY() AS INT);
+                    // 先查询是否存在相同的记录，处理 NULL 值的情况
+                    string checkSql = @"
+                        SELECT ID FROM S3D_Rule_PipingCompStandard 
+                        WHERE ComponentTypeID = @ComponentTypeID 
+                        AND GeometricIndustryStandard_CL = @GeometricIndustryStandard_CL 
+                        AND (MaterialsCategory_CL = @MaterialsCategory_CL OR (MaterialsCategory_CL IS NULL AND @MaterialsCategory_CL IS NULL))
                     ";
 
-                    return await conn.ExecuteScalarAsync<int>(sql, new
+                    var existingId = await conn.QueryFirstOrDefaultAsync<int?>(checkSql, new
                     {
-                        GeometricIndustryStandard_CL = geometricIndustryStandardCl,
                         ComponentTypeID = componentTypeId,
-                        MaterialsCategory_CL = materialsCategoryCl,
-                        JsonData = jsonData
+                        GeometricIndustryStandard_CL = geometricIndustryStandardCl,
+                        MaterialsCategory_CL = materialsCategoryCl
                     }, transaction);
-                }, "新增管道组件标准记录");
+
+                    if (existingId.HasValue)
+                    {
+                        // 记录存在，更新 status 为 1
+                        string updateSql = @"
+                            UPDATE S3D_Rule_PipingCompStandard 
+                            SET Status = 1, 
+                                JsonData = @JsonData, 
+                                ModifiedDate = GETDATE()
+                            WHERE ID = @Id
+                        ";
+                        await conn.ExecuteAsync(updateSql, new
+                        {
+                            Id = existingId.Value,
+                            JsonData = jsonData
+                        }, transaction);
+                        return existingId.Value;
+                    }
+                    else
+                    {
+                        // 记录不存在，执行插入操作
+                        string insertSql = @"
+                            INSERT INTO S3D_Rule_PipingCompStandard 
+                            (GeometricIndustryStandard_CL, ComponentTypeID, MaterialsCategory_CL, JsonData, CreatedDate, ModifiedDate, Status)
+                            VALUES (@GeometricIndustryStandard_CL, @ComponentTypeID, @MaterialsCategory_CL, @JsonData, GETDATE(), GETDATE(), 1);
+                            SELECT CAST(SCOPE_IDENTITY() AS INT);
+                        ";
+
+                        return await conn.ExecuteScalarAsync<int>(insertSql, new
+                        {
+                            GeometricIndustryStandard_CL = geometricIndustryStandardCl,
+                            ComponentTypeID = componentTypeId,
+                            MaterialsCategory_CL = materialsCategoryCl,
+                            JsonData = jsonData
+                        }, transaction);
+                    }
+                }, "新增或更新管道组件标准记录");
             }
             catch (Exception ex)
             {
                 // 记录日志，包含原始数据，方便后续回溯和手动修复
-                _logger?.LogError(ex, "新增管道组件标准记录时数据库操作失败，类型: {Type}, 数据: {Data}", type, data);
+                _logger?.LogError(ex, "新增或更新管道组件标准记录时数据库操作失败，类型: {Type}, 数据: {Data}", type, data);
                 throw new Exception($"数据库操作失败: {ex.Message}");
             }
         }
