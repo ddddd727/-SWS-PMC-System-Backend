@@ -45,6 +45,9 @@ namespace PMCSystem_Backend.Services.Implementations
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
 
+        // 静态锁对象，用于进程内线程同步
+        private static readonly SemaphoreSlim _configFileSemaphore = new(1, 1);
+
         // 常量定义
         private const string PART_PREFIX = "part-";
         private const string CONNECT_TYPE_FLANGE = "法兰";
@@ -672,88 +675,139 @@ namespace PMCSystem_Backend.Services.Implementations
                     throw new FileNotFoundException($"配置文件不存在: {configPath}");
                 }
 
-                string jsonContent = await File.ReadAllTextAsync(configPath);
-
-                // 使用缓存的 JsonSerializerOptions 实例进行反序列化，避免重复创建
-                var config = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(jsonContent, _jsonSerializerOptions);
-
-                if (config is not null && config.TryGetValue(type, out var componentConfig))
+                // 使用文件锁和重试机制处理并发写入
+                await ExecuteWithFileLockAsync(configPath, async () =>
                 {
-                    if (componentConfig.TryGetValue("Columns", out var columnsObj))
+                    string jsonContent = await File.ReadAllTextAsync(configPath);
+
+                    // 使用缓存的 JsonSerializerOptions 实例进行反序列化，避免重复创建
+                    var config = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(jsonContent, _jsonSerializerOptions);
+
+                    if (config is not null && config.TryGetValue(type, out var componentConfig))
                     {
-                        // 处理不同类型的 columnsObj
-                        List<Dictionary<string, object>> existingColumns;
+                        if (componentConfig.TryGetValue("Columns", out var columnsObj))
+                        {
+                            // 处理不同类型的 columnsObj
+                            List<Dictionary<string, object>> existingColumns;
 
-                        if (columnsObj is JsonElement jsonElement)
-                        {
-                            // 处理 JsonElement 类型
-                            existingColumns = jsonElement.Deserialize<List<Dictionary<string, object>>>() ?? [];
-                        }
-                        else if (columnsObj is List<object> listObj)
-                        {
-                            // 处理 List<object> 类型
-                            existingColumns = [.. listObj.Select(c => c as Dictionary<string, object>).Where(c => c != null).Select(c => c!)];
-                        }
-                        else if (columnsObj is List<Dictionary<string, object>> dictList)
-                        {
-                            // 处理 List<Dictionary<string, object>> 类型
-                            existingColumns = dictList;
-                        }
-                        else
-                        {
-                            existingColumns = [];
-                        }
-
-                        bool needUpdate = false;
-
-                        // 遍历新列，添加 IsNew 为 true 的列
-                        foreach (var column in columns)
-                        {
-                            if (column.IsNew == true && !string.IsNullOrEmpty(column.DbField))
+                            if (columnsObj is JsonElement jsonElement)
                             {
-                                // 检查是否已存在相同的 DbField
-                                bool exists = existingColumns.Any(c =>
-                                    c.ContainsKey("DbField") && c["DbField"]?.ToString() == column.DbField
-                                );
+                                // 处理 JsonElement 类型
+                                existingColumns = jsonElement.Deserialize<List<Dictionary<string, object>>>() ?? [];
+                            }
+                            else if (columnsObj is List<object> listObj)
+                            {
+                                // 处理 List<object> 类型
+                                existingColumns = [.. listObj.Select(c => c as Dictionary<string, object>).Where(c => c != null).Select(c => c!)];
+                            }
+                            else if (columnsObj is List<Dictionary<string, object>> dictList)
+                            {
+                                // 处理 List<Dictionary<string, object>> 类型
+                                existingColumns = dictList;
+                            }
+                            else
+                            {
+                                existingColumns = [];
+                            }
 
-                                if (!exists)
+                            bool needUpdate = false;
+
+                            // 遍历新列，添加 IsNew 为 true 的列
+                            foreach (var column in columns)
+                            {
+                                if (column.IsNew == true && !string.IsNullOrEmpty(column.DbField))
                                 {
-                                    // 创建新列配置
-                                    var newColumn = new Dictionary<string, object>
-                                    {
-                                        ["DbField"] = column.DbField,
-                                        ["Title"] = column.Title ?? string.Empty,
-                                        ["UiType"] = column.UiType ?? string.Empty,
-                                        ["IsHidden"] = column.IsHidden ?? false,
-                                        ["IsRequired"] = column.IsRequired ?? false,
-                                        ["IsReadOnly"] = column.IsReadOnly ?? false
-                                    };
+                                    // 检查是否已存在相同的 DbField
+                                    bool exists = existingColumns.Any(c =>
+                                        c.ContainsKey("DbField") && c["DbField"]?.ToString() == column.DbField
+                                    );
 
-                                    existingColumns.Add(newColumn);
-                                    needUpdate = true;
+                                    if (!exists)
+                                    {
+                                        // 创建新列配置
+                                        var newColumn = new Dictionary<string, object>
+                                        {
+                                            ["DbField"] = column.DbField,
+                                            ["Title"] = column.Title ?? string.Empty,
+                                            ["UiType"] = column.UiType ?? string.Empty,
+                                            ["IsHidden"] = column.IsHidden ?? false,
+                                            ["IsRequired"] = column.IsRequired ?? false,
+                                            ["IsReadOnly"] = column.IsReadOnly ?? false
+                                        };
+
+                                        existingColumns.Add(newColumn);
+                                        needUpdate = true;
+                                    }
                                 }
                             }
-                        }
 
-                        // 只有当需要更新时才保存配置文件
-                        if (needUpdate)
-                        {
-                            // 保存更新后的配置
-                            componentConfig["Columns"] = existingColumns;
-                            config[type] = componentConfig;
+                            // 只有当需要更新时才保存配置文件
+                            if (needUpdate)
+                            {
+                                // 保存更新后的配置
+                                componentConfig["Columns"] = existingColumns;
+                                config[type] = componentConfig;
 
-                            string updatedJson = JsonSerializer.Serialize(config, _jsonSerializerOptions);
+                                string updatedJson = JsonSerializer.Serialize(config, _jsonSerializerOptions);
 
-                            await File.WriteAllTextAsync(configPath, updatedJson);
+                                await File.WriteAllTextAsync(configPath, updatedJson);
+                            }
                         }
                     }
-                }
+                });
             }
             catch (Exception ex)
             {
                 // 记录日志，包含类型和列信息，方便后续回溯和手动修复
                 _logger?.LogError(ex, "更新配置文件失败，类型: {Type}, 列信息: {Columns}", type, columns);
                 throw new Exception($"更新配置文件失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 使用信号量和重试机制执行文件操作，处理并发访问
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="action">要执行的操作</param>
+        /// <returns>任务</returns>
+        private async Task ExecuteWithFileLockAsync(string filePath, Func<Task> action)
+        {
+            // 等待信号量（进程内线程同步）
+            await _configFileSemaphore.WaitAsync();
+
+            try
+            {
+                const int maxRetries = 10;
+                const int delayMilliseconds = 100;
+
+                for (int i = 0; i < maxRetries; i++)
+                {
+                    try
+                    {
+                        // 执行操作
+                        await action();
+                        return;
+                    }
+                    catch (IOException ex)
+                    {
+                        // 文件被锁定，等待后重试
+                        if (i < maxRetries - 1)
+                        {
+                            _logger?.LogWarning("文件被占用，等待 {Delay}ms 后重试 ({Attempt}/{MaxRetries}): {FilePath}",
+                                delayMilliseconds, i + 1, maxRetries, filePath);
+                            await Task.Delay(delayMilliseconds * (i + 1)); // 递增延迟
+                        }
+                        else
+                        {
+                            throw new IOException($"无法访问文件，已达到最大重试次数: {filePath}", ex);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // 释放信号量
+                _configFileSemaphore.Release();
             }
         }
 

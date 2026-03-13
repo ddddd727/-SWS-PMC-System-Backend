@@ -1,16 +1,466 @@
 {
-    "part-flange": {
-        "DisplayName": "Flange (法兰)",
-        "ViewName": "View_Flange_Main",
-        "PhysicalTableName": "S3D_Rule_Flange",
-        "HandlerType": "Flange",
-        "Columns": []
-    },
-    "part-bolts": {
-        "DisplayName": "Bolts (螺栓)",
-        "ViewName": "View_Flange_Bolts",
-        "PhysicalTableName": "S3D_Rule_Bolts",
-        "HandlerType": "Flange",
-        "Columns": []
-    }
+  "part-flange": {
+    "DisplayName": "Flange (法兰)",
+    "ViewName": "View_Flange_Main",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      }
+    ]
+  },
+  "part-blindFlange": {
+    "DisplayName": "Blind-flange (盲板)",
+    "ViewName": "View_BlindFlange_Main",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      },
+      {
+        "DbField": "custom_1773364218079",
+        "Title": "管材标准",
+        "UiType": "Input",
+        "IsHidden": false,
+        "IsRequired": false,
+        "IsReadOnly": false
+      }
+    ]
+  },
+  "part-gasket": {
+    "DisplayName": "Gasket (垫片)",
+    "ViewName": "View_Gasket_Main",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      },
+      {
+        "DbField": "custom_1773364237591",
+        "Title": "管材标准",
+        "UiType": "Input",
+        "IsHidden": false,
+        "IsRequired": false,
+        "IsReadOnly": false
+      }
+    ]
+  },
+  "part-bolt": {
+    "DisplayName": "Bolt (螺栓)",
+    "ViewName": "View_Flange_Bolts",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      },
+      {
+        "DbField": "custom_1773364363615",
+        "Title": "管材标准",
+        "UiType": "Input",
+        "IsHidden": false,
+        "IsRequired": false,
+        "IsReadOnly": false
+      }
+    ]
+  },
+  "part-nut": {
+    "DisplayName": "Nut (螺母)",
+    "ViewName": "View_Nut_Main",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      },
+      {
+        "DbField": "custom_1773364499575",
+        "Title": "管材标准",
+        "UiType": "Input",
+        "IsHidden": false,
+        "IsRequired": false,
+        "IsReadOnly": false
+      }
+    ]
+  },
+  "part-washer": {
+    "DisplayName": "Washer (垫圈)",
+    "ViewName": "View_Washer_Main",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      },
+      {
+        "DbField": "custom_1773364518198",
+        "Title": "管材标准",
+        "UiType": "Input",
+        "IsHidden": false,
+        "IsRequired": false,
+        "IsReadOnly": false
+      }
+    ]
+  },
+  "part-accessories": {
+    "DisplayName": "Accessories (功能附件)",
+    "ViewName": "View_Accessories_Main",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      },
+      {
+        "DbField": "custom_1773364533262",
+        "Title": "管材标准",
+        "UiType": "Input",
+        "IsHidden": false,
+        "IsRequired": false,
+        "IsReadOnly": false
+      }
+    ]
+  },
+  "part-joints": {
+    "DisplayName": "Joints (接头)",
+    "ViewName": "View_Joints_Main",
+    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+    "HandlerType": "Flange",
+    "Columns": [
+      {
+        "DbField": "id",
+        "Title": "ID",
+        "IsPrimaryKey": true,
+        "IsHidden": false,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "geometricIndustryStandardLong",
+        "Title": "标准",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/piping-standard",
+          "LabelField": "geometricIndustryStandardLong",
+          "ValueField": "geometricIndustryStandardCode"
+        },
+        "IsRequired": true
+      },
+      {
+        "DbField": "componentTypeName",
+        "Title": "类型",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "componentTypeDescription",
+        "Title": "中文描述",
+        "UiType": "Input",
+        "IsRequired": true,
+        "IsReadOnly": true
+      },
+      {
+        "DbField": "materialsCategoryLong",
+        "Title": "主材料",
+        "UiType": "Select",
+        "DataSource": {
+          "Url": "/api/dictpiping/options/mat-category",
+          "LabelField": "materialsCategoryLong",
+          "ValueField": "materialsCategoryCode"
+        },
+        "IsRequired": false
+      },
+      {
+        "DbField": "custom_1773364548742",
+        "Title": "管材标准",
+        "UiType": "Input",
+        "IsHidden": false,
+        "IsRequired": false,
+        "IsReadOnly": false
+      }
+    ]
+  }
 }
