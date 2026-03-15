@@ -114,8 +114,8 @@ namespace PMCSystem_Backend.Services.Implementations
 
             var componentTypeName = type.Replace(PART_PREFIX, "");
             var componentTypeResult = await conn.QueryFirstOrDefaultAsync<dynamic>(
-                "SELECT ID, ConnectType FROM S3D_Dict_PipingComponentType WHERE ComponentTypeName = @ComponentTypeName AND Status = @Status",
-                new { ComponentTypeName = componentTypeName, Status = STATUS_ACTIVE });
+                "SELECT ID, ConnectType FROM S3D_Dict_PipingComponentType WHERE ComponentTypeName = @ComponentTypeName",
+                new { ComponentTypeName = componentTypeName });
 
             if (componentTypeResult is not null)
             {
@@ -391,11 +391,11 @@ namespace PMCSystem_Backend.Services.Implementations
             if (ids.Any(id => id <= 0))
                 throw new ArgumentException("ID 必须为正整数", nameof(ids));
 
-            // 2. 批量更新 status 为 0
+            // 2. 批量删除记录
             return await ExecuteInTransactionAsync(async (conn, transaction) =>
             {
-                string sql = "UPDATE S3D_Rule_PipingCompStandard SET Status = @Status, ModifiedDate = GETDATE() WHERE ID IN @Ids";
-                return await conn.ExecuteAsync(sql, new { Status = STATUS_INACTIVE, Ids = ids }, transaction);
+                string sql = "DELETE FROM S3D_Rule_PipingCompStandard WHERE ID IN @Ids";
+                return await conn.ExecuteAsync(sql, new { Ids = ids }, transaction);
             }, "批量删除管道组件标准记录");
         }
 

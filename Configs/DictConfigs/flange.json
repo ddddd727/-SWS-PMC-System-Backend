@@ -47,6 +47,11 @@
           "ValueField": "materialsCategoryCode"
         },
         "IsRequired": false
+      },
+      {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
       }
     ]
   },
@@ -98,6 +103,11 @@
           "ValueField": "materialsCategoryCode"
         },
         "IsRequired": false
+      },
+      {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
       },
       {
         "DbField": "custom_1773364218079",
@@ -159,6 +169,11 @@
         "IsRequired": false
       },
       {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
+      },
+      {
         "DbField": "custom_1773364237591",
         "Title": "管材标准",
         "UiType": "Input",
@@ -216,6 +231,11 @@
           "ValueField": "materialsCategoryCode"
         },
         "IsRequired": false
+      },
+      {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
       },
       {
         "DbField": "custom_1773364363615",
@@ -277,6 +297,11 @@
         "IsRequired": false
       },
       {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
+      },
+      {
         "DbField": "custom_1773364499575",
         "Title": "管材标准",
         "UiType": "Input",
@@ -334,6 +359,11 @@
           "ValueField": "materialsCategoryCode"
         },
         "IsRequired": false
+      },
+      {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
       },
       {
         "DbField": "custom_1773364518198",
@@ -395,6 +425,11 @@
         "IsRequired": false
       },
       {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
+      },
+      {
         "DbField": "custom_1773364533262",
         "Title": "管材标准",
         "UiType": "Input",
@@ -452,6 +487,11 @@
           "ValueField": "materialsCategoryCode"
         },
         "IsRequired": false
+      },
+      {
+        "DbField": "Status",
+        "Title": "状态",
+        "UiType": "Switch"
       },
       {
         "DbField": "custom_1773364548742",
