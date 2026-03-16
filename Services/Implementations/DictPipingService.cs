@@ -319,7 +319,20 @@ namespace PMCSystem_Backend.Services.Implementations
             // 2. 提取标准字段值（更新时不包含 componentTypeId）
             var (jsonData, geometricIndustryStandardCl, _, materialsCategoryCl) = ExtractStandardValues(data);
 
-            // 5. 执行更新操作
+            // 3. 从 data 中获取 status 值（可选，默认为 false）
+            int status = 0; // 默认值
+            if (data.TryGetValue("status", out var statusObj) && statusObj is not null)
+            {
+                status = statusObj switch
+                {
+                    bool boolValue => boolValue ? 1 : 0,
+                    JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.True => 1,
+                    JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.False => 0,
+                    _ => 0 // 格式不正确时默认为 false
+                };
+            }
+
+            // 4. 执行更新操作
             try
             {
                 return await ExecuteInTransactionAsync(async (conn, transaction) =>
@@ -330,6 +343,7 @@ namespace PMCSystem_Backend.Services.Implementations
                             GeometricIndustryStandard_CL = @GeometricIndustryStandard_CL,
                             MaterialsCategory_CL = @MaterialsCategory_CL,
                             JsonData = @JsonData,
+                            Status = @Status,
                             ModifiedDate = GETDATE()
                         WHERE ID = @Id
                     ";
@@ -339,6 +353,7 @@ namespace PMCSystem_Backend.Services.Implementations
                         GeometricIndustryStandard_CL = geometricIndustryStandardCl,
                         MaterialsCategory_CL = materialsCategoryCl,
                         JsonData = jsonData,
+                        Status = status,
                         Id = id
                     }, transaction);
                 }, "更新管道组件标准记录");
