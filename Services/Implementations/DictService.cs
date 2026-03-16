@@ -306,7 +306,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>单列唯一校验</summary>
         private async Task<string?> ValidateUniqueAsync(string tableName, string field, object? value, Dictionary<string, object>? row)
         {
-            using var conn = _context.Database.GetDbConnection();
+            var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
             var sql = $"SELECT COUNT(1) FROM [{tableName}] WHERE [{field}] = @Value";
@@ -330,7 +330,7 @@ namespace PMCSystem_Backend.Services.Implementations
             if (config.UniqueConstraints == null || string.IsNullOrEmpty(config.PhysicalTableName))
                 return null;
 
-            using var conn = _context.Database.GetDbConnection();
+            var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
             foreach (var group in config.UniqueConstraints)
@@ -353,8 +353,10 @@ namespace PMCSystem_Backend.Services.Implementations
                 var count = await conn.ExecuteScalarAsync<int>(sql, parameters);
                 if (count > 0)
                 {
-                    var fieldNames = string.Join(" + ", group);
-                    return $"字段组合 [{fieldNames}] 已存在相同记录";
+                    var fieldTitles = group.Select(f =>
+                        config.Columns.FirstOrDefault(c => c.DbField == f)?.Title ?? f
+                    );
+                    return $"【{string.Join(" + ", fieldTitles)}】组合已存在相同记录，请检查后重试";
                 }
             }
 
@@ -400,7 +402,13 @@ namespace PMCSystem_Backend.Services.Implementations
                     Field = d.Field,
                     ParamName = d.ParamName
                 }).ToList(),
-                ValueMapping = ds.ValueMapping
+                ValueMapping = ds.ValueMapping,
+                FilterUsed = ds.FilterUsed,
+                LoadRelation = ds.LoadRelation == null ? null : new DataSourceRelationDto
+                {
+                    Direction = ds.LoadRelation.Direction,
+                    MappedField = ds.LoadRelation.MappedField
+                }
             };
         }
 

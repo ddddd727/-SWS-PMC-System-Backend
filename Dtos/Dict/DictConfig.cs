@@ -147,8 +147,26 @@ namespace PMCSystem_Backend.Dtos.Dict
         /// <summary>级联依赖：依赖字段变化时重新请求 Url</summary>
         public List<DataSourceDependency>? DependsOn { get; set; }
 
-        /// <summary>选中后映射到当前行其他字段，key=目标 DbField，value=接口响应字段名</summary>
+        /// <summary>选中后回填到行其他字段的映射，key=目标DbField，value=option字段名</summary>
         public Dictionary<string, string>? ValueMapping { get; set; }
+
+        /// <summary>选中后需要自动回填到当前行的字段列表（字段名需与视图返回字段一致）</summary>
+        public List<string>? AutoFillFields { get; set; }
+
+        /// <summary>父子级关联加载配置（可选），配置后查询时自动带出父级或子级信息</summary>
+        public DataSourceRelationConfig? LoadRelation { get; set; }
+
+        /// <summary>是否过滤已被其他行使用的选项，默认 true；设为 false 时始终显示全量选项</summary>
+        public bool FilterUsed { get; set; } = true;
+    }
+
+    public class DataSourceRelationConfig
+    {
+        /// <summary>加载方向：Parent=带出父级信息 / Children=带出子级列表</summary>
+        public string Direction { get; set; } = "Parent";
+
+        /// <summary>加载出来挂到每条 option 上的字段名，ValueMapping 用这个名字取值</summary>
+        public string MappedField { get; set; } = string.Empty;
     }
 
     public class DictStaticOption

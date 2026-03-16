@@ -386,6 +386,23 @@
                                         "type": "object",
                                         "description": "选中后需要同步映射到当前行其他字段的配置，key=目标 DbField，value=数据源响应中的字段名",
                                         "additionalProperties": { "type": "string" }
+                                    },
+                                    "LoadRelation": {
+                                        "type": "object",
+                                        "description": "父子级联动配置（可选）。配置后查询选项时后端自动通过 S3D_Common_CodeListHierarchy 找到父表，将父级信息挂到每条 option 上，供 ValueMapping 回填使用",
+                                        "required": [ "Direction", "MappedField" ],
+                                        "properties": {
+                                            "Direction": {
+                                                "type": "string",
+                                                "enum": [ "Parent", "Children" ],
+                                                "description": "Parent=带出父级信息并挂到每条 option / Children=带出子级列表"
+                                            },
+                                            "MappedField": {
+                                                "type": "string",
+                                                "description": "挂到每条 option 上的字段名，ValueMapping 的 value 用这个名字取值。例如配置 'ParentLong'，则每条 option 会有 { ..., ParentLong: '碳钢' }"
+                                            }
+                                        },
+                                        "additionalProperties": false
                                     }
                                 },
                                 "oneOf": [

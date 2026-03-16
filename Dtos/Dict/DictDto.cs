@@ -95,6 +95,17 @@ namespace PMCSystem_Backend.Dtos.Dict
         public List<DictStaticOptionDto>? Options { get; set; }
         public List<DataSourceDependencyDto>? DependsOn { get; set; }
         public Dictionary<string, string>? ValueMapping { get; set; }
+        public DataSourceRelationDto? LoadRelation { get; set; }
+        public bool FilterUsed { get; set; } = true;
+    }
+
+    public class DataSourceRelationDto
+    {
+        /// <summary>Parent / Children</summary>
+        public string Direction { get; set; } = "Parent";
+
+        /// <summary>挂到 option 上的字段名，前端 ValueMapping 用这个名字取值</summary>
+        public string MappedField { get; set; } = string.Empty;
     }
 
     public class DictStaticOptionDto

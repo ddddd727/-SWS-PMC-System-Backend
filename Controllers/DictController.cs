@@ -35,10 +35,16 @@ namespace PMCSystem_Backend.Controllers
             try
             {
                 var config = _configManager.GetConfig(type);
+
                 if (string.IsNullOrEmpty(config.CodeListTableName))
                     return NotFound(new { message = $"类型 '{type}' 未配置 CodeListTableName" });
 
-                var result = await _codeListService.GetOptionsAsync(config.CodeListTableName);
+                // 从该 type 的列配置里找到 LoadRelation（有配就带父子级，没配走原逻辑）
+                var relation = config.Columns
+                    .FirstOrDefault(c => c.DataSource?.LoadRelation != null)
+                    ?.DataSource?.LoadRelation;
+
+                var result = await _codeListService.GetOptionsAsync(config.CodeListTableName, relation);
                 return Ok(result);
             }
             catch (Exception ex)
