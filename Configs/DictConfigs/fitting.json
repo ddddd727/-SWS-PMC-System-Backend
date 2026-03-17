@@ -13,15 +13,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -38,18 +47,26 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
             }
@@ -69,15 +86,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -94,28 +120,28 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": false
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
-            },
-            {
-                "DbField": "custom_1773360569619",
-                "Title": "管材标准",
-                "UiType": "Input",
-                "IsHidden": false,
-                "IsRequired": false,
-                "IsReadOnly": false
             }
         ]
     },
@@ -133,15 +159,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -158,28 +193,28 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": false
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
-            },
-            {
-                "DbField": "custom_1773360463452",
-                "Title": "管材标准",
-                "UiType": "Input",
-                "IsHidden": false,
-                "IsRequired": false,
-                "IsReadOnly": false
             }
         ]
     },
@@ -197,15 +232,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -222,28 +266,28 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": false
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
-            },
-            {
-                "DbField": "custom_1773361047554",
-                "Title": "管材标准",
-                "UiType": "Input",
-                "IsHidden": false,
-                "IsRequired": false,
-                "IsReadOnly": false
             }
         ]
     },
@@ -261,15 +305,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -286,18 +339,26 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": false
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
             }
@@ -317,15 +378,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -342,28 +412,28 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": false
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
-            },
-            {
-                "DbField": "custom_1773362159470",
-                "Title": "管材标准",
-                "UiType": "Input",
-                "IsHidden": false,
-                "IsRequired": false,
-                "IsReadOnly": false
             }
         ]
     },
@@ -381,15 +451,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -406,28 +485,28 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": false
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
-            },
-            {
-                "DbField": "custom_1773362208102",
-                "Title": "管材标准",
-                "UiType": "Input",
-                "IsHidden": false,
-                "IsRequired": false,
-                "IsReadOnly": false
             }
         ]
     },
@@ -445,15 +524,24 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "geometricIndustryStandardCL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
                 "DbField": "geometricIndustryStandardLong",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/piping-standard",
-                    "LabelField": "geometricIndustryStandardLong",
-                    "ValueField": "geometricIndustryStandardCode"
-                },
-                "IsRequired": true
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
+                    "FilterUsed": false
+                }
             },
             {
                 "DbField": "componentTypeName",
@@ -470,28 +558,28 @@
                 "IsReadOnly": true
             },
             {
+                "DbField": "materialsCategoryCL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
                 "DbField": "materialsCategoryLong",
                 "Title": "主材料",
                 "UiType": "Select",
+                "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dictpiping/options/mat-category",
-                    "LabelField": "materialsCategoryLong",
-                    "ValueField": "materialsCategoryCode"
-                },
-                "IsRequired": false
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
+                    "FilterUsed": false
+                }
             },
             {
-                "DbField": "Status",
+                "DbField": "status",
                 "Title": "状态",
                 "UiType": "Switch"
-            },
-            {
-                "DbField": "custom_1773362525581",
-                "Title": "管材标准",
-                "UiType": "Input",
-                "IsHidden": false,
-                "IsRequired": false,
-                "IsReadOnly": false
             }
         ]
     }

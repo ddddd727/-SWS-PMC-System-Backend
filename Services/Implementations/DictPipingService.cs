@@ -685,13 +685,13 @@ namespace PMCSystem_Backend.Services.Implementations
                 : null;
 
             // 转换 JsonElement 类型为 Dapper 可识别的类型
-            var geometricIndustryStandardCl = data.TryGetValue("geometricIndustryStandardLong", out var standardValue) && !IsNullOrEmpty(standardValue)
+            var geometricIndustryStandardCl = data.TryGetValue("geometricIndustryStandardCL", out var standardValue) && !IsNullOrEmpty(standardValue)
                 ? ConvertJsonElement(standardValue)
                 : null;
             var componentTypeId = data.TryGetValue("componentTypeId", out var componentTypeIdValue) && !IsNullOrEmpty(componentTypeIdValue)
                 ? ConvertJsonElement(componentTypeIdValue)
                 : null;
-            var materialsCategoryCl = data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) && !IsNullOrEmpty(mainMaterialValue)
+            var materialsCategoryCl = data.TryGetValue("materialsCategoryCL", out var mainMaterialValue) && !IsNullOrEmpty(mainMaterialValue)
                 ? ConvertJsonElement(mainMaterialValue)
                 : null;
 
