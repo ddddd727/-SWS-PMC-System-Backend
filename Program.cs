@@ -116,7 +116,7 @@ try
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowVueFrontend",
-        policy => policy.WithOrigins("http://10.8.98.105").AllowAnyHeader().AllowAnyMethod());
+        policy => policy.WithOrigins("http://10.8.98.15").AllowAnyHeader().AllowAnyMethod());
     });
 
     //  DbContext
