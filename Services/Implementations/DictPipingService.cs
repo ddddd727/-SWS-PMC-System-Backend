@@ -94,14 +94,17 @@ namespace PMCSystem_Backend.Services.Implementations
                             IsPrimaryKey = c.IsPrimaryKey,
                             IsReadOnly = c.IsReadOnly,
 
-                            // 映射 Options：把配置里的选项传给前端
-                            Options = c.Options,
-
                             DataSource = c.DataSource is null ? null : new DictDataSourceDto
                             {
                                 Url = c.DataSource.Url,
                                 LabelField = c.DataSource.LabelField,
                                 ValueField = c.DataSource.ValueField,
+                                Options = c.DataSource.Options?.Select(o => new DictStaticOptionDto
+                                {
+                                    Label = o.Label,
+                                    Value = o.Value,
+                                    Disabled = o.Disabled
+                                }).ToList(),
                                 ValueMapping = c.DataSource.ValueMapping
                             }
                         })
