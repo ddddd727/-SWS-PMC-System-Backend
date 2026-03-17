@@ -182,27 +182,6 @@
         "DbField": "Status",
         "Title": "状态",
         "UiType": "Switch"
-      },
-      {
-        "DbField": "Ext_f8946746",
-        "Title": "1",
-        "UiType": "Input",
-        "IsRequired": false,
-        "IsHidden": false
-      },
-      {
-        "DbField": "Ext_b72255db",
-        "Title": "2",
-        "UiType": "Input",
-        "IsRequired": false,
-        "IsHidden": false
-      },
-      {
-        "DbField": "Ext_65e4a859",
-        "Title": "1",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsHidden": false
       }
     ]
   },
