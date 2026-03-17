@@ -93,15 +93,22 @@ namespace PMCSystem_Backend.Services.Implementations
                             Required = c.IsRequired,
                             IsPrimaryKey = c.IsPrimaryKey,
                             IsReadOnly = c.IsReadOnly,
-
-                            // 映射 Options：把配置里的选项传给前端
-                            Options = c.Options,
-
+                            
+                            // 注意：这里删除了 Options = c.Options，把它移到了 DataSource 内部处理
                             DataSource = c.DataSource is null ? null : new DictDataSourceDto
                             {
                                 Url = c.DataSource.Url,
                                 LabelField = c.DataSource.LabelField,
                                 ValueField = c.DataSource.ValueField,
+                                
+                                // 正确的 Options 映射方式：
+                                Options = c.DataSource.Options?.Select(o => new DictStaticOptionDto
+                                {
+                                    Label = o.Label,
+                                    Value = o.Value,
+                                    Disabled = o.Disabled
+                                }).ToList(),
+
                                 ValueMapping = c.DataSource.ValueMapping
                             }
                         })
@@ -678,13 +685,13 @@ namespace PMCSystem_Backend.Services.Implementations
                 : null;
 
             // 转换 JsonElement 类型为 Dapper 可识别的类型
-            var geometricIndustryStandardCl = data.TryGetValue("geometricIndustryStandardLong", out var standardValue) && !IsNullOrEmpty(standardValue)
+            var geometricIndustryStandardCl = data.TryGetValue("geometricIndustryStandardCL", out var standardValue) && !IsNullOrEmpty(standardValue)
                 ? ConvertJsonElement(standardValue)
                 : null;
             var componentTypeId = data.TryGetValue("componentTypeId", out var componentTypeIdValue) && !IsNullOrEmpty(componentTypeIdValue)
                 ? ConvertJsonElement(componentTypeIdValue)
                 : null;
-            var materialsCategoryCl = data.TryGetValue("materialsCategoryLong", out var mainMaterialValue) && !IsNullOrEmpty(mainMaterialValue)
+            var materialsCategoryCl = data.TryGetValue("materialsCategoryCL", out var mainMaterialValue) && !IsNullOrEmpty(mainMaterialValue)
                 ? ConvertJsonElement(mainMaterialValue)
                 : null;
 

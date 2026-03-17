@@ -16,8 +16,8 @@ namespace PMCSystem_Backend.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    public class DictPipingController(IDictPipingService dictPipingService, 
-                                    IS3dCommonCodeListValueService codeListService, 
+    public class DictPipingController(IDictPipingService dictPipingService,
+                                    IS3dCommonCodeListValueService codeListService,
                                     DictConfigManager dictConfigManager) : ControllerBase
     {
         private readonly IDictPipingService _dictPipingService = dictPipingService;
