@@ -21,6 +21,7 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
         {
             string tableName = config.PhysicalTableName;
             using var conn = _context.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
             var dbColumns = await GetTableSchemaAsync(conn, tableName);
             var dbColSet = new HashSet<string>(dbColumns, StringComparer.OrdinalIgnoreCase);
 
@@ -63,6 +64,7 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
         {
             string tableName = config.PhysicalTableName;
             using var conn = _context.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
             var dbColumns = await GetTableSchemaAsync(conn, tableName);
             var dbColSet = new HashSet<string>(dbColumns, StringComparer.OrdinalIgnoreCase);
 
@@ -110,7 +112,7 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
 
         private async Task<List<string>> GetTableSchemaAsync(IDbConnection conn, string tableName)
         {
-            var result = await conn.QueryAsync<string>("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TableName", new { TableName = tableName });
+            var result = await conn.QueryAsync<string>("SELECT c.COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS c JOIN INFORMATION_SCHEMA.TABLES t ON c.TABLE_NAME = t.TABLE_NAME AND c.TABLE_SCHEMA = t.TABLE_SCHEMA WHERE c.TABLE_NAME = @TableName AND t.TABLE_TYPE = 'BASE TABLE'", new { TableName = tableName });
             return result.ToList();
         }
     }

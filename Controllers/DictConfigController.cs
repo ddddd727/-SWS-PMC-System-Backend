@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PMCSystem_Backend.Services.Implementations;
+
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Encodings.Web;
 
 namespace PMCSystem_Backend.Controllers
 {
@@ -10,26 +12,25 @@ namespace PMCSystem_Backend.Controllers
     public class DictConfigController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;
-        // 文件锁，防止并发写入冲突
-        private static readonly object _fileLock = new object();
+        private readonly DictConfigManager _configManager;
+        private static readonly object _fileLock = new();
 
-        public DictConfigController(IWebHostEnvironment env)
+        public DictConfigController(IWebHostEnvironment env, DictConfigManager configManager)
         {
             _env = env;
+            _configManager = configManager;
         }
 
         // =================================================================
-        // 接口：新增自定义列 (前端调用此接口来加列)
+        // 新增自定义列
         // POST /api/dict-config/columns/{type}
         // =================================================================
         [HttpPost("columns/{type}")]
         public IActionResult AddColumn(string type, [FromBody] AddColumnDto input)
         {
-            // 1. 校验必填项
             if (string.IsNullOrWhiteSpace(input.Title))
-                return BadRequest(new { message = "列标题(Title)不能为空" });
+                return BadRequest(new { message = "列标题不能为空" });
 
-            // 默认为文本框
             if (string.IsNullOrWhiteSpace(input.UiType))
                 input.UiType = "Input";
 
@@ -37,84 +38,99 @@ namespace PMCSystem_Backend.Controllers
             {
                 lock (_fileLock)
                 {
-                    // 2. 读取 dicts.json 文件
-                    var filePath = Path.Combine(_env.ContentRootPath, "Configs", "dicts.json");
-                    if (!System.IO.File.Exists(filePath))
-                        return NotFound(new { message = "配置文件 dicts.json 不存在" });
+                    // 1. 在 Configs/DictConfigs/ 下找包含该 type 的文件
+                    var configDir = Path.Combine(_env.ContentRootPath, "Configs", "DictConfigs");
+                    if (!Directory.Exists(configDir))
+                        return NotFound(new { message = "配置目录 Configs/DictConfigs 不存在" });
 
-                    var jsonString = System.IO.File.ReadAllText(filePath);
+                    string? targetFile = null;
+                    JsonNode? rootNode = null;
 
-                    
-                    // 1. 配置 DocumentOptions：告诉解析器直接跳过注释 // 和 /* */
-                    var documentOptions = new JsonDocumentOptions
+                    var docOptions = new JsonDocumentOptions
                     {
                         CommentHandling = JsonCommentHandling.Skip,
-                        AllowTrailingCommas = true // 顺便允许对象末尾有多余的逗号，容错率更高
+                        AllowTrailingCommas = true
                     };
 
-                    // 2. 使用带有选项的 JsonNode 解析，方便动态操作
-                    var rootNode = JsonNode.Parse(jsonString, documentOptions: documentOptions);
-                    if (rootNode == null) return StatusCode(500, new { message = "配置文件解析失败" });
+                    foreach (var file in Directory.GetFiles(configDir, "*.json"))
+                    {
+                        var content = System.IO.File.ReadAllText(file);
+                        var node = JsonNode.Parse(content, documentOptions: docOptions);
+                        if (node?[type] != null)
+                        {
+                            targetFile = file;
+                            rootNode = node;
+                            break;
+                        }
+                    }
 
-                    // 3. 定位到对应业务的 Columns 数组
-                    // 路径：DictConfiguration -> [type] -> Columns
-                    var dictConfig = rootNode["DictConfiguration"];
-                    if (dictConfig == null || dictConfig[type] == null)
-                        return NotFound(new { message = $"未找到业务类型 '{type}' 的配置" });
+                    if (targetFile == null || rootNode == null)
+                        return NotFound(new { message = $"未在任何配置文件中找到类型 '{type}'" });
 
-                    var targetConfig = dictConfig[type];
+                    // 2. 定位 Columns 数组
+                    var targetConfig = rootNode[type]!;
                     var columnsNode = targetConfig["Columns"] as JsonArray;
-
-                    // 如果 Columns 数组不存在，创建一个新的
                     if (columnsNode == null)
                     {
                         columnsNode = new JsonArray();
                         targetConfig["Columns"] = columnsNode;
                     }
 
-                    // 4. 自动生成唯一的列代码 (DbField)
-                    // 使用 "Ext_" + 8位随机码，确保不和 ID/Status 冲突，且存入 JsonData
+                    // 3. 生成唯一 DbField（Ext_ 前缀，存入 JsonData）
                     string autoDbField;
                     do
                     {
-                        autoDbField = $"Ext_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+                        autoDbField = $"Ext_{Guid.NewGuid().ToString("N")[..8]}";
                     }
-                    while (columnsNode.Any(x => x["DbField"]?.GetValue<string>() == autoDbField));
+                    while (columnsNode.Any(x => x?["DbField"]?.GetValue<string>() == autoDbField));
 
-                    // 5. 构造新列的配置对象
-                    var newColNode = new JsonObject
+                    // 4. 构造新列对象
+                    var newCol = new JsonObject
                     {
-                        ["DbField"] = autoDbField,      // 存库用的 Key (自动生成)
-                        ["Title"] = input.Title,        // 表头标题
-                        ["UiType"] = input.UiType,      // 控件类型 (Input, Select, Switch)
+                        ["DbField"] = autoDbField,
+                        ["Title"] = input.Title,
+                        ["UiType"] = input.UiType,
                         ["IsRequired"] = input.IsRequired,
                         ["IsHidden"] = false
                     };
 
-                    // 6. 如果是下拉框(Select)，处理选项
+                    // 5. Select 类型：Options 写成 {Label, Value} 对象数组（新格式）
+                    //    放在 DataSource.Options 下
                     if (input.UiType.Equals("Select", StringComparison.OrdinalIgnoreCase)
                         && !string.IsNullOrWhiteSpace(input.Options))
                     {
                         var optionsArray = new JsonArray();
-                        // 按逗号拆分选项
-                        var opts = input.Options.Split(new[] { ',', '，' }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var opt in opts)
+                        foreach (var opt in input.Options.Split(new[] { ',', '，' }, StringSplitOptions.RemoveEmptyEntries))
                         {
-                            optionsArray.Add(opt.Trim());
+                            var trimmed = opt.Trim();
+                            optionsArray.Add(new JsonObject
+                            {
+                                ["Label"] = trimmed,
+                                ["Value"] = trimmed
+                            });
                         }
-                        newColNode["Options"] = optionsArray;
+
+                        newCol["DataSource"] = new JsonObject
+                        {
+                            ["Options"] = optionsArray,
+                            ["LabelField"] = "Label",
+                            ["ValueField"] = "Value"
+                        };
                     }
 
-                    // 7. 追加到配置数组
-                    columnsNode.Add(newColNode);
+                    // 6. 追加列
+                    columnsNode.Add(newCol);
 
-                    // 8. 写回文件 (格式化 JSON，防止中文转义)
+                    // 7. 写回原文件（保留中文，格式化缩进）
                     var writeOptions = new JsonSerializerOptions
                     {
                         WriteIndented = true,
                         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                     };
-                    System.IO.File.WriteAllText(filePath, rootNode.ToJsonString(writeOptions));
+                    System.IO.File.WriteAllText(targetFile, rootNode.ToJsonString(writeOptions));
+
+                    // 8. 通知 DictConfigManager 重新加载，立即生效
+                    _configManager.LoadAllConfigs();
                 }
 
                 return Ok(new { message = "列添加成功" });
@@ -126,12 +142,11 @@ namespace PMCSystem_Backend.Controllers
         }
     }
 
-    // 用于接收前端参数的 DTO
     public class AddColumnDto
     {
-        public string Title { get; set; }        // e.g. "客户等级"
-        public string UiType { get; set; }       // e.g. "Select"
-        public bool IsRequired { get; set; }     // e.g. true
-        public string? Options { get; set; }     // e.g. "VIP,普通" (仅下拉框用)
+        public string Title { get; set; } = string.Empty;
+        public string UiType { get; set; } = "Input";
+        public bool IsRequired { get; set; } = false;
+        public string? Options { get; set; }
     }
 }
