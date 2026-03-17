@@ -376,3 +376,4 @@ _build_verify/
 _diag/ExportDiag/bin/
 _diag/ExportDiag/obj/
 _diag/out/
+.trae/
