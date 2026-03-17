@@ -48,6 +48,8 @@ namespace PMCSystem_Backend.Models
         public string FlangeStandardName { get; set; } = string.Empty;
         public string PressureRatingName { get; set; } = string.Empty;
         public string ScheduleThicknessName { get; set; } = string.Empty;
+
+        public bool IsByRule { get; set; }
     }
 
     public class PmcOptionDto
@@ -73,6 +75,15 @@ namespace PMCSystem_Backend.Models
         public string PressureRatingName { get; set; } = string.Empty;
 
         public string ScheduleThicknessName { get; set; } = string.Empty;
+
+        public bool IsByRule { get; set; }
+    }
+
+    public class PmcCodeDeleteRequest
+    {
+        public string ShipType { get; set; } = string.Empty;
+        public string ShipNo { get; set; } = string.Empty;
+        public List<string> PmcCodes { get; set; } = new List<string>();
     }
 
     public class PmcCodeSaveRequest

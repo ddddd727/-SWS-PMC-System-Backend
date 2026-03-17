@@ -2,7 +2,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Common.Models;
 using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using PMCSystem_Backend.Services.Interfaces;
 
@@ -281,6 +281,8 @@ namespace PMCSystem_Backend.Services.Implementations
                 entity.NutStandard = dto.NutStandard ?? entity.NutStandard;
                 entity.WasherStandard = dto.WasherStandard ?? entity.WasherStandard;
                 entity.Status = dto.Status ?? entity.Status;
+                entity.VersionNum = dto.VersionNum ?? entity.VersionNum;
+                entity.IsByRule = dto.IsByRule ?? entity.IsByRule;
                 entity.JsonData = dto.JsonData ?? entity.JsonData;
 
                 await _context.SaveChangesAsync();

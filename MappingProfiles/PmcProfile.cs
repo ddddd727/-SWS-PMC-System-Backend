@@ -1,6 +1,7 @@
 using AutoMapper;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 
 namespace PMCSystem_Backend.MappingProfiles
 {
@@ -8,11 +9,17 @@ namespace PMCSystem_Backend.MappingProfiles
     {
         public PmcProfile()
         {
-            CreateMap<S3dDictPipingBendData, DspSpmcDictPipingBendDataDto>().ReverseMap();
-            CreateMap<CreateDspSpmcDictPipingBendDataDto, S3dDictPipingBendData>();
-            CreateMap<UpdateDspSpmcDictPipingBendDataDto, S3dDictPipingBendData>();
-            CreateMap<S3dCodeWallThickness, WallThicknessCodeConvertedDto>();
-            CreateMap<S3dCodePipingBendParameter, PipingBendParameterCodeConvertedDto>();
+            CreateMap<S3dDictPipingBendData, S3dDictPipingBendDataDto>().ReverseMap();
+            CreateMap<CreateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
+            CreateMap<UpdateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
+            CreateMap<S3dCodeWallThickness, S3dCodeWallThicknessDto>();
+            CreateMap<S3dCodePipingBendParameter, S3dCodePipingBendParameterDto>();
+            CreateMap<S3dCodeShortCodeMap, S3dCodeShortCodeMapDto>();
+            CreateMap<PMCSystem_Backend.Entities.PipeSpecConfig.S3dDictPipingComponentType, S3dDictPipingComponentTypeDto>().ReverseMap();
+
+            CreateMap<S3dRuleShortCodeMap, S3dRuleShortCodeMapDto>().ReverseMap();
+            CreateMap<CreateS3dRuleShortCodeMapDto, S3dRuleShortCodeMap>();
+            CreateMap<UpdateS3dRuleShortCodeMapDto, S3dRuleShortCodeMap>();
 
             CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();
             CreateMap<CreateS3dDictWallThicknessDto, S3dDictWallThickness>();
@@ -24,6 +31,7 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dRulePipingBendParameter, S3dRulePipingBendParameterDto>().ReverseMap();
             CreateMap<CreateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
             CreateMap<UpdateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
+            CreateMap<S3dRulePipingBendParameter, UpdateS3dRulePipingBendParameterDto>();
         }
     }
 }

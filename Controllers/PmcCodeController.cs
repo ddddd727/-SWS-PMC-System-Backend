@@ -61,6 +61,32 @@ namespace PMCSystem_Backend.Controllers
             }
         }
 
+        [HttpPost("delete")]
+        public IActionResult Delete([FromBody] PmcCodeDeleteRequest request)
+        {
+            try
+            {
+                if (request == null || string.IsNullOrWhiteSpace(request.ShipType) || string.IsNullOrWhiteSpace(request.ShipNo))
+                {
+                    return Fail(ApiErrorCode.ValidationError, "请填写船型船号");
+                }
+
+                if (request.PmcCodes == null || request.PmcCodes.Count == 0)
+                {
+                    return Fail(ApiErrorCode.ValidationError, "请选择要删除的PMC编码");
+                }
+
+                _logger.LogInformation("Deleting {Count} PMC codes for ShipType={ShipType}, ShipNo={ShipNo}", request.PmcCodes.Count, request.ShipType, request.ShipNo);
+                var deletedCount = _service.DeletePmcCodes(request);
+                return Success($"成功删除 {deletedCount} 条PMC编码");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete PMC codes");
+                return StatusCode(500, new { code = 500, message = "删除PMC编码失败: " + ex.Message });
+            }
+        }
+
         [HttpGet("query")]
         public IActionResult Query(string shipType, string shipNo)
         {

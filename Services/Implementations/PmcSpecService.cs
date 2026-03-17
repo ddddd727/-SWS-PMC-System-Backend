@@ -1,11 +1,16 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using PMCSystem_Backend.Common.Constants;
 using PMCSystem_Backend.Data;
+using PMCSystem_Backend.Dtos.PipeSpecConfig;
+using PMCSystem_Backend.Dtos.PipeSpecConfig.Models;
+using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
 using PMCSystem_Backend.MappingProfiles;
+using PMCSystem_Backend.MappingProfiles.PipeSpecMappers;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
@@ -13,16 +18,53 @@ namespace PMCSystem_Backend.Services.Implementations
     public class PmcSpecService : IPmcSpecService
     {
         private readonly PmcContext _context;
+
+        // 暂时采用不同的PmcContext进行，防止冲突
+        private readonly PmcContextCky _ckyContext;
+
+        /// <summary>规范部件类型名 -> 实体标准属性 setter（用于按 ComponentTypeId 分发）</summary>
+        private static readonly Dictionary<string, Action<S3dRulePmcData, List<PmcStandardInfo>>> ComponentTypeSetters =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Elbow"] = (e, list) => e.ElbowStandard = list,
+                ["Reducer"] = (e, list) => e.RedStandard = list,
+                ["Tee"] = (e, list) => e.TeeStandard = list,
+                ["Sleeve"] = (e, list) => e.SleeveStandard = list,
+                ["Bosses"] = (e, list) => e.BossesStandard = list,
+                ["Saddles"] = (e, list) => e.SaddlesStandard = list,
+                ["Caps"] = (e, list) => e.CapsStandard = list,
+                ["Overpass"] = (e, list) => e.OverpassStandard = list,
+                ["Accessories"] = (e, list) => e.AccessoriesStandard = list,
+                ["Flange"] = (e, list) => e.FlangeStandard = list,
+                ["BlindFlange"] = (e, list) => e.BlindFlangeStandard = list,
+                ["Gasket"] = (e, list) => e.GasketStandard = list,
+                ["Bolt"] = (e, list) => e.BoltStandard = list,
+                ["Nut"] = (e, list) => e.NutStandard = list,
+                ["Washer"] = (e, list) => e.WasherStandard = list,
+                ["Pipe"] = (e, list) => e.PipeStandard = list,
+            };
         private readonly IMapper _mapper;
         private readonly ICodelistService _codelistService;
         private readonly ILogger<PmcSpecService> _logger;
+        private readonly IPipeSpecConfigMapper _pipeSpecConfigMapper;
+        private readonly IPipeSpecVersionService _pipeSpecVersionService;
 
-        public PmcSpecService(PmcContext context, IMapper mapper, ICodelistService codelistService, ILogger<PmcSpecService> logger)
+        public PmcSpecService(
+            PmcContext context,
+            IMapper mapper,
+            ICodelistService codelistService,
+            ILogger<PmcSpecService> logger,
+            PmcContextCky pmcContextCky,
+            IPipeSpecConfigMapper pipeSpecConfigMapper,
+            IPipeSpecVersionService pipeSpecVersionService)
         {
             _context = context;
             _mapper = mapper;
             _codelistService = codelistService;
             _logger = logger;
+            _ckyContext = pmcContextCky;
+            _pipeSpecConfigMapper = pipeSpecConfigMapper;
+            _pipeSpecVersionService = pipeSpecVersionService;
         }
 
         /// <summary>
@@ -67,7 +109,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 PipingClass = entity.PipingClassName,
                 MaterialGrade = entity.MaterialsGradeName,
                 PressureRating = entity.PressureRatingName,
-                PipeStandard = entity.PipingStandardName[0].StandardName,
+                PipeStandard = entity.PipingStandardName,
                 MaterialCategory = entity.MaterialsCategoryName,
                 WallThickness = entity.ScheduleThicknessName
             };
@@ -90,19 +132,24 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("端面标准和壁厚系列不能为空");
             }
 
-            // 将字符串参数转换为 int（假设参数是代码值的字符串形式）
-            // 如果转换失败，可能需要通过 CodeList 表查找对应的 CodeListNumber
-            if (!int.TryParse(EndStandard, out int endStandardCl) || !int.TryParse(Schedule, out int scheduleCl))
-            {
-                _logger.LogError("端面标准或壁厚系列格式不正确，无法转换为整数值");
-                throw new ArgumentException("端面标准或壁厚系列格式不正确，无法转换为整数值");
-            }
-
             // 查询数据库中符合条件的数据
-            var queryResult = _context.S3dCommonPlainPipingGenericData
-                .Where(x => x.EndStandardCl == endStandardCl && x.ScheduleCl == scheduleCl)
-                .AsNoTracking()
-                .ToList();
+            //var queryResult = _context.S3dCommonPlainPipingGenericData
+            //    .Where(x => x.EndStandardCl == endStandardCl && x.ScheduleCl == scheduleCl)
+            //    .AsNoTracking()
+            //    .ToList();
+
+            // 更改当前的NPD通径范围的获取路径
+            //var queryResult = _ckyContext.S3dCodeWallThicknesses
+            //                    .Where(x => x.EndStandard == EndStandard && x.ScheduleThickness == Schedule)
+            //                    .AsNoTracking()
+            //                    .ToList();
+
+            // 从S3d_WallThickness_Info视图中获取通径范围信息
+            var queryResult = _context.S3dWallThicknessInfo
+                                .Where(x => x.GeometricIndustryStandard == EndStandard && x.ScheduleThickness == Schedule)
+                                .AsNoTracking()
+                                .ToList();
+
 
             // 构建返回结果
             var result = new SpecNPDInfoDto
@@ -110,20 +157,20 @@ namespace PMCSystem_Backend.Services.Implementations
                 EndStandard = EndStandard,
                 Schedule = Schedule,
                 NPD = queryResult
-                    .Where(x => x.NominalPipingDiameter > 0)
-                    .Select(x => (double)x.NominalPipingDiameter)
+                    .Where(x => x.NormalDiameter > 0)
+                    .Select(x => (double)x.NormalDiameter)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList(),
                 OutsideDiameter = queryResult
-                    .Where(x => x.PipingOutsideDiameter.HasValue && x.PipingOutsideDiameter.Value > 0)
-                    .Select(x => (double)x.PipingOutsideDiameter!.Value)
+                    .Where(x => x.PipingOutsideDiameter > 0)
+                    .Select(x => (double)x.PipingOutsideDiameter)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList(),
                 WallThickness = queryResult
-                    .Where(x => x.WallThickness.HasValue && x.WallThickness.Value > 0)
-                    .Select(x => (double)x.WallThickness!.Value)
+                    .Where(x => x.WallThickness > 0)
+                    .Select(x => (double)x.WallThickness)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList()
@@ -132,47 +179,60 @@ namespace PMCSystem_Backend.Services.Implementations
             return result;
         }
 
-        public List<PipeFittingSpecDto> GetPipeFittingSpec(string compnentType)
+        public List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName)
         {
-            if (string.IsNullOrWhiteSpace(compnentType))
+            if (componentTypeId == null && string.IsNullOrWhiteSpace(componentTypeName))
             {
-                _logger.LogError("compnentType 不能为空");
-                throw new ArgumentException("compnentType 不能为空");
+                _logger.LogError("部件类型不能为空");
+                throw new ArgumentException("部件类型不能为空");
             }
 
-            // 通过部件类型获取对应的 ComponentTypeId
-            var compType = _context.S3dDictPipingComponentTypes
-                .AsNoTracking()
-                .FirstOrDefault(x => x.ComponentTypeName == compnentType);
+            int resolvedComponentTypeId;
 
-            if (compType == null)
+            if (componentTypeId.HasValue)
             {
-                // 未找到对应的部件类型，返回空列表
-                return new List<PipeFittingSpecDto>();
+                resolvedComponentTypeId = componentTypeId.Value;
+            }
+            else
+            {
+                var normalizedName = componentTypeName?.Trim();
+                if (string.IsNullOrWhiteSpace(normalizedName))
+                {
+                    _logger.LogError("部件类型名称不能为空");
+                    throw new ArgumentException("部件类型名称不能为空");
+                }
+
+                var compType = _context.S3dDictPipingComponentTypes
+                    .AsNoTracking()
+                    .FirstOrDefault(x => x.ComponentTypeName == normalizedName);
+
+                if (compType == null)
+                {
+                    // 未找到对应的部件类型，返回空列表
+                    _logger.LogWarning("未找到对应的部件类型: {ComponentTypeName}", normalizedName);
+                    return new List<string>();
+                }
+
+                resolvedComponentTypeId = compType.Id;
             }
 
-            var componentTypeId = compType.Id;
-
-            // 在标准表中查找该部件类型下的所有标准条目
             var standards = _context.S3dRulePipingCompStandards
                 .AsNoTracking()
-                .Where(x => x.ComponentTypeId == componentTypeId)
+                .Where(x => x.ComponentTypeId == resolvedComponentTypeId)
                 .ToList();
 
-            // 提取标准的 CodeList 值（假设存储在 GeometricIndustryStandardCl 字段）
             var codeValues = standards
                 .Select(x => x.GeometricIndustryStandardCl)
                 .Where(v => v > 0)
                 .Distinct()
                 .ToList();
 
-            var result = new List<PipeFittingSpecDto>();
+            var standardNames = new List<string>();
 
             foreach (var code in codeValues)
             {
                 string standardName = code.ToString();
 
-                // 先尝试通过表名+值的短描述方法
                 try
                 {
                     var shortDescTask = _codelistService.GetShortDesciptionByCodelistValue("GeometricIndustryStandard", code.ToString());
@@ -187,11 +247,9 @@ namespace PMCSystem_Backend.Services.Implementations
                 }
                 catch
                 {
-                    // 忽略异常，尝试其他方式
-                    _logger.LogWarning(code.ToString() + "无法通过表名+值的短描述方法获取标准名称");
+                    _logger.LogWarning("{Code} 无法通过表名+值的短描述方法获取标准名称", code);
                 }
 
-                // 若仍为 code 字符串，则尝试按列名查询描述
                 if (standardName == code.ToString())
                 {
                     try
@@ -206,30 +264,36 @@ namespace PMCSystem_Backend.Services.Implementations
                     }
                     catch
                     {
-                        _logger.LogWarning(code.ToString() + "无法通过列名查询描述方法获取标准名称");
+                        _logger.LogWarning("{Code} 无法通过列名查询描述方法获取标准名称", code);
                     }
                 }
 
-                // 通过 GetMaterialListByStandard 方法获取材料列表，不进行 commodityType 过滤
-                List<string> materialList = new List<string>();
-                try
+                if (standardName == code.ToString())
                 {
-                    materialList = GetMaterialListByStandard(standardName, compnentType, string.Empty);
-                }
-                catch (Exception ex)
-                {
-                    // 如果获取材料列表失败，记录警告但继续处理，使用空列表
-                    _logger.LogWarning(ex, "获取标准 {StandardName} 的材料列表失败", standardName);
+                    return new List<string>();
                 }
 
-                result.Add(new PipeFittingSpecDto
-                {
-                    StandardName = standardName,
-                    MaterialList = materialList
-                });
+                standardNames.Add(standardName);
             }
 
-            return result.OrderBy(x => x.StandardName).ToList();
+            return standardNames
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+        }
+
+        public List<string> GetMaterialsGrades()
+        {
+            var grades = _ckyContext.S3dClMaterialsGrades
+                .AsNoTracking()
+                .Select(x => x.ShortStringValue)
+                .Where(x => x != null && x != string.Empty)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            return grades!;
         }
 
         /// <summary>
@@ -269,6 +333,26 @@ namespace PMCSystem_Backend.Services.Implementations
                 new ShipInfo {shipNumber = "H1603", shipType = "民船" }
             };
             return shipInfos;
+        }
+
+        /// <summary>
+        /// 获取所有部件类型信息
+        /// </summary>
+        /// <returns>部件类型列表</returns>
+        public List<ComponentTypeInfoDto> GetComponentTypes()
+        {
+            var componentTypes = _context.S3dDictPipingComponentTypes
+                .AsNoTracking()
+                .Select(x => new ComponentTypeInfoDto
+                {
+                    Id = x.Id,
+                    ComponentTypeName = x.ComponentTypeName,
+                    ComponentTypeDescription = x.ComponentTypeDescription
+                })
+                .OrderBy(x => x.ComponentTypeName)
+                .ToList();
+
+            return componentTypes;
         }
 
 
@@ -400,117 +484,241 @@ namespace PMCSystem_Backend.Services.Implementations
 
 
         /// <summary>
-        /// 保存PMC管系规格书中的标准规格
+        /// 保存PMC管系规格书中的标准规格（简化版：仅包含标准名称和材料信息）
         /// </summary>
-        /// <param name="pmcCode">PMC编码</param>
-        /// <param name="standardInfos">标准信息列表</param>
+        /// <param name="request">简化的管系规格书保存请求</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public bool SaveSpecRules(string pmcCode, List<PmcStandardInfo> standardInfos)
+        public bool SaveSpecRulesSimple(SavePipeSpecSimpleRequest request)
         {
-            if (string.IsNullOrWhiteSpace(pmcCode))
+            // 使用 Mapper 对简化请求做基础校验（必填字段、至少一个部件类型与标准）
+            var (isValid, errorMessage) = _pipeSpecConfigMapper.ValidateSimpleRequest(request);
+            if (!isValid)
             {
-                _logger.LogError("PMC编码不能为空");
-                throw new ArgumentException("PMC编码不能为空");
-            }
-
-            if (standardInfos == null || !standardInfos.Any())
-            {
-                _logger.LogError("标准信息列表不能为空");
-                throw new ArgumentException("标准信息列表不能为空");
+                _logger.LogError(errorMessage);
+                throw new ArgumentException(errorMessage);
             }
 
             try
             {
-                // 查询现有的PMC数据
+                // 查询现有的PMC数据：按 (Pmccode, ShipType, ShipNo) 精确匹配
                 var existingEntity = _context.S3dRulePmcdata
-                    .FirstOrDefault(x => x.Pmccode == pmcCode);
+                    .FirstOrDefault(x => x.Pmccode == request.PmcCode
+                        && x.ShipType == request.ShipType
+                        && x.ShipNo == request.ShipNumber);
 
                 if (existingEntity == null)
                 {
-                    _logger.LogError("未找到PMC编码 {PmcCode} 对应的数据，无法更新规则", pmcCode);
-                    throw new Exception($"未找到PMC编码 {pmcCode} 对应的数据");
+                    _logger.LogError("未找到PMC编码 {PmcCode} 船型 {ShipType} 船号 {ShipNo} 对应的数据，无法更新规则",
+                        request.PmcCode, request.ShipType, request.ShipNumber);
+                    throw new Exception($"未找到PMC编码 {request.PmcCode}（船型: {request.ShipType}, 船号: {request.ShipNumber}）对应的数据");
                 }
 
-                // 根据 StandardType 将标准信息分组
-                var groupedStandards = standardInfos.GroupBy(x => x.StandardType);
+                // 更新主表前，将当前配置保存为历史版本快照
+                _pipeSpecVersionService.CreateVersionSnapshot(existingEntity);
 
-                foreach (var group in groupedStandards)
+                // 将前端的简化配置（仅标准+材料）转换为内部统一的标准信息列表
+                var standardInfos = _pipeSpecConfigMapper.MapSimpleConfigurationsToStandardInfos(request.Configurations);
+
+                // 兼容仅传 componentType 的旧请求：根据 StandardType 从字典表反查 ComponentTypeId
+                ResolveComponentTypeIds(standardInfos);
+
+                // 仅保留成功解析出 ComponentTypeId 的配置，避免依赖英文描述字符串
+                var withId = standardInfos.Where(x => x.ComponentTypeId.HasValue && x.ComponentTypeId.Value > 0).ToList();
+                var skipped = standardInfos.Count - withId.Count;
+                if (skipped > 0)
                 {
-                    var standardType = group.Key;
-                    var standards = group.ToList();
+                    _logger.LogWarning("简化保存中有 {Count} 条标准配置未解析出 ComponentTypeId，已跳过；建议请求中传入 ComponentTypeId", skipped);
+                }
 
-                    // 根据部件类型分配到对应的实体字段
-                    switch (standardType)
+                // 按部件类型 ID 分组，并通过预先定义的映射写入 S3dRulePmcData 对应字段
+                var groupedByTypeId = withId.GroupBy(x => x.ComponentTypeId!.Value);
+                var idToSetter = BuildComponentTypeIdToSetter();
+
+                foreach (var group in groupedByTypeId)
+                {
+                    var typeId = group.Key;
+                    var standards = group.ToList();
+                    if (idToSetter.TryGetValue(typeId, out var setter))
                     {
-                        case "Elbow":
-                            existingEntity.ElbowStandard = MergeStandardList(existingEntity.ElbowStandard, standards);
-                            break;
-                        case "Reducer":
-                            existingEntity.RedStandard = MergeStandardList(existingEntity.RedStandard, standards);
-                            break;
-                        case "Tee":
-                            existingEntity.TeeStandard = MergeStandardList(existingEntity.TeeStandard, standards);
-                            break;
-                        case "Sleeve":
-                            existingEntity.SleeveStandard = MergeStandardList(existingEntity.SleeveStandard, standards);
-                            break;
-                        case "Bosses":
-                            existingEntity.BossesStandard = MergeStandardList(existingEntity.BossesStandard, standards);
-                            break;
-                        case "Saddles":
-                            existingEntity.SaddlesStandard = MergeStandardList(existingEntity.SaddlesStandard, standards);
-                            break;
-                        case "Caps":
-                            existingEntity.CapsStandard = MergeStandardList(existingEntity.CapsStandard, standards);
-                            break;
-                        case "Overpass":
-                            existingEntity.OverpassStandard = MergeStandardList(existingEntity.OverpassStandard, standards);
-                            break;
-                        case "Accessories":
-                            existingEntity.AccessoriesStandard = MergeStandardList(existingEntity.AccessoriesStandard, standards);
-                            break;
-                        case "Flange":
-                            existingEntity.FlangeStandard = MergeStandardList(existingEntity.FlangeStandard, standards);
-                            break;
-                        case "BlindFlange":
-                            existingEntity.BlindFlangeStandard = MergeStandardList(existingEntity.BlindFlangeStandard, standards);
-                            break;
-                        case "Gasket":
-                            existingEntity.GasketStandard = MergeStandardList(existingEntity.GasketStandard, standards);
-                            break;
-                        case "Bolt":
-                            existingEntity.BoltStandard = MergeStandardList(existingEntity.BoltStandard, standards);
-                            break;
-                        case "Nut":
-                            existingEntity.NutStandard = MergeStandardList(existingEntity.NutStandard, standards);
-                            break;
-                        case "Washer":
-                            existingEntity.WasherStandard = MergeStandardList(existingEntity.WasherStandard, standards);
-                            break;
-                        case "Pipe":
-                            existingEntity.PipeStandard = MergeStandardList(existingEntity.PipeStandard, standards);
-                            break;
-                        default:
-                            _logger.LogWarning("未知的部件类型: {StandardType}", standardType);
-                            break;
+                        setter(existingEntity, standards);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("简化保存中未找到部件类型 ID {ComponentTypeId} 对应的实体字段，已跳过", typeId);
                     }
                 }
 
-                // 更新状态为已配置
-                existingEntity.Status = "已配置";
+                // 更新船型和船号信息
+                existingEntity.ShipType = request.ShipType;
+                existingEntity.ShipNo = request.ShipNumber;
+
+                // 更新规格书配置状态为待审核
+                existingEntity.Status = SpecConfigStatus.Review;
 
                 // 保存更改
                 _context.SaveChanges();
 
-                _logger.LogInformation("成功保存PMC编码 {PmcCode} 的规格规则", pmcCode);
+                _logger.LogInformation("成功保存PMC编码 {PmcCode} 的简化规格规则（仅标准+材料）", request.PmcCode);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "保存PMC编码 {PmcCode} 的规格规则时发生错误", pmcCode);
+                _logger.LogError(ex, "保存PMC编码 {PmcCode} 的简化规格规则时发生错误", request.PmcCode);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// 保存PMC管系规格书中的标准规格（完整版：包含通径范围，保留给后续模块使用）
+        /// </summary>
+        /// <param name="request">管系规格书保存请求</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public bool SaveSpecRules(SavePipeSpecRequest request)
+        {
+            // 使用Mapper进行验证
+            var (isValid, errorMessage) = _pipeSpecConfigMapper.ValidateRequest(request);
+            if (!isValid)
+            {
+                _logger.LogError(errorMessage);
+                throw new ArgumentException(errorMessage);
+            }
+
+            try
+            {
+                // 查询现有的PMC数据：按 (Pmccode, ShipType, ShipNo) 精确匹配，与 S3D_Rule_PMCData 唯一约束一致
+                var existingEntity = _context.S3dRulePmcdata
+                    .FirstOrDefault(x => x.Pmccode == request.PmcCode
+                        && x.ShipType == request.ShipType
+                        && x.ShipNo == request.ShipNumber);
+
+                if (existingEntity == null)
+                {
+                    _logger.LogError("未找到PMC编码 {PmcCode} 船型 {ShipType} 船号 {ShipNo} 对应的数据，无法更新规则",
+                        request.PmcCode, request.ShipType, request.ShipNumber);
+                    throw new Exception($"未找到PMC编码 {request.PmcCode}（船型: {request.ShipType}, 船号: {request.ShipNumber}）对应的数据");
+                }
+
+                // 更新主表前，将当前配置保存为历史版本快照
+                _pipeSpecVersionService.CreateVersionSnapshot(existingEntity);
+
+                // 使用Mapper转换DTO结构为标准信息列表格式
+                var standardInfos = _pipeSpecConfigMapper.MapToStandardInfos(request.Configurations);
+
+                // 未传 ComponentTypeId 时按 StandardType 从字典表解析出 Id（兼容旧请求）
+                ResolveComponentTypeIds(standardInfos);
+
+                var withId = standardInfos.Where(x => x.ComponentTypeId.HasValue && x.ComponentTypeId.Value > 0).ToList();
+                var skipped = standardInfos.Count - withId.Count;
+                if (skipped > 0)
+                    _logger.LogWarning("有 {Count} 条标准配置未解析出 ComponentTypeId，已跳过；建议请求中传入 ComponentTypeId", skipped);
+
+                // 按 ComponentTypeId 分组，避免依赖英文描述
+                var groupedByTypeId = withId.GroupBy(x => x.ComponentTypeId!.Value);
+
+                var idToSetter = BuildComponentTypeIdToSetter();
+
+                foreach (var group in groupedByTypeId)
+                {
+                    var typeId = group.Key;
+                    var standards = group.ToList();
+                    if (idToSetter.TryGetValue(typeId, out var setter))
+                    {
+                        setter(existingEntity, standards);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("未找到部件类型 ID {ComponentTypeId} 对应的实体字段，已跳过", typeId);
+                    }
+                }
+
+                // 更新船型和船号信息
+                existingEntity.ShipType = request.ShipType;
+                existingEntity.ShipNo = request.ShipNumber;
+
+                // 更新规格书配置状态为待审核
+                existingEntity.Status = SpecConfigStatus.Review;
+
+                // 保存更改
+                _context.SaveChanges();
+
+                _logger.LogInformation("成功保存PMC编码 {PmcCode} 的规格规则", request.PmcCode);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "保存PMC编码 {PmcCode} 的规格规则时发生错误", request.PmcCode);
+                throw;
+            }
+        }
+
+        /// <summary>对未设置 ComponentTypeId 的项，按 StandardType 从字典表解析 Id。</summary>
+        private void ResolveComponentTypeIds(List<PmcStandardInfo> standardInfos)
+        {
+            var needResolve = standardInfos.Where(x => !x.ComponentTypeId.HasValue || x.ComponentTypeId.Value <= 0).ToList();
+            if (needResolve.Count == 0) return;
+
+            var componentTypes = _context.S3dDictPipingComponentTypes.AsNoTracking().ToList();
+            var nameToId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var ct in componentTypes)
+            {
+                var canonical = NormalizeComponentTypeNameToCanonical(ct.ComponentTypeName);
+                if (!string.IsNullOrEmpty(canonical) && !nameToId.ContainsKey(canonical))
+                    nameToId[canonical] = ct.Id;
+            }
+
+            foreach (var info in needResolve)
+            {
+                if (string.IsNullOrWhiteSpace(info.StandardType)) continue;
+                var canonical = NormalizeComponentTypeNameToCanonical(info.StandardType);
+                if (!string.IsNullOrEmpty(canonical) && nameToId.TryGetValue(canonical, out var id))
+                    info.ComponentTypeId = id;
+            }
+        }
+
+        /// <summary>将部件类型名称规范化为与 ComponentTypeSetters 一致的键（不区分大小写、去尾 s 等）。</summary>
+        private static string? NormalizeComponentTypeNameToCanonical(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var t = name.Trim();
+            if (t.Length == 0) return null;
+            var lower = t.ToLowerInvariant();
+            if (ComponentTypeSetters.ContainsKey(lower)) return lower;
+            if (lower.EndsWith('s') && t.Length > 1 && ComponentTypeSetters.ContainsKey(lower[..^1]))
+                return lower[..^1];
+            if (lower.Replace(" ", "") == "blindflange" || lower.Contains("blind flange"))
+                return "blindflange";
+            return lower;
+        }
+
+        /// <summary>根据字典表构建 ComponentTypeId -> setter，用于按 ID 写入实体字段。</summary>
+        private Dictionary<int, Action<S3dRulePmcData, List<PmcStandardInfo>>> BuildComponentTypeIdToSetter()
+        {
+            var componentTypes = _context.S3dDictPipingComponentTypes.AsNoTracking().ToList();
+            var result = new Dictionary<int, Action<S3dRulePmcData, List<PmcStandardInfo>>>();
+            foreach (var ct in componentTypes)
+            {
+                var canonical = NormalizeComponentTypeNameToCanonical(ct.ComponentTypeName);
+                if (string.IsNullOrEmpty(canonical)) continue;
+                if (ComponentTypeSetters.TryGetValue(canonical, out var setter))
+                    result[ct.Id] = setter;
+            }
+            return result;
+        }
+
+        /// <summary>规范名 -> 部件类型 Id，用于 ConvertStandardInfosToConfigurations 回填 ComponentTypeId。</summary>
+        private Dictionary<string, int> BuildComponentTypeNameToId()
+        {
+            var componentTypes = _context.S3dDictPipingComponentTypes.AsNoTracking().ToList();
+            var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var ct in componentTypes)
+            {
+                var canonical = NormalizeComponentTypeNameToCanonical(ct.ComponentTypeName);
+                if (!string.IsNullOrEmpty(canonical) && !result.ContainsKey(canonical))
+                    result[canonical] = ct.Id;
+            }
+            return result;
         }
 
         /// <summary>
@@ -622,6 +830,108 @@ namespace PMCSystem_Backend.Services.Implementations
             }
         }
 
+        /// <summary>
+        /// 解析PMC编码并返回基础信息和配置信息
+        /// </summary>
+        /// <param name="pmcCode">PMC编码</param>
+        /// <returns>包含基础信息和配置信息的DTO</returns>
+        public PmcInfoWithConfigDto AnalyzeCodeFromPMCWithConfig(string pmcCode)
+        {
+            // 先获取基础信息
+            var baseInfo = AnalyzeCodeFromPMC(pmcCode);
+
+            // 查询配置信息与规格书配置状态
+            var configurations = new List<ComponentTypeConfiguration>();
+            var configStatus = SpecConfigStatus.Pending;
+            var entity = _context.S3dRulePmcdata
+                .AsNoTracking()
+                .FirstOrDefault(x => x.Pmccode == pmcCode);
+            if (entity != null)
+            {
+                configStatus = SpecConfigStatus.Normalize(entity.Status);
+                if (GetSpecRules(pmcCode, out var standardInfos) && standardInfos.Any())
+                {
+                    configurations = ConvertStandardInfosToConfigurations(standardInfos);
+                }
+            }
+
+            return new PmcInfoWithConfigDto
+            {
+                BaseInfo = baseInfo,
+                Configurations = configurations,
+                ConfigStatus = configStatus
+            };
+        }
+
+        /// <summary>
+        /// 将标准信息列表转换为部件类型配置列表（简化版：仅保留标准名称和材料信息，去除通径范围）
+        /// </summary>
+        /// <param name="standardInfos">标准信息列表</param>
+        /// <returns>部件类型配置列表</returns>
+        private List<ComponentTypeConfiguration> ConvertStandardInfosToConfigurations(List<PmcStandardInfo> standardInfos)
+        {
+            var configurations = new Dictionary<string, ComponentTypeConfiguration>();
+            var nameToId = BuildComponentTypeNameToId();
+
+            foreach (var standardInfo in standardInfos)
+            {
+                // 跳过无效的标准信息
+                if (string.IsNullOrWhiteSpace(standardInfo.StandardType) || string.IsNullOrWhiteSpace(standardInfo.StandardName))
+                {
+                    continue;
+                }
+
+                // 跳过重复范围默认配置（IsDefault == true），因为涉及通径范围
+                if (standardInfo.IsDefault == true)
+                {
+                    continue;
+                }
+
+                // 获取或创建部件类型配置
+                if (!configurations.ContainsKey(standardInfo.StandardType))
+                {
+                    var canonical = NormalizeComponentTypeNameToCanonical(standardInfo.StandardType);
+                    var componentTypeId = standardInfo.ComponentTypeId ?? (canonical != null && nameToId.TryGetValue(canonical, out var id) ? id : (int?)null);
+                    configurations[standardInfo.StandardType] = new ComponentTypeConfiguration
+                    {
+                        ComponentTypeId = componentTypeId,
+                        ComponentType = standardInfo.StandardType,
+                        FullConfig = new ComponentFullConfiguration
+                        {
+                            StandardFileConfigs = new List<StandardFileConfig>()
+                        }
+                    };
+                }
+
+                var config = configurations[standardInfo.StandardType];
+
+                // 确保StandardFileConfigs列表已初始化
+                if (config.FullConfig!.StandardFileConfigs == null)
+                {
+                    config.FullConfig.StandardFileConfigs = new List<StandardFileConfig>();
+                }
+
+                // 创建标准文件配置（仅包含标准名称和材料，不包含通径范围）
+                var stdConfig = new StandardFileConfig
+                {
+                    StandardFile = standardInfo.StandardName,
+                    Material = standardInfo.Material
+                    // 注意：不包含 MinNpdValue、MaxNpdValue 和 BendRadiusMultiple，因为已简化配置
+                };
+
+                // 检查是否已存在相同的标准+材料组合，避免重复添加
+                var exists = config.FullConfig.StandardFileConfigs.Any(x =>
+                    x.StandardFile?.ToString() == stdConfig.StandardFile?.ToString() &&
+                    x.Material?.ToString() == stdConfig.Material?.ToString());
+
+                if (!exists)
+                {
+                    config.FullConfig.StandardFileConfigs.Add(stdConfig);
+                }
+            }
+
+            return configurations.Values.ToList();
+        }
 
         /// <summary>
         /// 生成对应的管系规格书
@@ -630,6 +940,41 @@ namespace PMCSystem_Backend.Services.Implementations
         public bool GeneratePipeSpecTable()
         {
             throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public bool SetSpecConfigStatus(string pmcCode, string status, string? shipType = null, string? shipNumber = null)
+        {
+            if (string.IsNullOrWhiteSpace(pmcCode))
+            {
+                _logger.LogError("SetSpecConfigStatus: PmcCode 不能为空");
+                throw new ArgumentException("PMC编码不能为空", nameof(pmcCode));
+            }
+
+            var query = _context.S3dRulePmcdata.Where(x => x.Pmccode == pmcCode);
+            if (!string.IsNullOrWhiteSpace(shipType) && !string.IsNullOrWhiteSpace(shipNumber))
+            {
+                query = query.Where(x => x.ShipType == shipType && x.ShipNo == shipNumber);
+            }
+
+            var entity = query.FirstOrDefault();
+            if (entity == null)
+            {
+                _logger.LogWarning("SetSpecConfigStatus: 未找到 PMC 编码 {PmcCode} 对应的记录", pmcCode);
+                return false;
+            }
+
+            entity.Status = status;
+            _context.SaveChanges();
+            _logger.LogInformation("SetSpecConfigStatus: 已将 PMC {PmcCode} 规格书配置状态更新为 {Status}", pmcCode, status);
+            return true;
+        }
+
+        /// <inheritdoc />
+        public bool AcceptSpecReview(string pmcCode, string? shipType = null, string? shipNumber = null)
+        {
+            // TODO: 后续接入审核系统流程，目前占位默认审核成功
+            return SetSpecConfigStatus(pmcCode, SpecConfigStatus.Approved, shipType, shipNumber);
         }
     }
 }

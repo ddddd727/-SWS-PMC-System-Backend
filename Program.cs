@@ -1,7 +1,10 @@
+using System.Text;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
+using PMCSystem_Backend.MappingProfiles.PipeSpecMappers;
 using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
 using System.Text.Json;
@@ -12,6 +15,11 @@ using PMCSystem_Backend.Services.Interface;
 using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using OfficeOpenXml;
 
+// 注册编码提供程序，确保 EPPlus 处理 ZIP/xlsx 时正确解析编码（修复导出 Excel 无法打开问题）
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+// 设置控制台编码为 UTF-8，解决中文乱码问题
+Console.OutputEncoding = Encoding.UTF8;
+Console.InputEncoding = Encoding.UTF8;
 // 设置 EPPlus 许可证上下文（必须在创建任何 ExcelPackage 之前设置）
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业用途，如果是商业用途请使用 LicenseContext.Commercial
 
@@ -20,7 +28,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .WriteTo.Console()
-    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateBootstrapLogger();
 
 try
@@ -33,7 +41,7 @@ try
         .ReadFrom.Services(services) // 从DI容器注入配置的Sink和Enricher
         .Enrich.FromLogContext()
         .WriteTo.Console()
-        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
+        .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
 
@@ -47,23 +55,28 @@ try
 
     // 这是你本来就有的（确保工厂注册在它的上面或附近）
     builder.Services.AddScoped<IDictService, DictService>();
+    // 注册DictPipingService
+    builder.Services.AddScoped<IDictPipingService, DictPipingService>();
 
     // Add services to the container.
     // 注册业务服务已移动到下方
 
-    // עԶScopedڣ ÿ󴴽һʵ
+
     builder.Services.AddScoped<IPipeLimitRuleService, PipeLimitRuleService>();
     builder.Services.AddScoped<IMainMaterialRuleService, MainMaterialRuleService>();
     builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
     builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
-    builder.Services.AddScoped<IDspSpmcDictPipingBendDataService, DspSpmcDictPipingBendDataService>();
-    builder.Services.AddScoped<IWallThicknessCodeConvertedService, WallThicknessCodeConvertedService>();
-    builder.Services.AddScoped<IPipingBendParameterCodeConvertedService, PipingBendParameterCodeConvertedService>();
+    builder.Services.AddScoped<IS3dCodeWallThicknessService, S3dCodeWallThicknessService>();
     builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
     builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dCodePipingBendParameterService, S3dCodePipingBendParameterService>();
+    builder.Services.AddScoped<IS3dDictPipingBendDataService, S3dDictPipingBendDataService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
+    builder.Services.AddScoped<IS3dCodeShortCodeMapService, S3dCodeShortCodeMapService>();
+    builder.Services.AddScoped<IS3dRuleShortCodeMapService, S3dRuleShortCodeMapService>();
+    builder.Services.AddScoped<IS3dDictPipingComponentTypeService, S3dDictPipingComponentTypeService>();
     
     // 补全缺失的服务注册
     builder.Services.AddScoped<IS3dCodeAb2b3c2ViewService, S3dCodeAb2b3c2ViewService>();
@@ -87,27 +100,26 @@ try
     builder.Services.AddScoped<ITemplatePreviewService>(provider =>
     {
         var templateBasePath = builder.Configuration.GetValue<string>("TemplateBasePath") ?? "Templates";
-        return new TemplatePreviewService(templateBasePath);
+        var pmcSpecService = provider.GetRequiredService<IPmcSpecService>();
+        var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<TemplatePreviewService>>();
+        return new TemplatePreviewService(templateBasePath, pmcSpecService, logger);
     });
+
+    // 注册管系规格配置映射器
+    builder.Services.AddScoped<IPipeSpecConfigMapper, PipeSpecConfigMapper>();
+
+    // 注册管系规格书版本管理服务
+    builder.Services.AddScoped<IPipeSpecVersionService, PipeSpecVersionService>();
 
     builder.Services.AddControllers();
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowVueFrontend", policy =>
-        {
-            policy.WithOrigins(
-                "http://localhost:5173",   // Vite 默认端口
-                "http://localhost:3000",   // 一些前端工具默认端口
-                "http://localhost:8080"    // Vue 
-                // CLI 默认端口
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-        });
+        options.AddPolicy("AllowVueFrontend",
+        policy => policy.WithOrigins("http://10.8.98.105").AllowAnyHeader().AllowAnyMethod());
     });
 
-    //  DbContextע
+    //  DbContext
     builder.Services.AddDbContext<SpecContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     // 注册多个 DbContext
@@ -137,6 +149,14 @@ try
 
     builder.Configuration.AddJsonFile("Configs/dicts.json", optional: true, reloadOnChange: true);
 
+    // 配置反向代理转发头（使用 Nginx/IIS 反向代理时必须）
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
     // 配置JSON序列化
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -152,31 +172,20 @@ try
     // 注册日志服务
     builder.Services.AddLogging();
 
+    // 健康检查（供负载均衡/容器编排探测）
+    builder.Services.AddHealthChecks();
+
 
     var app = builder.Build();
 
+    app.UseForwardedHeaders();
 
-
-    if (app.Environment.IsDevelopment())
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            // 设置Swagger UI 的根路径为 /swagger
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            options.RoutePrefix = "swagger";        // 访问http://localhost:xxxx/swagger 即可打开UI
-        });
-    }
-    else
-    {
-        // 生产环境也可以开启，根据需求关闭或限制访问
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            options.RoutePrefix = "swagger";
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-        });
-    }
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+        options.RoutePrefix = "swagger";
+    });
     // 配置中间件
 
     // Configure the HTTP request pipeline.
@@ -184,18 +193,15 @@ try
     // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
     app.UseMiddleware<ExceptionMiddleware>();
 
-    // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
-    app.UseMiddleware<ExceptionMiddleware>();
-
-    // app.UseHttpsRedirection();
-
-    app.UseMiddleware<ExceptionMiddleware>();
+    app.UseHttpsRedirection();
 
     app.UseCors("AllowVueFrontend");
 
     app.UseAuthorization();
 
     app.MapControllers();
+
+    app.MapHealthChecks("/health");
 
     app.Run();
 }

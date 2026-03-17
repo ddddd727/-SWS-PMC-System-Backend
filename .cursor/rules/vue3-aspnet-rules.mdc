@@ -1,0 +1,28 @@
+---
+description: Vue3 + ASP.NET Core 项目核心开发规范
+globs: **/*.{vue,js,ts,cs}
+alwaysApply: true
+---
+
+# Vue3 + ASP.NET Core 项目开发规范
+
+## 前端规范 (Vue3)
+
+- 使用 **Vue 3 组合式 API** 和 `<script setup>` 语法。
+- 组件文件使用 **PascalCase** 命名，如 `UserProfile.vue`。
+- 优先使用 `const`，避免使用 `var`。
+- 使用 **Tailwind CSS** 进行样式设计，确保 UI 响应式并适配深色模式[citation:2]。
+- API 请求统一使用 `fetch`，并集中管理在 `src/api/` 目录下[citation:2]。
+
+## 后端规范 (ASP.NET Core)
+
+- 使用 C# 的最新稳定版本。
+- Controllers 应保持精简，业务逻辑放入 Services 层。
+- API 端点遵循 RESTful 设计原则。
+- 使用异步编程模型（`async`/`await`）。
+
+## 通用规范
+
+- 所有导出的函数和复杂的内部函数都必须添加 **JSDoc** 或 XML 注释[citation:2]。
+- 提交信息遵循 `<type>: <description>` 格式（如 `feat: 添加用户登录功能`）[citation:2]。
+- 生成的代码必须完整且功能完善，**严禁留下 `TODO` 或占位符**[citation:2]。
