@@ -1,466 +1,498 @@
 {
-  "part-elbow": {
-    "DisplayName": "Elbow (弯头)",
-    "ViewName": "View_Fitting_Elbow",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
-  "part-red": {
-    "DisplayName": "Red (异径)",
-    "ViewName": "View_Fitting_Red",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
-  "part-tee": {
-    "DisplayName": "Tee (三通)",
-    "ViewName": "View_Fitting_Tee",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
-  "part-sleeve": {
-    "DisplayName": "Sleeve (套管)",
-    "ViewName": "View_Fitting_Sleeve",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
-  "part-bosses": {
-    "DisplayName": "Bosses (凸台)",
-    "ViewName": "View_Fitting_Bosses",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
-  "part-saddles": {
-    "DisplayName": "Saddles (鞍座)",
-    "ViewName": "View_Fitting_Saddles",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
-  "part-caps": {
-    "DisplayName": "Caps (管帽)",
-    "ViewName": "View_Fitting_Caps",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
-  "part-overpass": {
-    "DisplayName": "Overpass (过桥)",
-    "ViewName": "View_Fitting_Overpass",
-    "PhysicalTableName": "S3D_Rule_PipingCompStandard",
-    "HandlerType": "Fitting",
-    "Columns": [
-      {
-        "DbField": "id",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "geometricIndustryStandardLong",
-        "Title": "标准",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": true
-      },
-      {
-        "DbField": "componentTypeName",
-        "Title": "类型",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "componentTypeDescription",
-        "Title": "中文描述",
-        "UiType": "Input",
-        "IsRequired": true,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "materialsCategoryLong",
-        "Title": "主材料",
-        "UiType": "Select",
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false
-        },
-        "IsRequired": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  }
+    "part-elbow": {
+        "DisplayName": "Elbow (弯头)",
+        "ViewName": "View_Fitting_Elbow",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            }
+        ]
+    },
+    "part-red": {
+        "DisplayName": "Red (异径)",
+        "ViewName": "View_Fitting_Red",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            },
+            {
+                "DbField": "custom_1773360569619",
+                "Title": "管材标准",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsRequired": false,
+                "IsReadOnly": false
+            }
+        ]
+    },
+    "part-tee": {
+        "DisplayName": "Tee (三通)",
+        "ViewName": "View_Fitting_Tee",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            },
+            {
+                "DbField": "custom_1773360463452",
+                "Title": "管材标准",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsRequired": false,
+                "IsReadOnly": false
+            }
+        ]
+    },
+    "part-sleeve": {
+        "DisplayName": "Sleeve (套管)",
+        "ViewName": "View_Fitting_Sleeve",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            },
+            {
+                "DbField": "custom_1773361047554",
+                "Title": "管材标准",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsRequired": false,
+                "IsReadOnly": false
+            }
+        ]
+    },
+    "part-bosses": {
+        "DisplayName": "Bosses (凸台)",
+        "ViewName": "View_Fitting_Bosses",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            }
+        ]
+    },
+    "part-saddles": {
+        "DisplayName": "Saddles (鞍座)",
+        "ViewName": "View_Fitting_Saddles",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            },
+            {
+                "DbField": "custom_1773362159470",
+                "Title": "管材标准",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsRequired": false,
+                "IsReadOnly": false
+            }
+        ]
+    },
+    "part-caps": {
+        "DisplayName": "Caps (管帽)",
+        "ViewName": "View_Fitting_Caps",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            },
+            {
+                "DbField": "custom_1773362208102",
+                "Title": "管材标准",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsRequired": false,
+                "IsReadOnly": false
+            }
+        ]
+    },
+    "part-overpass": {
+        "DisplayName": "Overpass (过桥)",
+        "ViewName": "View_Fitting_Overpass",
+        "PhysicalTableName": "S3D_Rule_PipingCompStandard",
+        "HandlerType": "Fitting",
+        "Columns": [
+            {
+                "DbField": "id",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "geometricIndustryStandardLong",
+                "Title": "标准",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/piping-standard",
+                    "LabelField": "geometricIndustryStandardLong",
+                    "ValueField": "geometricIndustryStandardCode"
+                },
+                "IsRequired": true
+            },
+            {
+                "DbField": "componentTypeName",
+                "Title": "类型",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "componentTypeDescription",
+                "Title": "中文描述",
+                "UiType": "Input",
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "materialsCategoryLong",
+                "Title": "主材料",
+                "UiType": "Select",
+                "DataSource": {
+                    "Url": "/api/dictpiping/options/mat-category",
+                    "LabelField": "materialsCategoryLong",
+                    "ValueField": "materialsCategoryCode"
+                },
+                "IsRequired": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            },
+            {
+                "DbField": "custom_1773362525581",
+                "Title": "管材标准",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsRequired": false,
+                "IsReadOnly": false
+            }
+        ]
+    }
 }
