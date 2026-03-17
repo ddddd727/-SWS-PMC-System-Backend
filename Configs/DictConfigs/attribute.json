@@ -186,7 +186,7 @@
     ]
   },
   "piping-standard": {
-    "DisplayName": "B2-管材标准",
+    "DisplayName": "管材标准",
     "ViewName": "View_Dict_PipingStandard",
     "PhysicalTableName": "S3D_Dict_PipingStandard",
     "CodeListTableName": "",

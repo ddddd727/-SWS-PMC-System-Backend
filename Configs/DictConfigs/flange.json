@@ -17,9 +17,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -42,9 +43,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
@@ -73,9 +75,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -98,9 +101,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
@@ -137,9 +141,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -162,9 +167,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
@@ -201,9 +207,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -226,9 +233,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
@@ -265,9 +273,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -290,9 +299,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
@@ -329,9 +339,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -354,9 +365,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
@@ -393,9 +405,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -418,9 +431,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
@@ -457,9 +471,10 @@
         "Title": "标准",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/piping-standard",
-          "LabelField": "geometricIndustryStandardLong",
-          "ValueField": "geometricIndustryStandardCode"
+          "Url": "/api/dict/options/geo-standard",
+          "LabelField": "GeometricIndustryStandard_Long",
+          "ValueField": "GeometricIndustryStandard_Long",
+          "FilterUsed": false
         },
         "IsRequired": true
       },
@@ -482,9 +497,10 @@
         "Title": "主材料",
         "UiType": "Select",
         "DataSource": {
-          "Url": "/api/dictpiping/options/mat-category",
-          "LabelField": "materialsCategoryLong",
-          "ValueField": "materialsCategoryCode"
+          "Url": "/api/dict/options/mat-category",
+          "LabelField": "MaterialsCategory_Long",
+          "ValueField": "MaterialsCategory_Long",
+          "FilterUsed": false
         },
         "IsRequired": false
       },
