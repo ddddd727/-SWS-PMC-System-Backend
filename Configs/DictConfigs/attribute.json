@@ -185,117 +185,117 @@
       }
     ]
   },
-  "piping-standard": {
-    "DisplayName": "管材标准",
-    "ViewName": "View_Dict_PipingStandard",
-    "PhysicalTableName": "S3D_Dict_PipingStandard",
-    "CodeListTableName": "",
-    "HandlerType": "Attribute",
-    "UniqueConstraints": [
-      [
-        "MaterialsCategory_CL",
-        "PipingStandardCode"
-      ]
-    ],
-    "Columns": [
-      {
-        "DbField": "ID",
-        "Title": "ID",
-        "IsPrimaryKey": true,
-        "IsHidden": false,
-        "IsReadOnly": true
-      },
-      {
-        "DbField": "GeometricIndustryStandard_CL",
-        "Title": "标准CL",
-        "UiType": "Input",
-        "IsHidden": true,
-        "IsRequired": true
-      },
-      {
-        "DbField": "GeometricIndustryStandard_Long",
-        "Title": "标准",
-        "UiType": "Select",
-        "IsRequired": true,
-        "DataSource": {
-          "Url": "/api/dict/options/geo-standard",
-          "LabelField": "GeometricIndustryStandard_Long",
-          "ValueField": "GeometricIndustryStandard_Long",
-          "ValueMapping": {
-            "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL"
-          }
-        }
-      },
-      {
-        "DbField": "PipingStandardCode",
-        "Title": "标准编码",
-        "UiType": "Input",
-        "IsHidden": false,
-        "IsRequired": true,
-        "Validation": {
-          "MaxLength": 1,
-          "MinLength": 1,
-          "Pattern": "^[A-Za-z0-9]$",
-          "CustomMessage": "编码只能是单个字母或数字"
-        }
-      },
-      {
-        "DbField": "MaterialsCategory_CL",
-        "Title": "主材料CL",
-        "UiType": "Input",
-        "IsHidden": true
-      },
-      {
-        "DbField": "MaterialsCategory_Long",
-        "Title": "主材料",
-        "UiType": "Select",
-        "IsHidden": false,
-        "IsRequired": true,
-        "DataSource": {
-          "Url": "/api/dict/options/mat-category",
-          "LabelField": "MaterialsCategory_Long",
-          "ValueField": "MaterialsCategory_Long",
-          "FilterUsed": false,
-          "ValueMapping": {
-            "MaterialsCategory_CL": "MaterialsCategory_CL"
-          }
-        }
-      },
-      {
-        "DbField": "GeometricIndustryPractice_CL",
-        "Title": "标准系列CL",
-        "UiType": "Input",
-        "IsHidden": true
-      },
-      {
-        "DbField": "GeometricIndustryPractice_Long",
-        "Title": "标准系列",
-        "UiType": "Select",
-        "IsHidden": false,
-        "IsRequired": true,
-        "DataSource": {
-          "Url": "/api/dict/options/std-series",
-          "LabelField": "GeometricIndustryPractice_Long",
-          "ValueField": "GeometricIndustryPractice_Long",
-          "FilterUsed": false,
-          "ValueMapping": {
-            "GeometricIndustryPractice_CL": "GeometricIndustryPractice_CL"
-          }
-        }
-      },
-      {
-        "DbField": "JsonData",
-        "Title": "扩展属性",
-        "UiType": "JsonInput",
-        "IsHidden": false
-      },
-      {
-        "DbField": "Status",
-        "Title": "状态",
-        "UiType": "Switch"
-      }
-    ]
-  },
+    "piping-standard": {
+        "DisplayName": "管材标准",
+        "ViewName": "View_Dict_PipingStandard",
+        "PhysicalTableName": "S3D_Dict_PipingStandard",
+        "CodeListTableName": "GeometricIndustryStandard",
+        "HandlerType": "Attribute",
+        "UniqueConstraints": [
+            [
+                "MaterialsCategory_CL",
+                "PipingStandardCode"
+            ]
+        ],
+        "Columns": [
+            {
+                "DbField": "ID",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "GeometricIndustryStandard_CL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
+                "DbField": "GeometricIndustryStandard_Long",
+                "Title": "标准",
+                "UiType": "Select",
+                "IsRequired": true,
+                "DataSource": {
+                    "Url": "/api/dict/options/geo-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": {
+                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL"
+                    }
+                }
+            },
+            {
+                "DbField": "PipingStandardCode",
+                "Title": "标准编码",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsRequired": true,
+                "Validation": {
+                    "MaxLength": 1,
+                    "MinLength": 1,
+                    "Pattern": "^[A-Za-z0-9]$",
+                    "CustomMessage": "编码只能是单个字母或数字"
+                }
+            },
+            {
+                "DbField": "MaterialsCategory_CL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
+                "DbField": "MaterialsCategory_Long",
+                "Title": "主材料",
+                "UiType": "Select",
+                "IsHidden": false,
+                "IsRequired": true,
+                "DataSource": {
+                    "Url": "/api/dict/options/mat-category",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "FilterUsed": false,
+                    "ValueMapping": {
+                        "MaterialsCategory_CL": "MaterialsCategory_CL"
+                    }
+                }
+            },
+            {
+                "DbField": "GeometricIndustryPractice_CL",
+                "Title": "标准系列CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
+                "DbField": "GeometricIndustryPractice_Long",
+                "Title": "标准系列",
+                "UiType": "Select",
+                "IsHidden": false,
+                "IsRequired": true,
+                "DataSource": {
+                    "Url": "/api/dict/options/std-series",
+                    "LabelField": "GeometricIndustryPractice_Long",
+                    "ValueField": "GeometricIndustryPractice_Long",
+                    "FilterUsed": false,
+                    "ValueMapping": {
+                        "GeometricIndustryPractice_CL": "GeometricIndustryPractice_CL"
+                    }
+                }
+            },
+            {
+                "DbField": "JsonData",
+                "Title": "扩展属性",
+                "UiType": "JsonInput",
+                "IsHidden": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            }
+        ]
+    },
   "mat-grade": {
     "DisplayName": "B3-牌号",
     "ViewName": "View_Dict_MaterialsGrade",
