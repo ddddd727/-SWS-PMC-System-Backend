@@ -5,7 +5,7 @@ using PMCSystem_Backend.Dtos.Dict;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Data;
 
-namespace PMCSystem_Backend.Services.Implementations.DictStrategies 
+namespace PMCSystem_Backend.Services.Implementations.DictStrategies
 {
     public class FittingDictStrategy(PmcContext context) : IDictStrategy
     {
