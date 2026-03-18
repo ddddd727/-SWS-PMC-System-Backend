@@ -1,5 +1,6 @@
 using AutoMapper;
 using PMCSystem_Backend.Entities;
+using PMCSystem_Backend.Entities.DesignRule;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
 
@@ -28,6 +29,10 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<CreateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
             CreateMap<UpdateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
             CreateMap<S3dRulePipingBendParameter, UpdateS3dRulePipingBendParameterDto>();
+
+            CreateMap<S3dCommonPlainPipingGenericData, S3dCommonPlainPipingGenericDataDto>().ReverseMap();
+            CreateMap<CreateS3dCommonPlainPipingGenericDataDto, S3dCommonPlainPipingGenericData>();
+            CreateMap<UpdateS3dCommonPlainPipingGenericDataDto, S3dCommonPlainPipingGenericData>();
         }
     }
 }

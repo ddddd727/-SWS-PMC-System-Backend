@@ -66,6 +66,7 @@ try
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
     builder.Services.AddScoped<IS3dCodePipingBendParameterService, S3dCodePipingBendParameterService>();
     builder.Services.AddScoped<IS3dDictPipingBendDataService, S3dDictPipingBendDataService>();
+    builder.Services.AddScoped<IS3dCommonPlainPipingGenericDataService, S3dCommonPlainPipingGenericDataService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
     builder.Services.AddScoped<IS3dCodeShortCodeMapService, S3dCodeShortCodeMapService>();
     builder.Services.AddScoped<IS3dRuleShortCodeMapService, S3dRuleShortCodeMapService>();
