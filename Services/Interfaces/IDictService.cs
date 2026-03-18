@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using System.Collections.Generic;
 using PMCSystem_Backend.Dtos.Dict;
 
 namespace PMCSystem_Backend.Services.Interfaces
@@ -15,5 +16,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// 供 CustomRules.Type=Url 的前端调用
         /// </summary>
         Task<DictValidateResponse> ValidateFieldAsync(string type, DictValidateRequest request);
+        Task<IEnumerable<dynamic>> GetCodeListOptionsAsync(string tableName, DataSourceRelationConfig? relation = null);
     }
 }
