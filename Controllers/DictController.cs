@@ -27,7 +27,6 @@ namespace PMCSystem_Backend.Controllers
         // GET /api/dict/options/std-series
         // ================================================================
         [HttpGet("options/{type}")]
-        [HttpGet("options/{type}")]
         public async Task<IActionResult> GetOptions(string type)
         {
             try
