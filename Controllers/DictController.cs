@@ -12,16 +12,13 @@ namespace PMCSystem_Backend.Controllers
     public class DictController : ControllerBase
     {
         private readonly IDictService _dictService;
-        private readonly IS3dCommonCodeListValueService _codeListService;
-        private readonly DictConfigManager _configManager;
+        private readonly DictConfigManager _configManager; // 移除了 _codeListService
 
         public DictController(
             IDictService dictService,
-            IS3dCommonCodeListValueService codeListService,
             DictConfigManager configManager)
         {
             _dictService = dictService;
-            _codeListService = codeListService;
             _configManager = configManager;
         }
 
@@ -29,6 +26,7 @@ namespace PMCSystem_Backend.Controllers
         // 1. 下拉框选项
         // GET /api/dict/options/std-series
         // ================================================================
+        [HttpGet("options/{type}")]
         [HttpGet("options/{type}")]
         public async Task<IActionResult> GetOptions(string type)
         {
@@ -44,7 +42,8 @@ namespace PMCSystem_Backend.Controllers
                     .FirstOrDefault(c => c.DataSource?.LoadRelation != null)
                     ?.DataSource?.LoadRelation;
 
-                var result = await _codeListService.GetOptionsAsync(config.CodeListTableName, relation);
+                // 【修改点】改为调用 _dictService.GetCodeListOptionsAsync
+                var result = await _dictService.GetCodeListOptionsAsync(config.CodeListTableName, relation);
                 return Ok(result);
             }
             catch (Exception ex)
