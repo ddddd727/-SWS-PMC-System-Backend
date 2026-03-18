@@ -109,7 +109,9 @@ namespace PMCSystem_Backend.Services.Implementations
                                     Disabled = o.Disabled
                                 }).ToList(),
 
-                                ValueMapping = c.DataSource.ValueMapping
+                                ValueMapping = c.DataSource.ValueMapping,
+
+                                FilterUsed = c.DataSource.FilterUsed
                             }
                         })
                 ]
