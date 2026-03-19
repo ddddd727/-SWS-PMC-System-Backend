@@ -17,9 +17,9 @@ public partial class PmcContextCky : DbContext
     {
     }
 
-    public virtual DbSet<S3dCodeWallThickness> S3dCodeWallThicknesses { get; set; }
-
     public virtual DbSet<S3dCodePipingBendParameter> S3dCodePipingBendParameters { get; set; }
+
+    public virtual DbSet<S3dCodePlainPipingGenericData> S3dCodePlainPipingGenericData { get; set; }
 
     public virtual DbSet<S3dCodeShortCodeMap> S3dCodeShortCodeMaps { get; set; }
 
@@ -33,38 +33,17 @@ public partial class PmcContextCky : DbContext
 
     public virtual DbSet<S3dDictPipingBendData> S3dDictPipingBendData { get; set; }
 
-    public virtual DbSet<S3dDictWallThickness> S3dDictWallThicknesses { get; set; }
-
     public virtual DbSet<S3dRulePipingBendParameter> S3dRulePipingBendParameters { get; set; }
 
     public virtual DbSet<S3dDictPipingComponentType> S3dDictPipingComponentTypes { get; set; }
 
     public virtual DbSet<S3dRuleShortCodeHierarchyRule> S3dRuleShortCodeHierarchyRules { get; set; }
 
+    public virtual DbSet<PMCSystem_Backend.Entities.DesignRule.S3dCommonPlainPipingGenericData> S3dCommonPlainPipingGenericData { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<S3dCodeWallThickness>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("S3D_Code_WallThickness");
-
-            entity.Property(e => e.EndStandard).HasMaxLength(255);
-            entity.Property(e => e.EndStandardCl).HasColumnName("EndStandard_CL");
-            entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.Ndpunit)
-                .HasMaxLength(100)
-                .HasColumnName("NDPUnit");
-            entity.Property(e => e.Npd)
-                .HasColumnType("decimal(10, 3)")
-                .HasColumnName("NPD");
-            entity.Property(e => e.PipingOutsideDiameter).HasColumnType("decimal(10, 3)");
-            entity.Property(e => e.ScheduleThickness).HasMaxLength(255);
-            entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
-            entity.Property(e => e.WallThickness).HasColumnType("decimal(10, 3)");
-        });
-
         modelBuilder.Entity<S3dCodePipingBendParameter>(entity =>
         {
             entity
@@ -83,6 +62,23 @@ public partial class PmcContextCky : DbContext
             entity.Property(e => e.WallThicknessFrom).HasMaxLength(50);
             entity.Property(e => e.WallThicknessTo).HasMaxLength(50);
             entity.Property(e => e.BendRadiusMultiplier).HasColumnType("decimal(10, 3)");
+        });
+
+        modelBuilder.Entity<S3dCodePlainPipingGenericData>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("S3D_Code_PlainPipingGenericData");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.NominalPipingDiameter).HasColumnType("float");
+            entity.Property(e => e.NominalDiameterUnits).HasMaxLength(10);
+            entity.Property(e => e.EndStandardCl).HasColumnName("EndStandard_CL");
+            entity.Property(e => e.EndStandard).HasMaxLength(255);
+            entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
+            entity.Property(e => e.ScheduleThickness).HasMaxLength(255);
+            entity.Property(e => e.PipingOutsideDiameter).HasMaxLength(50);
+            entity.Property(e => e.WallThickness).HasMaxLength(50);
         });
 
         modelBuilder.Entity<S3dCommonCodeListTable>(entity =>
@@ -149,28 +145,6 @@ public partial class PmcContextCky : DbContext
             entity.Property(e => e.OutSideDiameterUnit).HasMaxLength(100);
             entity.Property(e => e.Status).HasDefaultValue(true);
             entity.Property(e => e.TailClampLength);
-        });
-
-        modelBuilder.Entity<S3dDictWallThickness>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__S3D_Dict__3214EC27B13DA1CB");
-
-            entity.ToTable("S3D_Dict_WallThickness");
-
-            entity.HasIndex(e => new { e.Npd, e.Ndpunit, e.ScheduleThicknessCl, e.EndStandardCl }, "UQ_WallThickness_NPD_Unit_Sche_Standard").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.EndStandardCl).HasColumnName("EndStandard_CL");
-            entity.Property(e => e.Ndpunit)
-                .HasMaxLength(100)
-                .HasColumnName("NDPUnit");
-            entity.Property(e => e.Npd)
-                .HasColumnType("decimal(10, 3)")
-                .HasColumnName("NPD");
-            entity.Property(e => e.PipingOutsideDiameter).HasColumnType("decimal(10, 3)");
-            entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
-            entity.Property(e => e.Status).HasDefaultValue(true);
-            entity.Property(e => e.WallThickness).HasColumnType("decimal(10, 3)");
         });
 
         modelBuilder.Entity<S3dRulePipingBendParameter>(entity =>
@@ -245,6 +219,40 @@ public partial class PmcContextCky : DbContext
             entity.Property(e => e.ModifiedBy).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.ModifiedDate).HasDefaultValueSql("(getdate())");
+        });
+
+        modelBuilder.Entity<PMCSystem_Backend.Entities.DesignRule.S3dCommonPlainPipingGenericData>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("DSP_PlainPipingGenericData_PK");
+
+            entity.ToTable("S3D_Common_PlainPipingGenericData");
+
+            entity.HasIndex(
+                    e => new
+                    {
+                        e.NominalPipingDiameter,
+                        e.NominalDiameterUnits,
+                        e.EndStandardCl,
+                        e.ScheduleThicknessCl,
+                        e.PressureRatingCl
+                    },
+                    "DSP_PlainPipingGenericData_UNIQUE")
+                .IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.NominalPipingDiameter).HasColumnType("float");
+            entity.Property(e => e.NominalDiameterUnits).HasMaxLength(5);
+            entity.Property(e => e.EndStandardCl).HasColumnName("EndStandard_CL");
+            entity.Property(e => e.ScheduleThicknessCl).HasColumnName("ScheduleThickness_CL");
+            entity.Property(e => e.PressureRatingCl).HasColumnName("PressureRating_CL");
+            entity.Property(e => e.PipingOutsideDiameter).HasMaxLength(50);
+            entity.Property(e => e.WallThickness).HasMaxLength(50);
+            entity.Property(e => e.Status).HasDefaultValue(true);
+
+            entity.Property(e => e.CreatedBy).HasMaxLength(100).HasDefaultValueSql("(suser_sname())");
+            entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime2(3)");
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime2(3)");
         });
 
         OnModelCreatingPartial(modelBuilder);
