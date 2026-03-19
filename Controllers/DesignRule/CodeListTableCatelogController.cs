@@ -35,5 +35,28 @@ namespace PMCSystem_Backend.Controllers
             var result = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
         }
+
+        [HttpGet("hierarchy/{codeListTableName}")]
+        public async Task<IActionResult> GetHierarchy(string codeListTableName)
+        {
+            if (string.IsNullOrWhiteSpace(codeListTableName))
+                return BadRequest("codeListTableName cannot be empty");
+
+            var hierarchy = await _service.GetHierarchyNamesAsync(codeListTableName);
+            if (hierarchy.Count == 0)
+                return NotFound();
+
+            return Ok(hierarchy);
+        }
+
+        [HttpPost("multilevel")]
+        public async Task<ActionResult<MultiLevelCodeListResponseDto>> GetMultiLevelValues([FromBody] MultiLevelCodeListRequestDto request)
+        {
+            if (request == null)
+                return BadRequest("Invalid request");
+
+            var result = await _service.GetMultiLevelCodeListValuesAsync(request);
+            return Ok(result);
+        }
     }
 }

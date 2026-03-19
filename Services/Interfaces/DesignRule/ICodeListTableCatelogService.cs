@@ -8,5 +8,7 @@ namespace PMCSystem_Backend.Services.Interfaces
     {
         Task<List<CodeListTableCatelogDto>> GetAllAsync();
         Task<CodeListTableCatelogDto> CreateAsync(CreateCodeListTableCatelogDto dto);
+        Task<CodeListHierarchyDto> GetHierarchyNamesAsync(string codeListTableName);
+        Task<MultiLevelCodeListResponseDto> GetMultiLevelCodeListValuesAsync(MultiLevelCodeListRequestDto request);
     }
 }
