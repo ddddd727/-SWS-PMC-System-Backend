@@ -36,10 +36,6 @@ public partial class PmcContextLr : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (!optionsBuilder.IsConfigured)
-        {
-            // optionsBuilder.UseSqlServer("Data Source=RICK;Initial Catalog=PMC0120;Integrated Security=True;TrustServerCertificate=True");
-        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

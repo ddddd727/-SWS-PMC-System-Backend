@@ -316,25 +316,12 @@ interface SpecNPDInfo {
 
 ---
 
-### 3.6 PipeFittingSpec - 管附件规格
+### 3.6 GetPipeFittingSpecRequest - 获取管附件标准请求
 
 ```typescript
-interface PipeFittingSpec {
-  standardName: string;     // 标准名称
-  materialList: string[];   // 材料列表
-}
-```
-
-**示例：**
-
-```json
-{
-  "standardName": "ASME B16.9",
-  "materialList": [
-    "Carbon Steel",
-    "Stainless Steel 304",
-    "Stainless Steel 316"
-  ]
+interface GetPipeFittingSpecRequest {
+  componentTypeId?: number;     // 部件类型 ID（推荐），与 GetComponentTypes 返回的 id 一致
+  componentTypeName?: string;   // 部件类型名称（兼容），长度≤255；与 componentTypeId 二选一，至少填一个
 }
 ```
 
@@ -463,12 +450,10 @@ interface GetNPDInfoRequest {
 
 ---
 
-### 3.9 GetPipeFittingSpecRequest - 获取管附件规格请求
+### 3.9 GetMaterialsGradesResponse - 获取材料牌号响应
 
 ```typescript
-interface GetPipeFittingSpecRequest {
-  componentTypeName: string;  // 部件类型名称（必填，长度≤255）
-}
+type GetMaterialsGradesResponse = ApiResponse<string[]>;
 ```
 
 ---
@@ -976,9 +961,9 @@ interface SpecNPDInfo {
 
 ---
 
-### 4.6 获取管附件规格
+### 4.6 获取管附件标准
 
-根据部件类型获取对应的标准列表和材料列表。
+根据部件类型获取对应的管附件标准名称列表。
 
 #### 基本信息
 
@@ -989,14 +974,15 @@ interface SpecNPDInfo {
 
 #### 请求参数
 
-| 参数名            | 类型   | 位置  | 必填 | 说明                    | 示例  |
-| ----------------- | ------ | ----- | ---- | ----------------------- | ----- |
-| componentTypeName | string | Query | 是   | 部件类型名称，长度≤255 | Elbow |
+| 参数名            | 类型   | 位置  | 必填 | 说明                                                                 | 示例  |
+| ----------------- | ------ | ----- | ---- | -------------------------------------------------------------------- | ----- |
+| componentTypeId   | number | Query | 否   | 部件类型 ID（推荐），与 GET /api/PmcSpec/ComponentTypes 返回的 id 一致 | 1     |
+| componentTypeName | string | Query | 否   | 部件类型名称（兼容），长度≤255；与 componentTypeId 至少填写一个        | Elbow |
 
 #### 请求示例
 
 ```
-GET /api/PmcSpec/PipeFittingSpec?componentTypeName=Elbow
+GET /api/PmcSpec/PipeFittingSpec?componentTypeId=1
 ```
 
 #### 响应数据
@@ -1008,21 +994,8 @@ GET /api/PmcSpec/PipeFittingSpec?componentTypeName=Elbow
   "code": 200,
   "message": "获取成功",
   "data": [
-    {
-      "standardName": "ASME B16.9",
-      "materialList": [
-        "Carbon Steel",
-        "Stainless Steel 304",
-        "Stainless Steel 316"
-      ]
-    },
-    {
-      "standardName": "JIS B2311",
-      "materialList": [
-        "Carbon Steel",
-        "Stainless Steel"
-      ]
-    }
+    "ASME B16.9",
+    "JIS B2311"
   ],
   "timestamp": "2026-02-03T10:30:00Z",
   "traceId": "0HMVD7K3QH1AE"
@@ -1037,8 +1010,8 @@ GET /api/PmcSpec/PipeFittingSpec?componentTypeName=Elbow
   "message": "请求参数验证失败",
   "data": [
     {
-      "field": "componentTypeName",
-      "message": "部件类型名称不能为空",
+      "field": "componentTypeId",
+      "message": "请至少提供 ComponentTypeId 或 ComponentTypeName 之一",
       "errorCode": "VALIDATION_ERROR"
     }
   ],
@@ -1052,7 +1025,7 @@ GET /api/PmcSpec/PipeFittingSpec?componentTypeName=Elbow
 ```json
 {
   "code": 404,
-  "message": "未找到对应的标准列表和材料列表",
+  "message": "未找到对应的标准列表",
   "timestamp": "2026-02-03T10:30:00Z",
   "traceId": "0HMVD7K3QH1AG"
 }
@@ -1061,17 +1034,51 @@ GET /api/PmcSpec/PipeFittingSpec?componentTypeName=Elbow
 #### TypeScript类型定义
 
 ```typescript
-type GetPipeFittingSpecResponse = ApiResponse<PipeFittingSpec[]>;
-
-interface PipeFittingSpec {
-  standardName: string;
-  materialList: string[];
-}
+type GetPipeFittingSpecResponse = ApiResponse<string[]>;
 ```
 
 ---
 
-### 4.7 保存规格书配置
+### 4.7 获取材料牌号
+
+获取所有材料牌号列表，来源于视图 `S3D_CL_MaterialsGrade` 的 `ShortStringValue` 列。
+
+#### 基本信息
+
+- **接口地址**: `GET /api/PmcSpec/MaterialsGrades`
+- **请求方式**: GET
+- **权限要求**: 无
+- **内容类型**: application/json
+
+#### 请求参数
+
+无
+
+#### 成功响应 (200)
+
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": [
+    "A105",
+    "304",
+    "316"
+  ],
+  "timestamp": "2026-02-03T10:30:00Z",
+  "traceId": "0HMVD7K3QH1AH"
+}
+```
+
+#### TypeScript 类型定义
+
+```typescript
+type GetMaterialsGradesResponse = ApiResponse<string[]>;
+```
+
+---
+
+### 4.8 保存规格书配置
 
 保存管系规格书的配置信息（简化版：仅包含标准名称和材料信息，不包含通径范围）。后端按 `(pmcCode, shipType, shipNumber)` 精确匹配数据库中已存在的记录进行更新，**请确保该组合对应的 PMC 数据已预先存在**。
 
@@ -1766,7 +1773,6 @@ import type {
   PmcSelectInfo,
   PmcBaseInfo,
   SpecNPDInfo,
-  PipeFittingSpec,
   SavePipeSpecRequest,
   ApiResponse
 } from '@/types';
@@ -1797,11 +1803,16 @@ export const pmcSpecApi = {
     return apiClient.get<ApiResponse<SpecNPDInfo>>('/PmcSpec/NPDInfo', { params });
   },
 
-  // 获取管附件规格
-  getPipeFittingSpec(componentTypeName: string) {
-    return apiClient.get<ApiResponse<PipeFittingSpec[]>>('/PmcSpec/PipeFittingSpec', {
-      params: { componentTypeName }
+  // 获取管附件标准
+  getPipeFittingSpec(params: { componentTypeId?: number; componentTypeName?: string }) {
+    return apiClient.get<ApiResponse<string[]>>('/PmcSpec/PipeFittingSpec', {
+      params
     });
+  },
+
+  // 获取材料牌号列表
+  getMaterialsGrades() {
+    return apiClient.get<ApiResponse<string[]>>('/PmcSpec/MaterialsGrades');
   },
 
   // 保存规格书配置
@@ -1986,11 +1997,6 @@ export interface SpecNPDInfo {
   npd?: number[];
   outsideDiameter?: number[];
   wallThickness?: number[];
-}
-
-export interface PipeFittingSpec {
-  standardName: string;
-  materialList: string[];
 }
 
 export interface DiameterRange {

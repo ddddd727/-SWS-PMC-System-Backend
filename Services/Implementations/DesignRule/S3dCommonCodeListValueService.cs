@@ -10,14 +10,14 @@ namespace PMCSystem_Backend.Services.Implementations
         private readonly PmcContextCky _context;
         public async Task<IEnumerable<dynamic>> GetOptionsAsync(string tableName)
         {
-           
+
             var tableEntity = await _context.S3dCommonCodeListTables
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.CodeListTableName == tableName);
 
             if (tableEntity == null)
             {
-              
+
                 return Enumerable.Empty<dynamic>();
             }
 

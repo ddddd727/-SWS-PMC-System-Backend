@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
@@ -16,6 +17,9 @@ using OfficeOpenXml;
 
 // 注册编码提供程序，确保 EPPlus 处理 ZIP/xlsx 时正确解析编码（修复导出 Excel 无法打开问题）
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+// 设置控制台编码为 UTF-8，解决中文乱码问题
+Console.OutputEncoding = Encoding.UTF8;
+Console.InputEncoding = Encoding.UTF8;
 // 设置 EPPlus 许可证上下文（必须在创建任何 ExcelPackage 之前设置）
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业用途，如果是商业用途请使用 LicenseContext.Commercial
 
@@ -24,7 +28,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .WriteTo.Console()
-    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateBootstrapLogger();
 
 try
@@ -37,7 +41,7 @@ try
         .ReadFrom.Services(services) // 从DI容器注入配置的Sink和Enricher
         .Enrich.FromLogContext()
         .WriteTo.Console()
-        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
+        .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day));
     //builder.Services.AddSerilog();
 
 
@@ -51,6 +55,8 @@ try
 
     // 这是你本来就有的（确保工厂注册在它的上面或附近）
     builder.Services.AddScoped<IDictService, DictService>();
+    // 注册DictPipingService
+    builder.Services.AddScoped<IDictPipingService, DictPipingService>();
 
     // Add services to the container.
     // 注册业务服务已移动到下方
@@ -110,7 +116,7 @@ try
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowVueFrontend",
-        policy => policy.WithOrigins("http://10.8.98.105").AllowAnyHeader().AllowAnyMethod());
+        policy => policy.WithOrigins("http://10.8.98.15").AllowAnyHeader().AllowAnyMethod());
     });
 
     //  DbContext
@@ -143,6 +149,14 @@ try
 
     builder.Configuration.AddJsonFile("Configs/dicts.json", optional: true, reloadOnChange: true);
 
+    // 配置反向代理转发头（使用 Nginx/IIS 反向代理时必须）
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
     // 配置JSON序列化
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -158,31 +172,20 @@ try
     // 注册日志服务
     builder.Services.AddLogging();
 
+    // 健康检查（供负载均衡/容器编排探测）
+    builder.Services.AddHealthChecks();
+
 
     var app = builder.Build();
 
+    app.UseForwardedHeaders();
 
-
-    if (app.Environment.IsDevelopment())
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            // 设置Swagger UI 的根路径为 /swagger
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            options.RoutePrefix = "swagger";        // 访问http://localhost:xxxx/swagger 即可打开UI
-        });
-    }
-    else
-    {
-        // 生产环境也可以开启，根据需求关闭或限制访问
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            options.RoutePrefix = "swagger";
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-        });
-    }
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+        options.RoutePrefix = "swagger";
+    });
     // 配置中间件
 
     // Configure the HTTP request pipeline.
@@ -190,18 +193,15 @@ try
     // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
     app.UseMiddleware<ExceptionMiddleware>();
 
-    // 注册异常处理中间件（应放在管道最前面，以捕获所有异常）
-    app.UseMiddleware<ExceptionMiddleware>();
-
-    // app.UseHttpsRedirection();
-
-    app.UseMiddleware<ExceptionMiddleware>();
+    app.UseHttpsRedirection();
 
     app.UseCors("AllowVueFrontend");
 
     app.UseAuthorization();
 
     app.MapControllers();
+
+    app.MapHealthChecks("/health");
 
     app.Run();
 }

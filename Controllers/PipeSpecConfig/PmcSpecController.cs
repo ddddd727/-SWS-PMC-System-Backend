@@ -226,15 +226,15 @@ namespace PMCSystem_Backend.Controllers
         }
 
         /// <summary>
-        /// 根据部件类型获取标准列表和对应的材料列表
+        /// 根据部件类型获取管附件标准名称列表。
         /// </summary>
         /// <param name="request">获取管附件规格请求</param>
-        /// <returns>标准列表及每个标准对应的材料列表</returns>
-        /// <response code="200">查询成功，返回标准列表和材料列表</response>
+        /// <returns>标准名称列表</returns>
+        /// <response code="200">查询成功，返回标准名称列表</response>
         /// <response code="400">请求参数错误或查询失败</response>
         /// <response code="404">未找到该部件类型对应的标准数据</response>
         [HttpGet("PipeFittingSpec")]
-        [ProducesResponseType(typeof(ApiResponse<List<PipeFittingSpecDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<List<string>>), 200)]
         [ProducesResponseType(typeof(ApiResponse), 400)]
         [ProducesResponseType(typeof(ApiResponse), 404)]
         public IActionResult GetPipeFittingSpec([FromQuery] GetPipeFittingSpecRequest request)
@@ -247,30 +247,72 @@ namespace PMCSystem_Backend.Controllers
 
             try
             {
-                _logger.LogInformation("开始获取管附件规格，部件类型: {ComponentTypeName}", request.ComponentTypeName);
+                _logger.LogInformation(
+                    "开始获取管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                    request.ComponentTypeId,
+                    request.ComponentTypeName);
 
-                // 调用服务层方法获取标准列表和材料列表
-                var result = _pmcSpecService.GetPipeFittingSpec(request.ComponentTypeName);
+                var result = _pmcSpecService.GetPipeFittingSpec(request.ComponentTypeId, request.ComponentTypeName);
 
-                // 判断查询结果是否为空
                 if (result == null || !result.Any())
                 {
-                    _logger.LogWarning("未找到管附件规格，部件类型: {ComponentTypeName}", request.ComponentTypeName);
-                    return Fail(ApiErrorCode.ResourceNotFound, "未找到对应的标准列表和材料列表");
+                    _logger.LogWarning(
+                        "未找到管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                        request.ComponentTypeId,
+                        request.ComponentTypeName);
+                    return Fail(ApiErrorCode.ResourceNotFound, "未找到对应的标准列表");
                 }
 
-                _logger.LogInformation("成功获取管附件规格，部件类型: {ComponentTypeName}，共 {Count} 条",
-                    request.ComponentTypeName, result.Count);
+                _logger.LogInformation(
+                    "成功获取管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}，共 {Count} 条",
+                    request.ComponentTypeId,
+                    request.ComponentTypeName,
+                    result.Count);
                 return Success(result, "获取成功");
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "管附件规格参数验证失败，部件类型: {ComponentTypeName}", request.ComponentTypeName);
+                _logger.LogWarning(
+                    ex,
+                    "管附件标准参数验证失败，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                    request.ComponentTypeId,
+                    request.ComponentTypeName);
                 return Fail(ApiErrorCode.ValidationError, "参数验证失败");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "获取管附件规格时发生错误，部件类型: {ComponentTypeName}", request.ComponentTypeName);
+                _logger.LogError(
+                    ex,
+                    "获取管附件标准时发生错误，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                    request.ComponentTypeId,
+                    request.ComponentTypeName);
+                return Fail(ApiErrorCode.BusinessRuleViolation, "查询失败，请稍后重试");
+            }
+        }
+
+        /// <summary>
+        /// 获取所有材料牌号列表（来自视图 S3D_CL_MaterialsGrade，仅返回 ShortStringValue 列）。
+        /// </summary>
+        /// <returns>材料牌号列表</returns>
+        /// <response code="200">查询成功，返回材料牌号列表</response>
+        /// <response code="400">查询失败</response>
+        [HttpGet("MaterialsGrades")]
+        [ProducesResponseType(typeof(ApiResponse<List<string>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse), 400)]
+        public IActionResult GetMaterialsGrades()
+        {
+            try
+            {
+                _logger.LogInformation("开始获取材料牌号列表");
+
+                var result = _pmcSpecService.GetMaterialsGrades();
+
+                _logger.LogInformation("成功获取材料牌号列表，共 {Count} 条", result.Count);
+                return Success(result, "获取成功");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取材料牌号列表时发生错误");
                 return Fail(ApiErrorCode.BusinessRuleViolation, "查询失败，请稍后重试");
             }
         }

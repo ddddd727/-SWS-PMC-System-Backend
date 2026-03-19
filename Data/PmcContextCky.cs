@@ -29,6 +29,8 @@ public partial class PmcContextCky : DbContext
 
     public virtual DbSet<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; }
 
+    public virtual DbSet<S3dClMaterialsGrade> S3dClMaterialsGrades { get; set; }
+
     public virtual DbSet<S3dDictPipingBendData> S3dDictPipingBendData { get; set; }
 
     public virtual DbSet<S3dRulePipingBendParameter> S3dRulePipingBendParameters { get; set; }
@@ -114,6 +116,17 @@ public partial class PmcContextCky : DbContext
             entity.HasOne(d => d.CodeListTable).WithMany(p => p.S3dCommonCodeListValues)
                 .HasForeignKey(d => d.CodeListTableId)
                 .HasConstraintName("FK__UD_CodeLi__CodeL__3B75D760");
+        });
+
+        modelBuilder.Entity<S3dClMaterialsGrade>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("S3D_CL_MaterialsGrade");
+
+            entity.Property(e => e.CodeListNumber);
+            entity.Property(e => e.ShortStringValue).HasMaxLength(255);
+            entity.Property(e => e.LongStringValue).HasMaxLength(255);
         });
 
         modelBuilder.Entity<S3dDictPipingBendData>(entity =>
