@@ -49,13 +49,39 @@ namespace PMCSystem_Backend.Controllers.CodeListManagement
             return Ok(hierarchy);
         }
 
-        [HttpPost("multilevel")]
-        public async Task<ActionResult<MultiLevelCodeListResponseDto>> GetMultiLevelValues([FromBody] MultiLevelCodeListRequestDto request)
+        [HttpGet("multilevel")]
+        public async Task<ActionResult<MultiLevelCodeListResponseDto>> GetMultiLevelValues(string? level1 = null, string? level2 = null, string? level3 = null, string? level4 = null, string? level5 = null)
         {
-            if (request == null)
-                return BadRequest("Invalid request");
+            var request = new MultiLevelCodeListRequestDto
+            {
+                Level1 = level1,
+                Level2 = level2,
+                Level3 = level3,
+                Level4 = level4,
+                Level5 = level5
+            };
 
             var result = await _service.GetMultiLevelCodeListValuesAsync(request);
+            return Ok(result);
+        }
+
+        [HttpGet("combined/{codeListTableName}")]
+        public async Task<ActionResult<CodeListCombinedResponseDto>> GetCombinedCodeList(string codeListTableName)
+        {
+            if (string.IsNullOrWhiteSpace(codeListTableName))
+                return BadRequest("codeListTableName cannot be empty");
+
+            var result = await _service.GetCombinedCodeListAsync(codeListTableName);
+            return Ok(result);
+        }
+
+        [HttpGet("values/by-parent/{shortStringValue}")]
+        public async Task<ActionResult<List<CodeListValueDto>>> GetValuesByParentShortStringValue(string shortStringValue)
+        {
+            if (string.IsNullOrWhiteSpace(shortStringValue))
+                return BadRequest("shortStringValue cannot be empty");
+
+            var result = await _service.GetCodeListValuesByParentShortStringValueAsync(shortStringValue);
             return Ok(result);
         }
     }
