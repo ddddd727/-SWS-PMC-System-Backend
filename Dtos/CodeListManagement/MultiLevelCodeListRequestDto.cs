@@ -1,9 +1,7 @@
-namespace PMCSystem_Backend.Dtos.DesignRule
+namespace PMCSystem_Backend.Dtos.CodeListManagement
 {
-    public class CodeListHierarchyDto
+    public class MultiLevelCodeListRequestDto
     {
-        public int Count { get; set; }
-
         public string? Level1 { get; set; }
 
         public string? Level2 { get; set; }

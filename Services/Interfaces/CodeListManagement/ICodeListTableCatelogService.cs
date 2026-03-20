@@ -1,8 +1,8 @@
-using PMCSystem_Backend.Dtos.DesignRule;
+using PMCSystem_Backend.Dtos.CodeListManagement;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace PMCSystem_Backend.Services.Interfaces
+namespace PMCSystem_Backend.Services.Interfaces.CodeListManagement
 {
     public interface ICodeListTableCatelogService
     {

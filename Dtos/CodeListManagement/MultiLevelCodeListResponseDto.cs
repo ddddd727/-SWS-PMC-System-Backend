@@ -1,4 +1,4 @@
-namespace PMCSystem_Backend.Dtos.DesignRule
+namespace PMCSystem_Backend.Dtos.CodeListManagement
 {
     public class MultiLevelCodeListResponseDto
     {

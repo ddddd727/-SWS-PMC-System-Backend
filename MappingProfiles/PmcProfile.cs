@@ -3,7 +3,7 @@ using PMCSystem_Backend.Entities;
 using PMCSystem_Backend.Entities.DesignRule;
 using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
-using PMCSystem_Backend.Dtos.DesignRule;
+using PMCSystem_Backend.Dtos.CodeListManagement;
 
 namespace PMCSystem_Backend.MappingProfiles
 {

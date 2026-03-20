@@ -13,6 +13,8 @@ using PMCSystem_Backend.Services.Implementations;
 using PMCSystem_Backend.Services.Impletation;
 using PMCSystem_Backend.Services.Interface;
 using PMCSystem_Backend.Services.Implementations.DictStrategies;
+using PMCSystem_Backend.Services.Interfaces.CodeListManagement;
+using PMCSystem_Backend.Services.Implementations.CodeListManagement;
 using OfficeOpenXml;
 
 // 注册编码提供程序，确保 EPPlus 处理 ZIP/xlsx 时正确解析编码（修复导出 Excel 无法打开问题）

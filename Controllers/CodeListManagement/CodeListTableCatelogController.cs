@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using PMCSystem_Backend.Dtos.DesignRule;
-using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Dtos.CodeListManagement;
+using PMCSystem_Backend.Services.Interfaces.CodeListManagement;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace PMCSystem_Backend.Controllers
+namespace PMCSystem_Backend.Controllers.CodeListManagement
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -1,15 +1,15 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.DesignRule;
+using PMCSystem_Backend.Dtos.CodeListManagement;
 using PMCSystem_Backend.Entities.PipeSpecConfig;
-using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Services.Interfaces.CodeListManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PMCSystem_Backend.Services.Implementations
+namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
 {
     public class CodeListTableCatelogService : ICodeListTableCatelogService
     {
