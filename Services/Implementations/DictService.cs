@@ -8,8 +8,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using PMCSystem_Backend.Services.Interfaces;
 

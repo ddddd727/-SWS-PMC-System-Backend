@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Dtos.CodelistTable;
+﻿using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.CodelistTable;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {

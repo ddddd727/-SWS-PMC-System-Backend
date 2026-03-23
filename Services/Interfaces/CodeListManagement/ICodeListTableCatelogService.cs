@@ -1,4 +1,4 @@
-using PMCSystem_Backend.Dtos.CodeListManagement;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

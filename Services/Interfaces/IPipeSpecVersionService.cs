@@ -1,5 +1,5 @@
-using PMCSystem_Backend.Dtos.PipeSpecConfig;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 
 namespace PMCSystem_Backend.Services.Interfaces;
 

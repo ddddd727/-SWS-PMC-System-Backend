@@ -1,4 +1,4 @@
-﻿using PMCSystem_Backend.Dtos.Dict;
+﻿using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 using System.Threading.Tasks;
 
 namespace PMCSystem_Backend.Services.Interfaces

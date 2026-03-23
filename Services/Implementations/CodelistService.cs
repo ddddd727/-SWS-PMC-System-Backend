@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.CodelistTable;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.CodelistTable;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations

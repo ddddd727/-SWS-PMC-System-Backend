@@ -1,8 +1,7 @@
-using PMCSystem_Backend.Dtos.PipeSpecConfig;
-using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.Requests;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
 using System.Net;
 
 namespace PMCSystem_Backend.Services.Interfaces
@@ -16,7 +15,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// 获取所有船型船号信息
         /// </summary>
         /// <returns>船型信息</returns>
-        List<PMCSystem_Backend.Entities.PipeSpecConfig.ShipInfo> GetShipInfos();
+        List<ShipInfo> GetShipInfos();
 
         /// <summary>
         /// 获取所有部件类型信息

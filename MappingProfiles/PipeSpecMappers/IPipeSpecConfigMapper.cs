@@ -1,6 +1,6 @@
-using PMCSystem_Backend.Dtos.PipeSpecConfig;
-using PMCSystem_Backend.Dtos.PipeSpecConfig.Models;
-using PMCSystem_Backend.Dtos.PipeSpecConfig.Requests;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.Models;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.Requests;
 
 namespace PMCSystem_Backend.MappingProfiles.PipeSpecMappers
 {

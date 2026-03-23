@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -8,8 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -36,7 +35,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\TempEntities\" />
+    <Folder Include="Core\Exceptions\" />
+    <Folder Include="Core\Extensions\" />
+    <Folder Include="Core\DependencyInjection\" />
+    <Folder Include="Modules\DesignRules\Services\" />
+    <Folder Include="Modules\DesignRules\Repositories\" />
+    <Folder Include="Modules\PipingSpecifications\Repositories\" />
+    <Folder Include="Modules\PipingSpecifications\Services\" />
+    <Folder Include="Modules\PMCRuleConfig\Repositories\" />
+    <Folder Include="Modules\PMCRuleConfig\Services\" />
+    <Folder Include="Modules\StandardComponents\Repositories\" />
+    <Folder Include="Modules\StandardComponents\Services\" />
+    <Folder Include="Modules\StandardComponents\Entities\" />
   </ItemGroup>
 
   <ItemGroup>

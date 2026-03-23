@@ -1,4 +1,4 @@
-using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Modules.DesignRules.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

@@ -1,0 +1,23 @@
+# 项目架构与代码生成规范 (适用于 Cursor AI)
+
+你是一个高级 .NET 后端架构师。在为本项目生成任何 C# 代码时，必须严格遵守以下“模块化单体架构 (Modular Monolith)”规则：
+
+## 1. 目录结构规范
+- **禁止**将新接口或业务逻辑放入 `src/Legacy/` 目录中。
+- 所有新功能必须放置在 `src/Modules/` 下对应的业务模块中（如 `StandardComponents`, `PipingSpecifications`, `DesignRules`, `EngineeringConfig`, `PluginManagement`）。
+- 每个模块内部应包含：`Controllers`, `Services`, `DTOs`, `Entities`, `DataConfigurations`。
+
+## 2. 命名与分层规范
+- **Controller**: 必须放置在模块的 `Controllers` 文件夹下，命名如 `[Entity]Controller`，继承 `ControllerBase`，并使用 `[ApiController]` 和特性路由 `[Route("api/v1/[module]/[controller]")]`。
+- **Service**: 必须面向接口编程，如 `I[Entity]Service` 和 `[Entity]Service`。
+- **DTO**: 严格按操作命名，如 `Create[Entity]Request`, `[Entity]DetailResponse`。禁止出现 `Dto1`, `Req` 等模糊命名。
+
+## 3. 数据库 (EF Core) 规范 (核心铁律)
+- **绝对禁止**在生成新实体时直接修改 `Core/Data/AppDbContext.cs` 中的内容（如添加 `OnModelCreating` 配置）。
+- 任何实体类的表结构映射（HasMaxLength, ToTable 等），**必须**在该模块的 `DataConfigurations` 文件夹下创建一个实现 `IEntityTypeConfiguration<T>` 的独立配置类。
+- `AppDbContext` 已配置自动扫描，因此无需手动注册配置类。
+
+## 4. 依赖注入
+- 模块内部的服务注册，请提示开发者在 `Core/DependencyInjection` 中的扩展方法里进行注册，或提供对应的注册代码。
+
+在生成代码前，请先思考该功能属于哪个模块，并严格按上述结构输出代码路径及内容。

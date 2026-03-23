@@ -1,10 +1,10 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Common.Models;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.PipeSpecConfig;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Shared.Models;
 
 namespace PMCSystem_Backend.Services.Implementations
 {

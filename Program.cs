@@ -2,10 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.MappingProfiles.PipeSpecMappers;
-using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
 using System.Text.Json;
 using PMCSystem_Backend.Services.Interfaces;
@@ -16,6 +14,8 @@ using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using PMCSystem_Backend.Services.Interfaces.CodeListManagement;
 using PMCSystem_Backend.Services.Implementations.CodeListManagement;
 using OfficeOpenXml;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Core.Middlewares;
 
 // 注册编码提供程序，确保 EPPlus 处理 ZIP/xlsx 时正确解析编码（修复导出 Excel 无法打开问题）
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -141,8 +141,14 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // ע AutoMapper
-    builder.Services.AddAutoMapper(typeof(RuleProfiles));
+    // 注册 AutoMapper
+    builder.Services.AddAutoMapper(cfg =>
+    {
+        cfg.AddProfile<RuleProfiles>();
+        cfg.AddProfile<PmcProfile>();
+        cfg.AddProfile<PmcSpecRuleProfile>();
+        cfg.AddProfile<S3dMappingProfile>();
+    });
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Services.AddControllers(options =>

@@ -7,10 +7,10 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.Dict;
 using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 
 namespace PMCSystem_Backend.Services.Implementations
 {

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Collections.Generic;
-using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {

@@ -1,9 +1,8 @@
 using AutoMapper;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Entities.DesignRule;
-using PMCSystem_Backend.Models;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
-using PMCSystem_Backend.Dtos.CodeListManagement;
+using PMCSystem_Backend.Modules.DesignRules.Dtos;
+using PMCSystem_Backend.Modules.DesignRules.Entities;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 
 namespace PMCSystem_Backend.MappingProfiles
 {
@@ -17,7 +16,7 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dCodePipingBendParameter, S3dCodePipingBendParameterDto>();
             CreateMap<S3dCodePlainPipingGenericData, S3dCodePlainPipingGenericDataDto>();
             CreateMap<S3dCodeShortCodeMap, S3dCodeShortCodeMapDto>();
-            CreateMap<PMCSystem_Backend.Entities.PipeSpecConfig.S3dDictPipingComponentType, S3dDictPipingComponentTypeDto>().ReverseMap();
+            CreateMap<S3dDictPipingComponentType, S3dDictPipingComponentTypeDto>().ReverseMap();
 
             CreateMap<S3dRuleShortCodeMap, S3dRuleShortCodeMapDto>().ReverseMap();
             CreateMap<CreateS3dRuleShortCodeMapDto, S3dRuleShortCodeMap>();
@@ -36,8 +35,8 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<UpdateS3dCommonPlainPipingGenericDataDto, S3dCommonPlainPipingGenericData>();
 
             // CodeListTableCatelog Mappings
-            CreateMap<PMCSystem_Backend.Entities.PipeSpecConfig.S3dCommonCodeListTable, CodeListTableCatelogDto>().ReverseMap();
-            CreateMap<CreateCodeListTableCatelogDto, PMCSystem_Backend.Entities.PipeSpecConfig.S3dCommonCodeListTable>();
+            CreateMap<PMCSystem_Backend.Modules.PipingSpecifications.Entities.S3dCommonCodeListTable, CodeListTableCatelogDto>().ReverseMap();
+            CreateMap<CreateCodeListTableCatelogDto, PMCSystem_Backend.Modules.PipingSpecifications.Entities.S3dCommonCodeListTable>();
         }
     }
 }

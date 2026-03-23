@@ -1,4 +1,4 @@
-using PMCSystem_Backend.Dtos.TemplatePreview;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {

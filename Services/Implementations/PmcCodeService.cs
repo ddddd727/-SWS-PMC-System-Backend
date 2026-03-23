@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Models;
 using PMCSystem_Backend.Services.Interface;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Entities;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 
 namespace PMCSystem_Backend.Services.Impletation
 {

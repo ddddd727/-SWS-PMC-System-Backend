@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Common.Constants;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.PipeSpecConfig;
-using PMCSystem_Backend.Dtos.PipeSpecConfig.Models;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.Models;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Shared.Constants;
 
 namespace PMCSystem_Backend.Services.Implementations;
 
