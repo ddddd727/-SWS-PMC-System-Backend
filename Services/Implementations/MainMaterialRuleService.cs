@@ -2,9 +2,9 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Core.Data;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
-using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Services.Interfaces;
 
-namespace PMCSystem_Backend.Services.Impletation
+namespace PMCSystem_Backend.Services.Implementations
 {
     public class MainMaterialRuleService : IMainMaterialRuleService
     {

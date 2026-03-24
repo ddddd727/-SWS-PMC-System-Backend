@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
-using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Shared;
 using PMCSystem_Backend.Shared.Enums;
 

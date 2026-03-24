@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Shared;
 
 namespace PMCSystem_Backend.Modules.PMCRuleConfig.Controllers

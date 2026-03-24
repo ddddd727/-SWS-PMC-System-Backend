@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Core.Data;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Entities;
 using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 
-namespace PMCSystem_Backend.Services.Impletation
+namespace PMCSystem_Backend.Services.Implementations
 {
     public class PmcCodeService : IPmcCodeService
     {

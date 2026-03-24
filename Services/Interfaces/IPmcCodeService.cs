@@ -1,7 +1,7 @@
 using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
 
-namespace PMCSystem_Backend.Services.Interface
+namespace PMCSystem_Backend.Services.Interfaces
 {
     public interface IPmcCodeService
     {

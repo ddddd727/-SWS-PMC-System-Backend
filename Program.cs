@@ -8,8 +8,6 @@ using Serilog;
 using System.Text.Json;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Services.Implementations;
-using PMCSystem_Backend.Services.Impletation;
-using PMCSystem_Backend.Services.Interface;
 using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using PMCSystem_Backend.Services.Interfaces.CodeListManagement;
 using PMCSystem_Backend.Services.Implementations.CodeListManagement;
@@ -53,9 +51,6 @@ try
     builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.AttributeDictStrategy>();
     builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.FittingDictStrategy>();
     builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.FlangeDictStrategy>();
-    builder.Services.AddScoped<PMCSystem_Backend.Services.Interfaces.IDictService, PMCSystem_Backend.Services.Implementations.DictService>();
-
-    // 这是你本来就有的（确保工厂注册在它的上面或附近）
     builder.Services.AddScoped<IDictService, DictService>();
     // 注册DictPipingService
     builder.Services.AddScoped<IDictPipingService, DictPipingService>();
@@ -114,7 +109,19 @@ try
     // 注册管系规格书版本管理服务
     builder.Services.AddScoped<IPipeSpecVersionService, PipeSpecVersionService>();
 
-    builder.Services.AddControllers();
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add(new ProducesAttribute("application/json"));
+    })
+    .AddJsonOptions(options =>
+    {
+        // 统一使用小驼峰命名
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        // 空值属性可选
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        // 时间格式
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
     builder.Services.AddCors(options =>
     {
@@ -151,11 +158,6 @@ try
     });
     // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-    builder.Services.AddControllers(options =>
-    {
-        options.Filters.Add(new ProducesAttribute("application/json"));
-    });
-
     builder.Configuration.AddJsonFile("Configs/dicts.json", optional: true, reloadOnChange: true);
 
     // 配置反向代理转发头（使用 Nginx/IIS 反向代理时必须）
@@ -165,18 +167,6 @@ try
         options.KnownNetworks.Clear();
         options.KnownProxies.Clear();
     });
-
-    // 配置JSON序列化
-    builder.Services.AddControllers()
-        .AddJsonOptions(options =>
-        {
-            // 统一使用小驼峰命名
-            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            // 空值属性可选
-            options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-            // 时间格式
-            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        });
 
     // 注册日志服务
     builder.Services.AddLogging();
