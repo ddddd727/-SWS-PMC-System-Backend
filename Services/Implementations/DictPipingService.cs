@@ -123,7 +123,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
             var componentTypeName = type.Replace(PART_PREFIX, "");
             var componentTypeResult = await conn.QueryFirstOrDefaultAsync<dynamic>(
-                "SELECT ID, ConnectType FROM S3D_Dict_PipingComponentType WHERE ComponentTypeName = @ComponentTypeName",
+                "SELECT ID, ConnectType FROM S3D_Dict_ComponentType WHERE ComponentTypeName = @ComponentTypeName",
                 new { ComponentTypeName = componentTypeName });
 
             if (componentTypeResult is not null)
@@ -436,7 +436,7 @@ namespace PMCSystem_Backend.Services.Implementations
             using var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
-            string sql = "SELECT id, ComponentTypeName, ComponentTypeDescription FROM S3D_Dict_PipingComponentType WHERE status = 1";
+            string sql = "SELECT id, ComponentTypeName, ComponentTypeDescription FROM S3D_Dict_ComponentType WHERE status = 1";
             var result = await conn.QueryAsync<dynamic>(sql);
             return [.. result];
         }

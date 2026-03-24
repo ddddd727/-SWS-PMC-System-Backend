@@ -5,7 +5,7 @@ using PMCSystem_Backend.Shared.Entities;
 namespace PMCSystem_Backend.Shared.DataConfigurations;
 
 /// <summary>
-/// S3D_Dict_PipingComponentType 表配置
+/// S3D_Dict_ComponentType 表配置
 /// </summary>
 public class S3dDictPipingComponentTypeConfiguration : IEntityTypeConfiguration<S3dDictPipingComponentType>
 {
@@ -13,7 +13,7 @@ public class S3dDictPipingComponentTypeConfiguration : IEntityTypeConfiguration<
     public void Configure(EntityTypeBuilder<S3dDictPipingComponentType> entity)
     {
         entity.HasKey(e => e.Id);
-        entity.ToTable("S3D_Dict_PipingComponentType");
+        entity.ToTable("S3D_Dict_ComponentType");
         entity.HasIndex(e => e.ComponentTypeName, "UQ_PipingComponentType_Name").IsUnique();
         entity.Property(e => e.Id).HasColumnName("ID");
         entity.Property(e => e.ComponentTypeName).HasMaxLength(255);
