@@ -10,9 +10,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCodePipingClassViewService : IS3dCodePipingClassViewService
     {
-        private readonly SpecContext _context;
+        private readonly AppDbContext _context;
 
-        public S3dCodePipingClassViewService(SpecContext context)
+        public S3dCodePipingClassViewService(AppDbContext context)
         {
             _context = context;
         }

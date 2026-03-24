@@ -11,10 +11,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dRuleShortCodeMapService : IS3dRuleShortCodeMapService
     {
-        private readonly PmcContextCky _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public S3dRuleShortCodeMapService(PmcContextCky context, IMapper mapper)
+        public S3dRuleShortCodeMapService(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

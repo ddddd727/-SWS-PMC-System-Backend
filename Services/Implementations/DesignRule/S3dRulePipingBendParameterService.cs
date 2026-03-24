@@ -9,10 +9,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dRulePipingBendParameterService : IS3dRulePipingBendParameterService
     {
-        private readonly PmcContextCky _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public S3dRulePipingBendParameterService(PmcContextCky context, IMapper mapper)
+        public S3dRulePipingBendParameterService(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

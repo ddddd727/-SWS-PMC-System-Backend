@@ -8,10 +8,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PipeLimitRuleService : IPipeLimitRuleService
     {
-        private readonly PmcContextLr _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public PipeLimitRuleService(PmcContextLr context, IMapper mapper)
+        public PipeLimitRuleService(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

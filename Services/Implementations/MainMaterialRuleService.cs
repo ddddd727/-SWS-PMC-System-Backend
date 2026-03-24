@@ -8,9 +8,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class MainMaterialRuleService : IMainMaterialRuleService
     {
-        private readonly PmcContextLr _context;
+        private readonly AppDbContext _context;
 
-        public MainMaterialRuleService(PmcContextLr context)
+        public MainMaterialRuleService(AppDbContext context)
         {
             _context = context;
         }

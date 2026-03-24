@@ -10,9 +10,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCodeFlangeStandPressureRatingService : IS3dCodeFlangeStandPressureRatingService
     {
-        private readonly SpecContext _context;
+        private readonly AppDbContext _context;
 
-        public S3dCodeFlangeStandPressureRatingService(SpecContext context)
+        public S3dCodeFlangeStandPressureRatingService(AppDbContext context)
         {
             _context = context;
         }

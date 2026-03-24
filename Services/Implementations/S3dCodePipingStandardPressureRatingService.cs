@@ -10,9 +10,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCodePipingStandardPressureRatingService : IS3dCodePipingStandardPressureRatingService
     {
-        private readonly SpecContext _context;
+        private readonly AppDbContext _context;
 
-        public S3dCodePipingStandardPressureRatingService(SpecContext context)
+        public S3dCodePipingStandardPressureRatingService(AppDbContext context)
         {
             _context = context;
         }

@@ -9,11 +9,11 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dDictPipingBendDataService : IS3dDictPipingBendDataService
     {
-        private readonly PmcContextCky _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly IS3dCommonCodeListValueService _codeListService;
 
-        public S3dDictPipingBendDataService(PmcContextCky context, IMapper mapper, IS3dCommonCodeListValueService codeListService)
+        public S3dDictPipingBendDataService(AppDbContext context, IMapper mapper, IS3dCommonCodeListValueService codeListService)
         {
             _context = context;
             _mapper = mapper;

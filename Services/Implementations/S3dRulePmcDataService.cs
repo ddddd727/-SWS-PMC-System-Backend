@@ -13,11 +13,11 @@ namespace PMCSystem_Backend.Services.Implementations
     /// </summary>
     public class S3dRulePmcDataService : IS3dRulePmcDataService
     {
-        private readonly PmcContext _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly ILogger<S3dRulePmcDataService> _logger;
 
-        public S3dRulePmcDataService(PmcContext context, IMapper mapper, ILogger<S3dRulePmcDataService> logger)
+        public S3dRulePmcDataService(AppDbContext context, IMapper mapper, ILogger<S3dRulePmcDataService> logger)
         {
             _context = context;
             _mapper = mapper;

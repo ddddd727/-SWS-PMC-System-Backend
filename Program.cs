@@ -129,18 +129,9 @@ try
         policy => policy.WithOrigins("http://10.8.98.15").AllowAnyHeader().AllowAnyMethod());
     });
 
-    //  DbContext
-    builder.Services.AddDbContext<SpecContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    // 注册多个 DbContext
-    builder.Services.AddDbContext<PmcContextCky>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-    builder.Services.AddDbContext<PmcContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-    builder.Services.AddDbContext<PmcContextLr>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    // 统一 DbContext（合并原 PmcContext、PmcContextCky、PmcContextLr、SpecContext）
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 

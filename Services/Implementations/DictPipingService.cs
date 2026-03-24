@@ -34,7 +34,7 @@ namespace PMCSystem_Backend.Services.Implementations
     public class DictPipingService(
         DictStrategyFactory strategyFactory,
         DictConfigManager configManager,
-        PmcContext context,
+        AppDbContext context,
         ILogger<DictPipingService> logger) : IDictPipingService
     {
         // 缓存 JsonSerializerOptions 实例，避免每次序列化/反序列化时重复创建
@@ -58,7 +58,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         private readonly DictStrategyFactory _strategyFactory = strategyFactory;
         private readonly DictConfigManager _configManager = configManager;
-        private readonly PmcContext _context = context;
+        private readonly AppDbContext _context = context;
         private readonly ILogger<DictPipingService> _logger = logger;
 
         #region 1. 查询 (GetTableData)

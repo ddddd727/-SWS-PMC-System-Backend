@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -17,11 +17,11 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class DictService : IDictService
     {
-        private readonly PmcContext _context;
+        private readonly AppDbContext _context;
         private readonly DictConfigManager _configManager;
         private readonly DictStrategyFactory _strategyFactory;
 
-        public DictService(PmcContext context,
+        public DictService(AppDbContext context,
             DictConfigManager configManager,
             DictStrategyFactory strategyFactory)
         {

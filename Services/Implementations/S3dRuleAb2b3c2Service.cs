@@ -12,10 +12,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dRuleAb2b3c2Service : IS3dRuleAb2b3c2Service
     {
-        private readonly SpecContext _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public S3dRuleAb2b3c2Service(SpecContext context, IMapper mapper)
+        public S3dRuleAb2b3c2Service(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

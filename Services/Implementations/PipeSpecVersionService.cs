@@ -13,7 +13,7 @@ namespace PMCSystem_Backend.Services.Implementations;
 /// </summary>
 public class PipeSpecVersionService : IPipeSpecVersionService
 {
-    private readonly PmcContext _context;
+    private readonly AppDbContext _context;
     private readonly ILogger<PipeSpecVersionService> _logger;
 
     /// <summary>版本 Standard 列 getter，用于收集所有标准配置</summary>
@@ -37,7 +37,7 @@ public class PipeSpecVersionService : IPipeSpecVersionService
         v => v.WasherStandard
     };
 
-    public PipeSpecVersionService(PmcContext context, ILogger<PipeSpecVersionService> logger)
+    public PipeSpecVersionService(AppDbContext context, ILogger<PipeSpecVersionService> logger)
     {
         _context = context;
         _logger = logger;

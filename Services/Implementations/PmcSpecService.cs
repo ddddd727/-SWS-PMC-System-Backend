@@ -16,10 +16,7 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class PmcSpecService : IPmcSpecService
     {
-        private readonly PmcContext _context;
-
-        // 暂时采用不同的PmcContext进行，防止冲突
-        private readonly PmcContextCky _ckyContext;
+        private readonly AppDbContext _context;
 
         /// <summary>规范部件类型名 -> 实体标准属性 setter（用于按 ComponentTypeId 分发）</summary>
         private static readonly Dictionary<string, Action<S3dRulePmcData, List<PmcStandardInfo>>> ComponentTypeSetters =
@@ -49,11 +46,10 @@ namespace PMCSystem_Backend.Services.Implementations
         private readonly IPipeSpecVersionService _pipeSpecVersionService;
 
         public PmcSpecService(
-            PmcContext context,
+            AppDbContext context,
             IMapper mapper,
             ICodelistService codelistService,
             ILogger<PmcSpecService> logger,
-            PmcContextCky pmcContextCky,
             IPipeSpecConfigMapper pipeSpecConfigMapper,
             IPipeSpecVersionService pipeSpecVersionService)
         {
@@ -61,7 +57,6 @@ namespace PMCSystem_Backend.Services.Implementations
             _mapper = mapper;
             _codelistService = codelistService;
             _logger = logger;
-            _ckyContext = pmcContextCky;
             _pipeSpecConfigMapper = pipeSpecConfigMapper;
             _pipeSpecVersionService = pipeSpecVersionService;
         }
@@ -284,7 +279,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         public List<string> GetMaterialsGrades()
         {
-            var grades = _ckyContext.S3dClMaterialsGrades
+            var grades = _context.S3dClMaterialsGrades
                 .AsNoTracking()
                 .Select(x => x.ShortStringValue)
                 .Where(x => x != null && x != string.Empty)

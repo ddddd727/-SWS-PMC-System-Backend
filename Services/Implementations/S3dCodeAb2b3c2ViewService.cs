@@ -10,9 +10,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCodeAb2b3c2ViewService : IS3dCodeAb2b3c2ViewService
     {
-        private readonly SpecContext _context;
+        private readonly AppDbContext _context;
 
-        public S3dCodeAb2b3c2ViewService(SpecContext context)
+        public S3dCodeAb2b3c2ViewService(AppDbContext context)
         {
             _context = context;
         }

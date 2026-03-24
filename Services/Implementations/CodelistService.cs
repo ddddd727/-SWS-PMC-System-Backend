@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Core.Data;
 using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.CodelistTable;
 using PMCSystem_Backend.Services.Interfaces;
@@ -8,14 +8,14 @@ namespace PMCSystem_Backend.Services.Implementations
     public class CodelistService : ICodelistService
     {
         private readonly ILogger<CodelistService> _logger;
-        private readonly PmcContext _pmcContext;
+        private readonly AppDbContext _pmcContext;
 
         private static readonly Dictionary<string, int> _codelistTableCache = new();
         private static readonly Dictionary<string, Dictionary<int, string>> _codelistValueCache = new();
         private static DateTime _lastCacheRefresh = DateTime.MinValue;
         private static readonly TimeSpan _cacheRefreshInterval = TimeSpan.FromMinutes(30);
 
-        public CodelistService(ILogger<CodelistService> logger, PmcContext pmcContext)
+        public CodelistService(ILogger<CodelistService> logger, AppDbContext pmcContext)
         {
             _logger = logger;
             _pmcContext = pmcContext;

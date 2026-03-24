@@ -14,14 +14,12 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
 {
     public class CodeListTableCatelogService : ICodeListTableCatelogService
     {
-        private readonly PmcContextCky _context;
-        private readonly PmcContext _hierarchyContext;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public CodeListTableCatelogService(PmcContextCky context, PmcContext hierarchyContext, IMapper mapper)
+        public CodeListTableCatelogService(AppDbContext context, IMapper mapper)
         {
             _context = context;
-            _hierarchyContext = hierarchyContext;
             _mapper = mapper;
         }
 
@@ -77,7 +75,7 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
 
                 result.Add(currentName);
 
-                var hierarchy = await _hierarchyContext.S3dCommonCodeListHierarchies
+                var hierarchy = await _context.S3dCommonCodeListHierarchies
                     .AsNoTracking()
                     .Where(h => h.CodeListTableId == currentId)
                     .Select(h => h.ParentCodeListTableId)

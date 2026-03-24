@@ -10,10 +10,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dDictPipingComponentTypeService : IS3dDictPipingComponentTypeService
     {
-        private readonly PmcContextCky _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public S3dDictPipingComponentTypeService(PmcContextCky context, IMapper mapper)
+        public S3dDictPipingComponentTypeService(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

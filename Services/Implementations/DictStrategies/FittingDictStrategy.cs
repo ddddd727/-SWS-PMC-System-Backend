@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Core.Data;
 using PMCSystem_Backend.Modules.StandardComponents.Dtos;
@@ -7,9 +7,9 @@ using System.Data;
 
 namespace PMCSystem_Backend.Services.Implementations.DictStrategies
 {
-    public class FittingDictStrategy(PmcContext context) : IDictStrategy
+    public class FittingDictStrategy(AppDbContext context) : IDictStrategy
     {
-        private readonly PmcContext _context = context;
+        private readonly AppDbContext _context = context;
 
         /// <summary>
         /// 查询 Piping Component Type 数据

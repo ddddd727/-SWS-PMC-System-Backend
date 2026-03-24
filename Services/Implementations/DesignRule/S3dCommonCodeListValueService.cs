@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Core.Data;
 using PMCSystem_Backend.Modules.DesignRules.Dtos;
 using PMCSystem_Backend.Services.Interfaces;
@@ -7,7 +7,7 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCommonCodeListValueService : IS3dCommonCodeListValueService
     {
-        private readonly PmcContextCky _context;
+        private readonly AppDbContext _context;
         public async Task<IEnumerable<dynamic>> GetOptionsAsync(string tableName)
         {
 
@@ -36,7 +36,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
             return values;
         }
-        public S3dCommonCodeListValueService(PmcContextCky context)
+        public S3dCommonCodeListValueService(AppDbContext context)
         {
             _context = context;
         }

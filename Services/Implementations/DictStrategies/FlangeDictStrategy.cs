@@ -7,9 +7,9 @@ using System.Data;
 
 namespace PMCSystem_Backend.Services.Implementations.DictStrategies
 {
-    public class FlangeDictStrategy(PmcContext context) : IDictStrategy
+    public class FlangeDictStrategy(AppDbContext context) : IDictStrategy
     {
-        private readonly PmcContext _context = context;
+        private readonly AppDbContext _context = context;
 
         /// <summary>
         /// 查询 Piping Component Type 数据

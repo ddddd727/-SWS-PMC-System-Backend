@@ -8,9 +8,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class FlangeRuleService : IFlangeRuleService
     {
-        private readonly PmcContextLr _context;
+        private readonly AppDbContext _context;
 
-        public FlangeRuleService(PmcContextLr context)
+        public FlangeRuleService(AppDbContext context)
         {
             _context = context;
         }
