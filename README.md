@@ -9,10 +9,10 @@
 **当前核心特性**：
 
 - 模块化设计（按业务域划分 Module）
-- 统一 DbContext（AppDbContext 合并多数据源）
+- 统一 DbContext（AppDbContext 合并多数据源，实体配置按模块拆分至 DataConfigurations）
 - Shared 共享实体（跨模块同名实体统一管理）
 - Swagger 在线 API 文档与测试
-- EF Core + SQL Server 数据库访问
+- EF Core + SQL Server 数据库访问（Service 直接使用 DbContext，无仓储层）
 - AutoMapper 对象映射
 - 依赖注入、CORS、Serilog 日志等
 
@@ -25,7 +25,7 @@ PMCSystem_Backend/
 │
 ├── Core/                           # 核心基础设施
 │   ├── Data/
-│   │   └── AppDbContext.cs         # 统一 DbContext（合并原 4 个 Context）
+│   │   └── AppDbContext.cs         # 统一 DbContext（合并原 4 个 Context，配置自动扫描）
 │   ├── Middlewares/
 │   │   └── ExceptionMiddleware.cs  # 全局异常处理
 │   ├── Exceptions/                 # 自定义异常（预留）
@@ -34,6 +34,7 @@ PMCSystem_Backend/
 │
 ├── Shared/                         # 跨模块共享
 │   ├── ApiControllerBase.cs        # 控制器基类（统一响应格式）
+│   ├── DataConfigurations/         # 共享实体的 EF Core 配置
 │   ├── Entities/                   # 跨模块共享实体
 │   │   ├── S3dCommonCodeListTable.cs
 │   │   ├── S3dCommonCodeListValue.cs
@@ -48,30 +49,25 @@ PMCSystem_Backend/
 ├── Modules/                        # 业务模块（按域划分）
 │   ├── DesignRules/                # 设计规则模块
 │   │   ├── Controllers/
+│   │   ├── DataConfigurations/     # 实体表/视图的 EF Core 配置
 │   │   ├── Entities/               # 模块专属实体
-│   │   ├── Dtos/
-│   │   ├── Repositories/           # 仓储层（预留）
-│   │   └── Services/               # 模块服务（预留，当前集中于 Services/）
+│   │   └── Dtos/
 │   │
 │   ├── PipingSpecifications/       # 管系规格模块
 │   │   ├── Controllers/
+│   │   ├── DataConfigurations/
 │   │   ├── Entities/
-│   │   ├── Dtos/
-│   │   ├── Repositories/
-│   │   └── Services/
+│   │   └── Dtos/
 │   │
 │   ├── PMCRuleConfig/              # PMC 规则配置模块
 │   │   ├── Controllers/
+│   │   ├── DataConfigurations/
 │   │   ├── Entities/
-│   │   ├── Dtos/
-│   │   ├── Repositories/
-│   │   └── Services/
+│   │   └── Dtos/
 │   │
 │   └── StandardComponents/         # 标准件（字典、CodeList 等）
 │       ├── Controllers/
-│       ├── Dtos/
-│       ├── Repositories/
-│       └── Services/
+│       └── Dtos/
 │
 ├── Services/                       # 服务层（集中管理）
 │   ├── Interfaces/                 # 服务接口
@@ -125,103 +121,9 @@ PMCSystem_Backend/
 
 ---
 
-## 仓储层（Repository）设计
+## 数据访问说明
 
-### 为何需要仓储层
-
-- **解耦**：Service 不直接依赖 DbContext，便于单元测试和替换数据源
-- **复用**：通用 CRUD 逻辑集中，减少重复代码
-- **职责分离**：数据访问与业务逻辑清晰划分
-
-### 仓储层目录结构（建议）
-
-```
-Modules/{ModuleName}/
-└── Repositories/
-    ├── I{Entity}Repository.cs      # 仓储接口
-    └── {Entity}Repository.cs       # 仓储实现
-```
-
-### 仓储接口示例
-
-```csharp
-// Modules/PipingSpecifications/Repositories/IPipeSpecVersionRepository.cs
-namespace PMCSystem_Backend.Modules.PipingSpecifications.Repositories;
-
-public interface IPipeSpecVersionRepository
-{
-    Task<PipeSpecVersion?> GetByKeyAsync(string pmcCode, string shipType, string shipNo);
-    Task<List<PipeSpecVersion>> GetListAsync(string? shipType, string? shipNo);
-    Task<PipeSpecVersion> AddAsync(PipeSpecVersion entity);
-    Task UpdateAsync(PipeSpecVersion entity);
-    Task DeleteAsync(PipeSpecVersion entity);
-}
-```
-
-### 仓储实现示例
-
-```csharp
-// Modules/PipingSpecifications/Repositories/PipeSpecVersionRepository.cs
-using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Core.Data;
-using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
-
-namespace PMCSystem_Backend.Modules.PipingSpecifications.Repositories;
-
-public class PipeSpecVersionRepository : IPipeSpecVersionRepository
-{
-    private readonly AppDbContext _context;
-
-    public PipeSpecVersionRepository(AppDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<PipeSpecVersion?> GetByKeyAsync(string pmcCode, string shipType, string shipNo)
-    {
-        return await _context.PipeSpecVersions
-            .FirstOrDefaultAsync(x =>
-                x.PmcCode == pmcCode && x.ShipType == shipType && x.ShipNo == shipNo);
-    }
-
-    public async Task<PipeSpecVersion> AddAsync(PipeSpecVersion entity)
-    {
-        _context.PipeSpecVersions.Add(entity);
-        await _context.SaveChangesAsync();
-        return entity;
-    }
-    // ...
-}
-```
-
-### 仓储注册（Program.cs）
-
-```csharp
-// 按模块注册
-builder.Services.AddScoped<IPipeSpecVersionRepository, PipeSpecVersionRepository>();
-```
-
-### Service 使用仓储
-
-```csharp
-public class PipeSpecVersionService
-{
-    private readonly IPipeSpecVersionRepository _repository;
-    private readonly IMapper _mapper;
-
-    public PipeSpecVersionService(IPipeSpecVersionRepository repository, IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
-
-    public async Task<PipeSpecVersionDto> GetAsync(string pmcCode, string shipType, string shipNo)
-    {
-        var entity = await _repository.GetByKeyAsync(pmcCode, shipType, shipNo);
-        return _mapper.Map<PipeSpecVersionDto>(entity);
-    }
-}
-```
+本项目 **不使用仓储层**，Service 层直接注入 `AppDbContext` 进行数据访问。EF Core 的 DbContext + DbSet 已提供工作单元和查询抽象，足以满足多数场景。实体映射配置按模块拆分至 `DataConfigurations`，由 `ApplyConfigurationsFromAssembly` 自动加载。
 
 ---
 
@@ -247,15 +149,15 @@ public class YourEntity
 }
 ```
 
-### 步骤 3：注册 DbSet（如为表实体）
+### 步骤 3：注册 DbSet 与实体配置
 
-在 `Core/Data/AppDbContext.cs` 中：
+1. 在 `Core/Data/AppDbContext.cs` 中添加：
 
 ```csharp
 public virtual DbSet<YourEntity> YourEntities { get; set; }
 ```
 
-并在 `OnModelCreating` 中配置映射（表名、列名、索引等）。
+2. 在对应模块的 `DataConfigurations/` 下新建 `IEntityTypeConfiguration<YourEntity>` 实现（如 `YourEntityConfiguration.cs`），配置表名、列名、索引等。AppDbContext 会自动扫描并应用。
 
 ### 步骤 4：创建数据库迁移（如为新表）
 
@@ -277,19 +179,13 @@ CreateMap<YourEntity, YourEntityDto>().ReverseMap();
 CreateMap<CreateYourEntityDto, YourEntity>();
 ```
 
-### 步骤 7：（可选）添加仓储层
-
-- 创建 `Modules/{ModuleName}/Repositories/IYourEntityRepository.cs`
-- 创建 `Modules/{ModuleName}/Repositories/YourEntityRepository.cs`
-- 在 Program.cs 注册
-
-### 步骤 8：实现服务
+### 步骤 7：实现服务
 
 - 接口：`Services/Interfaces/IYourEntityService.cs`
 - 实现：`Services/Implementations/YourEntityService.cs`
-- 注入 `AppDbContext` 或 `IYourEntityRepository`、`IMapper`
+- 注入 `AppDbContext`、`IMapper`，直接使用 `_context.YourEntities` 进行数据访问
 
-### 步骤 9：添加控制器
+### 步骤 8：添加控制器
 
 在 `Modules/{ModuleName}/Controllers/YourEntityController.cs`：
 
@@ -311,7 +207,7 @@ public class YourEntityController : ApiControllerBase
 }
 ```
 
-### 步骤 10：注册服务
+### 步骤 9：注册服务
 
 在 `Program.cs` 中：
 
@@ -319,7 +215,7 @@ public class YourEntityController : ApiControllerBase
 builder.Services.AddScoped<IYourEntityService, YourEntityService>();
 ```
 
-### 步骤 11：验证
+### 步骤 10：验证
 
 运行项目，在 Swagger UI 中测试新接口。
 

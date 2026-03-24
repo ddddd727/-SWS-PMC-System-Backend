@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -39,12 +39,8 @@
     <Folder Include="Core\Extensions\" />
     <Folder Include="Core\DependencyInjection\" />
     <Folder Include="Modules\DesignRules\Services\" />
-    <Folder Include="Modules\DesignRules\Repositories\" />
-    <Folder Include="Modules\PipingSpecifications\Repositories\" />
     <Folder Include="Modules\PipingSpecifications\Services\" />
-    <Folder Include="Modules\PMCRuleConfig\Repositories\" />
     <Folder Include="Modules\PMCRuleConfig\Services\" />
-    <Folder Include="Modules\StandardComponents\Repositories\" />
     <Folder Include="Modules\StandardComponents\Services\" />
     <Folder Include="Modules\StandardComponents\Entities\" />
   </ItemGroup>
