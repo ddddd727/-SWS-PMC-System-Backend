@@ -3,6 +3,7 @@ using PMCSystem_Backend.Modules.DesignRules.Dtos;
 using PMCSystem_Backend.Modules.DesignRules.Entities;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
 using PMCSystem_Backend.Modules.StandardComponents.Dtos;
+using PMCSystem_Backend.Shared.Entities;
 
 namespace PMCSystem_Backend.MappingProfiles
 {
@@ -35,8 +36,8 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<UpdateS3dCommonPlainPipingGenericDataDto, S3dCommonPlainPipingGenericData>();
 
             // CodeListTableCatelog Mappings
-            CreateMap<PMCSystem_Backend.Modules.PipingSpecifications.Entities.S3dCommonCodeListTable, CodeListTableCatelogDto>().ReverseMap();
-            CreateMap<CreateCodeListTableCatelogDto, PMCSystem_Backend.Modules.PipingSpecifications.Entities.S3dCommonCodeListTable>();
+            CreateMap<S3dCommonCodeListTable, CodeListTableCatelogDto>().ReverseMap();
+            CreateMap<CreateCodeListTableCatelogDto, S3dCommonCodeListTable>();
         }
     }
 }

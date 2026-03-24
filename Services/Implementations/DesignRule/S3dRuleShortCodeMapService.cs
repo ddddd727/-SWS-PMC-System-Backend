@@ -2,7 +2,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Core.Data;
 using PMCSystem_Backend.Modules.DesignRules.Dtos;
-using PMCSystem_Backend.Modules.DesignRules.Entities;
+using PMCSystem_Backend.Shared.Entities;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;

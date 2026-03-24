@@ -1,10 +1,9 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PMCSystem_Backend.Core.Data;
-using PMCSystem_Backend.Modules.DesignRules.Entities;
-using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 using PMCSystem_Backend.Services.Interfaces.CodeListManagement;
+using PMCSystem_Backend.Shared.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

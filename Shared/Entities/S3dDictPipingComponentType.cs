@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
+namespace PMCSystem_Backend.Shared.Entities;
 
-namespace PMCSystem_Backend.Modules.DesignRules.Entities;
-
+/// <summary>
+/// 跨模块共享实体，映射表 S3D_Dict_PipingComponentType
+/// 被 DesignRules、PipingSpecifications 等模块共用
+/// </summary>
 public partial class S3dDictPipingComponentType
 {
     public int Id { get; set; }

@@ -1,9 +1,8 @@
-using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
-using System;
-using System.Collections.Generic;
+namespace PMCSystem_Backend.Shared.Entities;
 
-namespace PMCSystem_Backend.Modules.DesignRules.Entities;
-
+/// <summary>
+/// 跨模块共享实体，映射表 S3D_Common_CodeListValue
+/// </summary>
 public partial class S3dCommonCodeListValue
 {
     public int Id { get; set; }

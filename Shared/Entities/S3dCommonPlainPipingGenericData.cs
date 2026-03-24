@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
+namespace PMCSystem_Backend.Shared.Entities;
 
-namespace PMCSystem_Backend.Modules.DesignRules.Entities;
-
+/// <summary>
+/// 跨模块共享实体，映射表 S3D_Common_PlainPipingGenericData
+/// 采用 DesignRules 版结构（含审计字段），与当前数据库一致
+/// </summary>
 public partial class S3dCommonPlainPipingGenericData
 {
     public int Id { get; set; }

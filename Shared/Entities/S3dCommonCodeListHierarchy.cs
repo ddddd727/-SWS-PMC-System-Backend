@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+namespace PMCSystem_Backend.Shared.Entities;
 
-namespace PMCSystem_Backend.Modules.PipingSpecifications.Entities;
-
+/// <summary>
+/// 跨模块共享实体，映射表 S3D_Common_CodeListHierarchy
+/// </summary>
 public partial class S3dCommonCodeListHierarchy
 {
     public int Id { get; set; }

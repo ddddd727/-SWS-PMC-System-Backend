@@ -6,6 +6,7 @@ using PMCSystem_Backend.Modules.DesignRules.Entities;
 using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
 using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Entities;
+using PMCSystem_Backend.Shared.Entities;
 
 namespace PMCSystem_Backend.Core.Data;
 
@@ -30,7 +31,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<S3dCdbPipeComponent> S3dCdbPipeComponents { get; set; }
     public virtual DbSet<S3dCdbPipeStock> S3dCdbPipeStocks { get; set; }
     public virtual DbSet<S3dRulePmcData> S3dRulePmcdata { get; set; }
-    public virtual DbSet<PMCSystem_Backend.Modules.DesignRules.Entities.S3dRuleShortCodeMap> S3dRuleShortCodeMaps { get; set; }
+    public virtual DbSet<S3dRuleShortCodeMap> S3dRuleShortCodeMaps { get; set; }
     public virtual DbSet<S3dRuleShortCodeHierarchyRule> S3dRuleShortCodeHierarchyRules { get; set; }
     public virtual DbSet<S3dRulePipingBendParameter> S3dRulePipingBendParameters { get; set; }
     public virtual DbSet<S3dRulePipingCompStandard> S3dRulePipingCompStandards { get; set; }
@@ -45,7 +46,7 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<S3dCodePlainPipingGenericData> S3dCodePlainPipingGenericData { get; set; }
     public virtual DbSet<S3dCodeShortCodeMap> S3dCodeShortCodeMaps { get; set; }
     public virtual DbSet<S3dClMaterialsGrade> S3dClMaterialsGrades { get; set; }
-    public virtual DbSet<PMCSystem_Backend.Modules.DesignRules.Entities.S3dCommonPlainPipingGenericData> S3dCommonPlainPipingGenericData { get; set; }
+    public virtual DbSet<S3dCommonPlainPipingGenericData> S3dCommonPlainPipingGenericData { get; set; }
     public virtual DbSet<PipeSpecVersion> PipeSpecVersions { get; set; }
     public virtual DbSet<S3dRuleAb2b3c2> S3dRuleAb2b3c2s { get; set; }
     public virtual DbSet<S3dRuleB1b2b3d> S3dRuleB1b2b3ds { get; set; }
@@ -260,7 +261,7 @@ public partial class AppDbContext : DbContext
 
     private static void ConfigureS3dRuleShortCodeMap(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<PMCSystem_Backend.Modules.DesignRules.Entities.S3dRuleShortCodeMap>(entity =>
+        modelBuilder.Entity<S3dRuleShortCodeMap>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.ToTable("S3D_Rule_ShortCodeMap");
@@ -606,7 +607,7 @@ public partial class AppDbContext : DbContext
 
     private static void ConfigureDesignRulesPlainPipingGenericData(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<PMCSystem_Backend.Modules.DesignRules.Entities.S3dCommonPlainPipingGenericData>(entity =>
+        modelBuilder.Entity<S3dCommonPlainPipingGenericData>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("DSP_PlainPipingGenericData_PK");
             entity.ToTable("S3D_Common_PlainPipingGenericData");

@@ -1,9 +1,8 @@
-﻿using PMCSystem_Backend.Modules.DesignRules.Entities;
-using System;
-using System.Collections.Generic;
+namespace PMCSystem_Backend.Shared.Entities;
 
-namespace PMCSystem_Backend.Modules.PipingSpecifications.Entities;
-
+/// <summary>
+/// 跨模块共享实体，映射表 S3D_Common_CodeListTable
+/// </summary>
 public partial class S3dCommonCodeListTable
 {
     public int Id { get; set; }
@@ -14,6 +13,5 @@ public partial class S3dCommonCodeListTable
 
     public string Major { get; set; } = null!;
 
-    
     public virtual ICollection<S3dCommonCodeListValue> S3dCommonCodeListValues { get; set; } = new List<S3dCommonCodeListValue>();
 }
