@@ -36,34 +36,9 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
             return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
         }
 
-        [HttpGet("hierarchy/{codeListTableName}")]
-        public async Task<IActionResult> GetHierarchy(string codeListTableName)
-        {
-            if (string.IsNullOrWhiteSpace(codeListTableName))
-                return BadRequest("codeListTableName cannot be empty");
 
-            var hierarchy = await _service.GetHierarchyNamesAsync(codeListTableName);
-            if (hierarchy.Count == 0)
-                return NotFound();
 
-            return Ok(hierarchy);
-        }
 
-        [HttpGet("multilevel")]
-        public async Task<ActionResult<MultiLevelCodeListResponseDto>> GetMultiLevelValues(string? level1 = null, string? level2 = null, string? level3 = null, string? level4 = null, string? level5 = null)
-        {
-            var request = new MultiLevelCodeListRequestDto
-            {
-                Level1 = level1,
-                Level2 = level2,
-                Level3 = level3,
-                Level4 = level4,
-                Level5 = level5
-            };
-
-            var result = await _service.GetMultiLevelCodeListValuesAsync(request);
-            return Ok(result);
-        }
 
         [HttpGet("combined/{codeListTableName}")]
         public async Task<ActionResult<CodeListCombinedResponseDto>> GetCombinedCodeList(string codeListTableName)

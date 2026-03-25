@@ -43,170 +43,9 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
             return _mapper.Map<CodeListTableCatelogDto>(entity);
         }
 
-        public async Task<CodeListHierarchyDto> GetHierarchyNamesAsync(string codeListTableName)
-        {
-            if (string.IsNullOrWhiteSpace(codeListTableName))
-                throw new ArgumentException("codeListTableName cannot be empty", nameof(codeListTableName));
 
-            var start = await _context.S3dCommonCodeListTables
-                .AsNoTracking()
-                .Where(t => t.CodeListTableName == codeListTableName)
-                .Select(t => new { t.Id, t.CodeListTableName })
-                .FirstOrDefaultAsync();
 
-            if (start == null)
-                return new CodeListHierarchyDto { Count = 0 };
 
-            var result = new List<string>();
-            var visited = new HashSet<int>();
-
-            var currentId = start.Id;
-            while (visited.Add(currentId))
-            {
-                var currentName = await _context.S3dCommonCodeListTables
-                    .AsNoTracking()
-                    .Where(t => t.Id == currentId)
-                    .Select(t => t.CodeListTableName)
-                    .FirstOrDefaultAsync();
-
-                if (string.IsNullOrWhiteSpace(currentName))
-                    break;
-
-                result.Add(currentName);
-
-                var hierarchy = await _context.S3dCommonCodeListHierarchies
-                    .AsNoTracking()
-                    .Where(h => h.CodeListTableId == currentId)
-                    .Select(h => h.ParentCodeListTableId)
-                    .FirstOrDefaultAsync();
-
-                if (hierarchy == null)
-                    break;
-
-                currentId = hierarchy.Value;
-            }
-
-            result.Reverse();
-
-            var hierarchyDto = new CodeListHierarchyDto { Count = result.Count };
-            if (result.Count > 0) hierarchyDto.Level1 = result[0];
-            if (result.Count > 1) hierarchyDto.Level2 = result[1];
-            if (result.Count > 2) hierarchyDto.Level3 = result[2];
-            if (result.Count > 3) hierarchyDto.Level4 = result[3];
-            if (result.Count > 4) hierarchyDto.Level5 = result[4];
-
-            return hierarchyDto;
-        }
-
-        public async Task<MultiLevelCodeListResponseDto> GetMultiLevelCodeListValuesAsync(MultiLevelCodeListRequestDto request)
-        {
-            var response = new MultiLevelCodeListResponseDto();
-            var levels = new List<string?>();
-            
-            if (!string.IsNullOrWhiteSpace(request.Level1)) levels.Add(request.Level1);
-            if (!string.IsNullOrWhiteSpace(request.Level2)) levels.Add(request.Level2);
-            if (!string.IsNullOrWhiteSpace(request.Level3)) levels.Add(request.Level3);
-            if (!string.IsNullOrWhiteSpace(request.Level4)) levels.Add(request.Level4);
-            if (!string.IsNullOrWhiteSpace(request.Level5)) levels.Add(request.Level5);
-
-            if (levels.Count == 0)
-                return response;
-
-            var valuesList = new List<List<S3dCommonCodeListValue>>();
-
-            foreach (var levelName in levels)
-            {
-                var table = await _context.S3dCommonCodeListTables
-                    .AsNoTracking()
-                    .Where(t => t.CodeListTableName == levelName)
-                    .FirstOrDefaultAsync();
-
-                if (table == null)
-                    continue;
-
-                var values = await _context.S3dCommonCodeListValues
-                    .AsNoTracking()
-                    .Where(v => v.CodeListTableId == table.Id)
-                    .ToListAsync();
-
-                valuesList.Add(values);
-            }
-
-            if (valuesList.Count == 0)
-                return response;
-
-            // 先添加 level1 的数据
-            if (valuesList.Count > 0)
-            {
-                foreach (var v in valuesList[0])
-                {
-                    var data = new CodeListLevelData();
-                    data.Level1ShortDesc = v.ShortStringValue;
-                    data.Level1LongDesc = v.LongStringValue;
-                    data.Level1CodeNum = v.CodeListNumber;
-                    data.Level1Status = v.Status ? 1 : 0;
-                    response.LevelData.Add(data);
-                }
-            }
-
-            // 再添加 level2 的数据
-            if (valuesList.Count > 1)
-            {
-                foreach (var v in valuesList[1])
-                {
-                    var data = new CodeListLevelData();
-                    data.Level2ShortDesc = v.ShortStringValue;
-                    data.Level2LongDesc = v.LongStringValue;
-                    data.Level2CodeNum = v.CodeListNumber;
-                    data.Level2Status = v.Status ? 1 : 0;
-                    response.LevelData.Add(data);
-                }
-            }
-
-            // 再添加 level3 的数据
-            if (valuesList.Count > 2)
-            {
-                foreach (var v in valuesList[2])
-                {
-                    var data = new CodeListLevelData();
-                    data.Level3ShortDesc = v.ShortStringValue;
-                    data.Level3LongDesc = v.LongStringValue;
-                    data.Level3CodeNum = v.CodeListNumber;
-                    data.Level3Status = v.Status ? 1 : 0;
-                    response.LevelData.Add(data);
-                }
-            }
-
-            // 再添加 level4 的数据
-            if (valuesList.Count > 3)
-            {
-                foreach (var v in valuesList[3])
-                {
-                    var data = new CodeListLevelData();
-                    data.Level4ShortDesc = v.ShortStringValue;
-                    data.Level4LongDesc = v.LongStringValue;
-                    data.Level4CodeNum = v.CodeListNumber;
-                    data.Level4Status = v.Status ? 1 : 0;
-                    response.LevelData.Add(data);
-                }
-            }
-
-            // 再添加 level5 的数据
-            if (valuesList.Count > 4)
-            {
-                foreach (var v in valuesList[4])
-                {
-                    var data = new CodeListLevelData();
-                    data.Level5ShortDesc = v.ShortStringValue;
-                    data.Level5LongDesc = v.LongStringValue;
-                    data.Level5CodeNum = v.CodeListNumber;
-                    data.Level5Status = v.Status ? 1 : 0;
-                    response.LevelData.Add(data);
-                }
-            }
-
-            return response;
-        }
 
         public async Task<CodeListCombinedResponseDto> GetCombinedCodeListAsync(string codeListTableName)
         {
@@ -214,24 +53,59 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
                 throw new ArgumentException("codeListTableName cannot be empty", nameof(codeListTableName));
 
             // 获取层级信息
-            var hierarchy = await GetHierarchyNamesAsync(codeListTableName);
-            var combinedResponse = new CodeListCombinedResponseDto
+            var start = await _context.S3dCommonCodeListTables
+                .AsNoTracking()
+                .Where(t => t.CodeListTableName == codeListTableName)
+                .Select(t => new { t.Id, t.CodeListTableName })
+                .FirstOrDefaultAsync();
+
+            var result = new List<string>();
+            if (start != null)
             {
-                Count = hierarchy.Count,
-                Level1 = hierarchy.Level1,
-                Level2 = hierarchy.Level2,
-                Level3 = hierarchy.Level3,
-                Level4 = hierarchy.Level4,
-                Level5 = hierarchy.Level5
-            };
+                var visited = new HashSet<int>();
+                var currentId = start.Id;
+                while (visited.Add(currentId))
+                {
+                    var currentName = await _context.S3dCommonCodeListTables
+                        .AsNoTracking()
+                        .Where(t => t.Id == currentId)
+                        .Select(t => t.CodeListTableName)
+                        .FirstOrDefaultAsync();
+
+                    if (string.IsNullOrWhiteSpace(currentName))
+                        break;
+
+                    result.Add(currentName);
+
+                    var hierarchy = await _context.S3dCommonCodeListHierarchies
+                        .AsNoTracking()
+                        .Where(h => h.CodeListTableId == currentId)
+                        .Select(h => h.ParentCodeListTableId)
+                        .FirstOrDefaultAsync();
+
+                    if (hierarchy == null)
+                        break;
+
+                    currentId = hierarchy.Value;
+                }
+
+                result.Reverse();
+            }
+
+            var combinedResponse = new CodeListCombinedResponseDto { Count = result.Count };
+            if (result.Count > 0) combinedResponse.Level1 = result[0];
+            if (result.Count > 1) combinedResponse.Level2 = result[1];
+            if (result.Count > 2) combinedResponse.Level3 = result[2];
+            if (result.Count > 3) combinedResponse.Level4 = result[3];
+            if (result.Count > 4) combinedResponse.Level5 = result[4];
 
             // 构建层级名称列表
             var levels = new List<string?>();
-            if (!string.IsNullOrWhiteSpace(hierarchy.Level1)) levels.Add(hierarchy.Level1);
-            if (!string.IsNullOrWhiteSpace(hierarchy.Level2)) levels.Add(hierarchy.Level2);
-            if (!string.IsNullOrWhiteSpace(hierarchy.Level3)) levels.Add(hierarchy.Level3);
-            if (!string.IsNullOrWhiteSpace(hierarchy.Level4)) levels.Add(hierarchy.Level4);
-            if (!string.IsNullOrWhiteSpace(hierarchy.Level5)) levels.Add(hierarchy.Level5);
+            if (!string.IsNullOrWhiteSpace(combinedResponse.Level1)) levels.Add(combinedResponse.Level1);
+            if (!string.IsNullOrWhiteSpace(combinedResponse.Level2)) levels.Add(combinedResponse.Level2);
+            if (!string.IsNullOrWhiteSpace(combinedResponse.Level3)) levels.Add(combinedResponse.Level3);
+            if (!string.IsNullOrWhiteSpace(combinedResponse.Level4)) levels.Add(combinedResponse.Level4);
+            if (!string.IsNullOrWhiteSpace(combinedResponse.Level5)) levels.Add(combinedResponse.Level5);
 
             if (levels.Count == 0)
                 return combinedResponse;
