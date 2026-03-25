@@ -82,5 +82,21 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("next-code")]
+        public async Task<ActionResult<int>> GetNextAvailableCodeListNumber()
+        {
+            try
+            {
+                var result = await _service.GetNextAvailableCodeListNumberAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
     }
 }

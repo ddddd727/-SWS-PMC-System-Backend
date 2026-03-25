@@ -12,5 +12,7 @@ namespace PMCSystem_Backend.Services.Interfaces.CodeListManagement
         Task<CodeListCombinedResponseDto> GetCombinedCodeListAsync(string codeListTableName);
         Task<List<CodeListValueDto>> GetCodeListValuesByParentShortStringValueAsync(string shortStringValue);
         Task<CodeListValueDto> CreateCodeListValueAsync(CreateCodeListValueDto dto);
+
+        Task<int> GetNextAvailableCodeListNumberAsync();
     }
 }

@@ -302,5 +302,26 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
                 Status = newCodeListValue.Status ? 1 : 0
             };
         }
+
+        public async Task<int> GetNextAvailableCodeListNumberAsync()
+        {
+            // 1. 查询所有的 CodeListNumber
+            var usedNumbers = await _context.S3dCommonCodeListValues
+                .AsNoTracking()
+                .Select(v => v.CodeListNumber)
+                .ToListAsync();
+
+            // 2. 从10000开始检查，找到第一个未使用的数字
+            const int startNumber = 10000;
+            for (int i = startNumber; ; i++)
+            {
+                if (!usedNumbers.Contains(i))
+                {
+                    return i;
+                }
+            }
+        }
+
+
     }
 }
