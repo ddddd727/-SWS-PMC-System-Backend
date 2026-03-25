@@ -84,5 +84,28 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
             var result = await _service.GetCodeListValuesByParentShortStringValueAsync(shortStringValue);
             return Ok(result);
         }
+
+        [HttpPost("values")]
+        public async Task<ActionResult<CodeListValueDto>> CreateCodeListValue([FromBody] CreateCodeListValueDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest("Invalid data");
+            }
+
+            try
+            {
+                var result = await _service.CreateCodeListValueAsync(dto);
+                return CreatedAtAction(nameof(GetValuesByParentShortStringValue), new { shortStringValue = dto.ParentShortStringValue }, result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 }

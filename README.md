@@ -243,6 +243,10 @@ builder.Services.AddScoped<IYourEntityService, YourEntityService>();
 git clone <repo-url>
 cd PMCSystem_Backend
 
+dotnet run --launch-profile http
+http://localhost:5022/swagger/index.html
+taskkill /F /IM PMCSystem_Backend.exe
+
 dotnet restore
 dotnet build
 

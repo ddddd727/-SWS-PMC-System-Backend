@@ -339,7 +339,7 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
             if (string.IsNullOrWhiteSpace(shortStringValue))
                 throw new ArgumentException("shortStringValue cannot be empty", nameof(shortStringValue));
 
-            // 首先根据 ShortStringValue 找到对应的 CodeListNumber
+            // 首先根据 ShortStringValue 找到对应的 CodeListTableID 和 CodeListNumber
             var codeListValue = await _context.S3dCommonCodeListValues
                 .AsNoTracking()
                 .Where(v => v.ShortStringValue == shortStringValue)
@@ -348,11 +348,20 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
             if (codeListValue == null)
                 return new List<CodeListValueDto>();
 
-            // 使用找到的 CodeListNumber 作为 ParentCodeListNumber 查询相关数据
+            // 使用 CodeListTableID 去 S3D_Common_CodeListHierarchy 作为 ParentCodeListTableID 查找对应行的 CodeListTableID
+            var childCodeListTable = await _context.S3dCommonCodeListHierarchies
+                .AsNoTracking()
+                .Where(h => h.ParentCodeListTableId == codeListValue.CodeListTableId)
+                .FirstOrDefaultAsync();
+
+            if (childCodeListTable == null)
+                return new List<CodeListValueDto>();
+
+            // 使用找到的 CodeListNumber 作为 ParentCodeListNumber，并且 CodeListTableID 为找到的子表ID，查询相关数据
             var parentCodeListNumber = codeListValue.CodeListNumber;
             var relatedValues = await _context.S3dCommonCodeListValues
                 .AsNoTracking()
-                .Where(v => v.ParentCodeListNumber == parentCodeListNumber)
+                .Where(v => v.ParentCodeListNumber == parentCodeListNumber && v.CodeListTableId == childCodeListTable.CodeListTableId)
                 .Select(v => new CodeListValueDto
                 {
                     ShortStringValue = v.ShortStringValue,
@@ -363,6 +372,61 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
                 .ToListAsync();
 
             return relatedValues;
+        }
+
+        public async Task<CodeListValueDto> CreateCodeListValueAsync(CreateCodeListValueDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            // 1. 根据 CodeListTableName 查找对应的 CodeListTableID
+            var codeListTable = await _context.S3dCommonCodeListTables
+                .AsNoTracking()
+                .Where(t => t.CodeListTableName == dto.CodeListTableName)
+                .FirstOrDefaultAsync();
+
+            if (codeListTable == null)
+                throw new ArgumentException($"CodeListTable with name '{dto.CodeListTableName}' not found");
+
+            // 2. 根据 ParentShortStringValue 查找对应的 CodeListNumber 作为 ParentCodeListNumber
+            int? parentCodeListNumber = null;
+            if (!string.IsNullOrWhiteSpace(dto.ParentShortStringValue))
+            {
+                var parentCodeListValue = await _context.S3dCommonCodeListValues
+                    .AsNoTracking()
+                    .Where(v => v.ShortStringValue == dto.ParentShortStringValue)
+                    .FirstOrDefaultAsync();
+
+                if (parentCodeListValue != null)
+                {
+                    parentCodeListNumber = parentCodeListValue.CodeListNumber;
+                }
+            }
+
+            // 3. 创建新的 CodeListValue 实体
+            var newCodeListValue = new S3dCommonCodeListValue
+            {
+                CodeListTableId = codeListTable.Id,
+                ParentCodeListNumber = parentCodeListNumber,
+                ShortStringValue = dto.ShortStringValue,
+                LongStringValue = dto.LongStringValue,
+                CodeListNumber = dto.CodeListNumber,
+                IsUserDefine = true, // 默认值
+                Status = dto.Status
+            };
+
+            // 4. 保存到数据库
+            _context.S3dCommonCodeListValues.Add(newCodeListValue);
+            await _context.SaveChangesAsync();
+
+            // 5. 映射并返回结果
+            return new CodeListValueDto
+            {
+                ShortStringValue = newCodeListValue.ShortStringValue,
+                LongStringValue = newCodeListValue.LongStringValue,
+                CodeListNumber = newCodeListValue.CodeListNumber,
+                Status = newCodeListValue.Status ? 1 : 0
+            };
         }
     }
 }
