@@ -36,34 +36,9 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
             return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
         }
 
-        [HttpGet("hierarchy/{codeListTableName}")]
-        public async Task<IActionResult> GetHierarchy(string codeListTableName)
-        {
-            if (string.IsNullOrWhiteSpace(codeListTableName))
-                return BadRequest("codeListTableName cannot be empty");
 
-            var hierarchy = await _service.GetHierarchyNamesAsync(codeListTableName);
-            if (hierarchy.Count == 0)
-                return NotFound();
 
-            return Ok(hierarchy);
-        }
 
-        [HttpGet("multilevel")]
-        public async Task<ActionResult<MultiLevelCodeListResponseDto>> GetMultiLevelValues(string? level1 = null, string? level2 = null, string? level3 = null, string? level4 = null, string? level5 = null)
-        {
-            var request = new MultiLevelCodeListRequestDto
-            {
-                Level1 = level1,
-                Level2 = level2,
-                Level3 = level3,
-                Level4 = level4,
-                Level5 = level5
-            };
-
-            var result = await _service.GetMultiLevelCodeListValuesAsync(request);
-            return Ok(result);
-        }
 
         [HttpGet("combined/{codeListTableName}")]
         public async Task<ActionResult<CodeListCombinedResponseDto>> GetCombinedCodeList(string codeListTableName)
@@ -84,5 +59,44 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
             var result = await _service.GetCodeListValuesByParentShortStringValueAsync(shortStringValue);
             return Ok(result);
         }
+
+        [HttpPost("values")]
+        public async Task<ActionResult<CodeListValueDto>> CreateCodeListValue([FromBody] CreateCodeListValueDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest("Invalid data");
+            }
+
+            try
+            {
+                var result = await _service.CreateCodeListValueAsync(dto);
+                return CreatedAtAction(nameof(GetValuesByParentShortStringValue), new { shortStringValue = dto.ParentShortStringValue }, result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("next-code")]
+        public async Task<ActionResult<int>> GetNextAvailableCodeListNumber()
+        {
+            try
+            {
+                var result = await _service.GetNextAvailableCodeListNumberAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
     }
 }
