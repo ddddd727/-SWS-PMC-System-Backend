@@ -24,9 +24,20 @@ namespace PMCSystem_Backend.Services.Implementations.CodeListManagement
 
         public async Task<List<CodeListTableCatelogDto>> GetAllAsync()
         {
+            // Get all non-null ParentCodeListTableId from hierarchy table
+            var parentIds = await _context.S3dCommonCodeListHierarchies
+                .AsNoTracking()
+                .Where(h => h.ParentCodeListTableId.HasValue)
+                .Select(h => h.ParentCodeListTableId.Value)
+                .Distinct()
+                .ToListAsync();
+
+            // Get CodeListTable records that are NOT in the parentIds list
             var entities = await _context.S3dCommonCodeListTables
                 .AsNoTracking()
+                .Where(t => !parentIds.Contains(t.Id))
                 .ToListAsync();
+
             return _mapper.Map<List<CodeListTableCatelogDto>>(entities);
         }
 
