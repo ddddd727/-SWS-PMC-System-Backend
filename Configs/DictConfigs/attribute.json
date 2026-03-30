@@ -5,7 +5,6 @@
         "PhysicalTableName": "S3D_Dict_GeometricIndustryPractice",
         "CodeListTableName": "GeometricIndustryPractice",
         "HandlerType": "Attribute"
-     
     },
     "piping-class": {
         "DisplayName": "管材等级",
@@ -96,6 +95,7 @@
                 "IsRequired": true,
                 "DataSource": {
                     "Url": "/api/dict/options/mat-category",
+                    "OptionsSource": "CodeList",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": {
@@ -154,20 +154,31 @@
                 "Title": "标准CL",
                 "UiType": "Input",
                 "IsHidden": true,
-                "IsRequired": true
+                "IsReadOnly": true
             },
             {
                 "DbField": "GeometricIndustryStandard_Long",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsHidden": false,
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/geo-standard",
+                    "Url": "/api/dict/options/piping-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
+                    "LoadRelation": {
+                        "Direction": "Parent",
+                        "MappedField": "GeometricIndustryStandard_Parent_Long"
+                    },
                     "ValueMapping": {
-                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL"
-                    }
+                        "GeometricIndustryPractice_CL": "GeometricIndustryStandard_Parent_CL",
+                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL",
+                        "GeometricIndustryStandard_Long": "GeometricIndustryStandard_Long",
+                        "GeometricIndustryStandardParent_CL": "GeometricIndustryStandard_Parent_CL",
+                        "GeometricIndustryStandardParent_Short": "GeometricIndustryStandard_Parent_Short",
+                        "GeometricIndustryStandardParent_Long": "GeometricIndustryStandard_Parent_Long"
+                    },
+                    "FilterUsed": true
                 }
             },
             {
@@ -196,7 +207,7 @@
                 "IsHidden": false,
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "FilterUsed": false,
@@ -207,25 +218,33 @@
             },
             {
                 "DbField": "GeometricIndustryPractice_CL",
-                "Title": "标准系列CL",
+                "Title": "系列码表CL",
                 "UiType": "Input",
-                "IsHidden": true
+                "IsHidden": true,
+                "IsRequired": true,
+                "IsReadOnly": true
             },
             {
-                "DbField": "GeometricIndustryPractice_Long",
+                "DbField": "GeometricIndustryStandardParent_CL",
+                "Title": "标准系列CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "GeometricIndustryStandardParent_Short",
+                "Title": "标准系列Short",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "GeometricIndustryStandardParent_Long",
                 "Title": "标准系列",
-                "UiType": "Select",
+                "UiType": "Input",
                 "IsHidden": false,
-                "IsRequired": true,
-                "DataSource": {
-                    "Url": "/api/dict/options/std-series",
-                    "LabelField": "GeometricIndustryPractice_Long",
-                    "ValueField": "GeometricIndustryPractice_Long",
-                    "FilterUsed": false,
-                    "ValueMapping": {
-                        "GeometricIndustryPractice_CL": "GeometricIndustryPractice_CL"
-                    }
-                }
+                "IsReadOnly": true,
+                "IsRequired": false
             },
             {
                 "DbField": "JsonData",
@@ -316,7 +335,7 @@
     },
     "mat-grade-rule": {
         "DisplayName": "B3-牌号规则",
-        "ViewName": "View_Rule_MaterialsGrade",
+        "ViewName": "View_Rule_M    aterialsGrade",
         "PhysicalTableName": "S3D_Rule_MaterialsGrade",
         "CodeListTableName": "",
         "HandlerType": "Attribute",
@@ -375,7 +394,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/geo-standard",
+                    "Url": "/api/dict/options/geo-standard?source=view",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": {
@@ -430,7 +449,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/geo-standard",
+                    "Url": "/api/dict/options/geo-standard?source=view",
                     "LabelField": "GeometricIndustryStandard_Short",
                     "ValueField": "GeometricIndustryStandard_Short",
                     "ValueMapping": {
@@ -463,7 +482,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/std-series",
+                    "Url": "/api/dict/options/std-series?source=view",
                     "LabelField": "GeometricIndustryPractice_Long",
                     "ValueField": "GeometricIndustryPractice_Long",
                     "ValueMapping": {
@@ -546,39 +565,6 @@
             }
         ]
     },
-    "schedule-series": {
-        "DisplayName": "壁厚系列",
-        "ViewName": "View_Dict_ScheduleSeries",
-        "PhysicalTableName": "S3D_Dict_ScheduleSeries",
-        "CodeListTableName": "",
-        "HandlerType": "Attribute",
-        "Columns": [
-            {
-                "DbField": "ID",
-                "Title": "ID",
-                "IsPrimaryKey": true,
-                "IsHidden": false,
-                "IsReadOnly": true
-            },
-            {
-                "DbField": "ScheduleSeriesName",
-                "Title": "壁厚系列",
-                "UiType": "Input",
-                "IsRequired": true
-            },
-            {
-                "DbField": "JsonData",
-                "Title": "扩展数据",
-                "UiType": "JsonInput",
-                "IsHidden": false
-            },
-            {
-                "DbField": "Status",
-                "Title": "状态",
-                "UiType": "Switch"
-            }
-        ]
-    },
     "schedule-thickness": {
         "DisplayName": "D-壁厚等级",
         "ViewName": "View_Dict_ScheduleThickness",
@@ -629,14 +615,136 @@
             },
             {
                 "DbField": "MaterialsCategory_CL",
+                "Title": "主材料CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
+                "DbField": "MaterialsCategory_Long",
                 "Title": "主材料",
                 "UiType": "Select",
                 "IsHidden": false,
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
-                    "LabelField": "MaterialsCategory_Short",
-                    "ValueField": "MaterialsCategory_CL"
+                    "Url": "/api/dict/options/mat-category?source=view",
+                    "LabelField": "MaterialsCategory_Long",
+                    "ValueField": "MaterialsCategory_Long",
+                    "FilterUsed": false,
+                    "ValueMapping": {
+                        "MaterialsCategory_CL": "MaterialsCategory_CL"
+                    }
+                }
+            },
+            {
+                "DbField": "SimpleSelectionSeriesName",
+                "Title": "简选系列",
+                "UiType": "Select",
+                "IsHidden": false,
+                "IsRequired": false,
+                "DataSource": {
+                    "Url": "TODO:待填入简选系列的接口地址",
+                    "LabelField": "TODO_Label",
+                    "ValueField": "TODO_Value"
+                }
+            },
+            {
+                "DbField": "JsonData",
+                "Title": "扩展数据",
+                "UiType": "JsonInput",
+                "IsHidden": false
+            },
+            {
+                "DbField": "Status",
+                "Title": "状态",
+                "UiType": "Switch"
+            }
+        ]
+    },
+    "schedule-description": {
+        "DisplayName": "规则-壁厚描述",
+        "ViewName": "View_Rule_ScheduleDescription",
+        "PhysicalTableName": "S3D_Rule_ScheduleDescription",
+        "HandlerType": "Rule",
+        "Columns": [
+            {
+                "DbField": "ID",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "ScheduleThickness_CL",
+                "Title": "壁厚等级CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
+                "DbField": "ScheduleThickness_Short",
+                "Title": "壁厚等级",
+                "UiType": "Select",
+                "IsHidden": false,
+                "IsRequired": true,
+                "DataSource": {
+                    "Url": "/api/dict/options/schedule-thickness?source=view",
+                    "LabelField": "ScheduleThickness_Short",
+                    "ValueField": "ScheduleThickness_Short",
+                    "ValueMapping": {
+                        "ScheduleThickness_CL": "ScheduleThickness_CL",
+                        "ScheduleThickness_Long": "ScheduleThickness_Long"
+                    }
+                }
+            },
+            {
+                "DbField": "ScheduleThickness_Long",
+                "Title": "壁厚等级描述",
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "MaterialsGrade_CL",
+                "Title": "牌号CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
+                "DbField": "MaterialsGrade_Long",
+                "Title": "牌号",
+                "UiType": "Select",
+                "IsHidden": false,
+                "IsRequired": true,
+                "DataSource": {
+                    "Url": "/api/dict/options/mat-grade?source=view",
+                    "LabelField": "MaterialsGrade_Long",
+                    "ValueField": "MaterialsGrade_Long",
+                    "ValueMapping": {
+                        "MaterialsGrade_CL": "MaterialsGrade_CL"
+                    }
+                }
+            },
+            {
+                "DbField": "GeometricIndustryStandard_CL",
+                "Title": "几何工业标准CL",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsRequired": true
+            },
+            {
+                "DbField": "GeometricIndustryStandard_Long",
+                "Title": "几何工业标准",
+                "UiType": "Select",
+                "IsHidden": false,
+                "IsRequired": true,
+                "DataSource": {
+                    "Url": "/api/dict/options/geo-standard?source=view",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "ValueMapping": {
+                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL"
+                    }
                 }
             },
             {
@@ -654,7 +762,10 @@
     },
     "geo-standard": {
         "DisplayName": "几何工业标准",
+        "ViewName": "View_Dict_GeometricIndustryStandard",
+        "PhysicalTableName": "S3D_Dict_GeometricIndustryStandard",
         "CodeListTableName": "GeometricIndustryStandard",
+        "HandlerType": "Attribute",
         "Columns": []
     }
 }
