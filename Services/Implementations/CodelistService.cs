@@ -71,6 +71,79 @@ namespace PMCSystem_Backend.Services.Implementations
             return null;
         }
 
+        /// <summary>
+        /// 根据 Codelist 表名和短描述反查对应的 Codelist 值
+        /// </summary>
+        /// <param name="codelistTableName">Codelist 表名</param>
+        /// <param name="shortDescription">短描述（ShortStringValue）</param>
+        /// <returns>匹配到的 CodeListNumber；未命中或歧义时返回 null</returns>
+        public async Task<int?> GetCodeListNumberByShortDescriptionAsync(string codelistTableName, string shortDescription)
+        {
+            if (string.IsNullOrWhiteSpace(codelistTableName))
+            {
+                _logger.LogWarning("Codelist表名不能为空");
+                return null;
+            }
+
+            var normalizedDescription = shortDescription?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedDescription))
+            {
+                _logger.LogWarning("短描述不能为空，表名：{CodelistTableName}", codelistTableName);
+                return null;
+            }
+
+            try
+            {
+                var codelistTableId = await GetCodelistTableIdAsync(codelistTableName);
+                if (codelistTableId == 0)
+                {
+                    _logger.LogWarning("未找到Codelist表：{CodelistTableName}", codelistTableName);
+                    return null;
+                }
+
+                var normalizedLower = normalizedDescription.ToLower();
+                var matchedValues = await _pmcContext.S3dCommonCodeListValues
+                    .Where(v =>
+                        v.CodeListTableId == codelistTableId
+                        && v.Status
+                        && v.ShortStringValue != null
+                        && v.ShortStringValue.Trim().ToLower() == normalizedLower)
+                    .Select(v => new { v.CodeListNumber, v.ShortStringValue })
+                    .ToListAsync();
+
+                if (matchedValues.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "未找到匹配的Codelist值，表名：{CodelistTableName}，短描述：{ShortDescription}",
+                        codelistTableName, normalizedDescription);
+                    return null;
+                }
+
+                if (matchedValues.Count > 1)
+                {
+                    _logger.LogWarning(
+                        "短描述匹配到多个Codelist值，表名：{CodelistTableName}，短描述：{ShortDescription}，数量：{Count}",
+                        codelistTableName, normalizedDescription, matchedValues.Count);
+                    return null;
+                }
+
+                var matched = matchedValues[0];
+                UpdateCache(codelistTableName, new Dictionary<int, string>
+                {
+                    { matched.CodeListNumber, matched.ShortStringValue }
+                });
+
+                return matched.CodeListNumber;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "根据短描述反查Codelist值失败，表名：{CodelistTableName}，短描述：{ShortDescription}",
+                    codelistTableName, normalizedDescription);
+                return null;
+            }
+        }
+
 
         /// <summary>
         /// 解析列名，获取对应的Codelist表名

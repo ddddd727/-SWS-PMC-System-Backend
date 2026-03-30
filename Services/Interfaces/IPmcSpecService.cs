@@ -52,7 +52,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <param name="EndStandard"> 端面标准 </param>
         /// <param name="Schedule"> 壁厚系列 </param>
         /// <returns></returns>
-        SpecNPDInfoDto GetNPDInfoByPmc(string EndStandard, string Schedule);
+        Task<SpecNPDInfoDto> GetNPDInfoByPmcAsync(string EndStandard, string Schedule);
 
 
 

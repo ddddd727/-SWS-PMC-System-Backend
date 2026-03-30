@@ -37,7 +37,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <param name="templateId">模板唯一标识</param>
         /// <param name="pmcCode">PMC 编码，用于查询已保存的规格书数据</param>
         /// <returns>预览响应</returns>
-        TemplatePreviewResponse GetTemplatePreviewBySpec(string templateId, string pmcCode);
+        Task<TemplatePreviewResponse> GetTemplatePreviewBySpec(string templateId, string pmcCode);
 
         /// <summary>
         /// 使用已保存的规格书数据填充模板并导出为 Excel 文件。
@@ -45,6 +45,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <param name="templateId">模板唯一标识</param>
         /// <param name="pmcCode">PMC 编码，用于查询已保存的规格书数据</param>
         /// <returns>填充后的 xlsx 文件字节流</returns>
-        byte[] ExportTemplateBySpec(string templateId, string pmcCode);
+        Task<byte[]> ExportTemplateBySpec(string templateId, string pmcCode);
     }
 }

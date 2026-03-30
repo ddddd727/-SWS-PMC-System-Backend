@@ -184,7 +184,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
         [HttpGet("NPDInfo")]
         [ProducesResponseType(typeof(ApiResponse<SpecNPDInfoDto>), 200)]
         [ProducesResponseType(typeof(ApiResponse), 400)]
-        public IActionResult GetNPDInfo([FromQuery] GetNPDInfoRequest request)
+        public async Task<IActionResult> GetNPDInfo([FromQuery] GetNPDInfoRequest request)
         {
             // 使用ModelState自动验证
             if (!ModelState.IsValid)
@@ -198,7 +198,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
                     request.EndStandard, request.Schedule);
 
                 // 调用服务层方法获取通径、外径、壁厚信息
-                var result = _pmcSpecService.GetNPDInfoByPmc(request.EndStandard, request.Schedule);
+                var result = await _pmcSpecService.GetNPDInfoByPmcAsync(request.EndStandard, request.Schedule);
 
                 // 判断查询结果是否为空
                 if (result == null || IsNPDInfoEmpty(result))

@@ -11,6 +11,9 @@ using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Shared.Constants;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
@@ -117,7 +120,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <param name="EndStandard">端面标准</param>
         /// <param name="Schedule">壁厚系列</param>
         /// <returns>通径、外径、壁厚信息</returns>
-        public SpecNPDInfoDto GetNPDInfoByPmc(string EndStandard, string Schedule)
+        public async Task<SpecNPDInfoDto> GetNPDInfoByPmcAsync(string EndStandard, string Schedule)
         {
             // 参数验证
             if (string.IsNullOrWhiteSpace(EndStandard) || string.IsNullOrWhiteSpace(Schedule))
@@ -126,24 +129,28 @@ namespace PMCSystem_Backend.Services.Implementations
                 throw new ArgumentException("端面标准和壁厚系列不能为空");
             }
 
-            // 查询数据库中符合条件的数据
-            //var queryResult = _context.S3dCommonPlainPipingGenericData
-            //    .Where(x => x.EndStandardCl == endStandardCl && x.ScheduleCl == scheduleCl)
-            //    .AsNoTracking()
-            //    .ToList();
+            var endStandardCl = await _codelistService
+                .GetCodeListNumberByShortDescriptionAsync("EndStandard", EndStandard);
+            if (!endStandardCl.HasValue)
+            {
+                _logger.LogWarning("无法根据端面标准反查Codelist值，EndStandard: {EndStandard}", EndStandard);
+                throw new ArgumentException("端面标准无效或未配置");
+            }
 
-            // 更改当前的NPD通径范围的获取路径
-            //var queryResult = _ckyContext.S3dCodeWallThicknesses
-            //                    .Where(x => x.EndStandard == EndStandard && x.ScheduleThickness == Schedule)
-            //                    .AsNoTracking()
-            //                    .ToList();
+            var scheduleThicknessCl = await _codelistService
+                .GetCodeListNumberByShortDescriptionAsync("ScheduleThickness", Schedule);
+            if (!scheduleThicknessCl.HasValue)
+            {
+                _logger.LogWarning("无法根据壁厚系列反查Codelist值，Schedule: {Schedule}", Schedule);
+                throw new ArgumentException("壁厚系列无效或未配置");
+            }
 
-            // 从S3d_WallThickness_Info视图中获取通径范围信息
-            var queryResult = _context.S3dWallThicknessInfo
-                                .Where(x => x.GeometricIndustryStandard == EndStandard && x.ScheduleThickness == Schedule)
-                                .AsNoTracking()
-                                .ToList();
-
+            var queryResult = await _context.S3dCommonPlainPipingGenericData
+                .Where(x => x.EndStandardCl == endStandardCl.Value
+                         && x.ScheduleThicknessCl == scheduleThicknessCl.Value
+                         && x.Status)
+                .AsNoTracking()
+                .ToListAsync();
 
             // 构建返回结果
             var result = new SpecNPDInfoDto
@@ -151,26 +158,166 @@ namespace PMCSystem_Backend.Services.Implementations
                 EndStandard = EndStandard,
                 Schedule = Schedule,
                 NPD = queryResult
-                    .Where(x => x.NormalDiameter > 0)
-                    .Select(x => (double)x.NormalDiameter)
+                    .Where(x => x.NominalPipingDiameter > 0)
+                    .Select(x => x.NominalPipingDiameter)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList(),
                 OutsideDiameter = queryResult
-                    .Where(x => x.PipingOutsideDiameter > 0)
-                    .Select(x => (double)x.PipingOutsideDiameter)
+                    .Select(x => ParsePositiveDoubleOrNull(x.PipingOutsideDiameter))
+                    .Where(x => x.HasValue)
+                    .Select(x => x!.Value)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList(),
                 WallThickness = queryResult
-                    .Where(x => x.WallThickness > 0)
-                    .Select(x => (double)x.WallThickness)
+                    .Select(x => ParsePositiveDoubleOrNull(x.WallThickness))
+                    .Where(x => x.HasValue)
+                    .Select(x => x!.Value)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList()
             };
 
             return result;
+        }
+
+        /// <summary>
+        /// 将 S3D_Common_PlainPipingGenericData 中外径/壁厚字段的字符串解析为可用于返回前端的正数。
+        /// 兼容：纯数字、带单位后缀、千分位、欧式小数逗号、全角数字、文本中嵌入的数值等。
+        /// </summary>
+        /// <param name="rawValue">原始字符串值</param>
+        /// <returns>解析成功且大于 0 的数值；否则 null</returns>
+        private static double? ParsePositiveDoubleOrNull(string? rawValue)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return null;
+            }
+
+            var normalized = NormalizeEngineeringNumericString(rawValue);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                return null;
+            }
+
+            if (TryParseDoubleFlexible(normalized, out var value) && value > 0)
+            {
+                return value;
+            }
+
+            // 从较长描述中提取第一个数值片段（如 "OD 21.3 mm"、"Φ21.3"）
+            var match = NumberTokenRegex.Match(normalized);
+            if (match.Success && TryParseDoubleFlexible(match.Value, out value) && value > 0)
+            {
+                return value;
+            }
+
+            return null;
+        }
+
+        /// <summary>匹配工程类文本中的第一个浮点数字面量。</summary>
+        private static readonly Regex NumberTokenRegex = new(
+            @"[-+]?(?:\d+\.?\d*|\d*\.?\d+)(?:[eE][-+]?\d+)?",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+        /// <summary>
+        /// 去除不可见字符、全角数字转半角、去掉常见单位后缀，便于解析。
+        /// </summary>
+        private static string NormalizeEngineeringNumericString(string raw)
+        {
+            var sb = new StringBuilder(raw.Length);
+            foreach (var c in raw.Trim())
+            {
+                if (c is >= '０' and <= '９')
+                {
+                    sb.Append((char)(c - '０' + '0'));
+                }
+                else if (c == '\u00A0' || c == '\u3000')
+                {
+                    sb.Append(' ');
+                }
+                else if (!char.IsControl(c))
+                {
+                    sb.Append(c);
+                }
+            }
+
+            var s = sb.ToString().Trim();
+            if (s.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            // 去掉尾部常见单位（不区分大小写），如 "21.3 mm"、"21.3mm"
+            s = Regex.Replace(
+                s,
+                @"\s*(mm|cm|m|in|inch|''|""|DN|Φ|φ|OD|ID)\s*$",
+                "",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+            return s.Trim();
+        }
+
+        /// <summary>
+        /// 在多种小数/千分位规则下尝试解析为 double。
+        /// </summary>
+        private static bool TryParseDoubleFlexible(string s, out double value)
+        {
+            value = default;
+
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                return false;
+            }
+
+            s = s.Trim();
+
+            // 直接尝试
+            if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            {
+                return true;
+            }
+
+            if (double.TryParse(s, NumberStyles.Float, CultureInfo.CurrentCulture, out value))
+            {
+                return true;
+            }
+
+            var dot = s.IndexOf('.');
+            var comma = s.IndexOf(',');
+
+            // 仅含逗号且视为欧式小数：21,3
+            if (comma >= 0 && dot < 0 && s.IndexOf(',', comma + 1) < 0)
+            {
+                var eu = s.Replace(',', '.');
+                if (double.TryParse(eu, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+                {
+                    return true;
+                }
+            }
+
+            // 美式千分位 1,234.56 → 去掉逗号
+            if (dot >= 0 && comma >= 0)
+            {
+                var us = s.Replace(",", "");
+                if (double.TryParse(us, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+                {
+                    return true;
+                }
+            }
+
+            // 欧式千分位 1.234,56 → 去点保留逗号再转
+            if (comma > dot && dot >= 0)
+            {
+                var de = s.Replace(".", "").Replace(',', '.');
+                if (double.TryParse(de, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName)
