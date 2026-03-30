@@ -320,12 +320,29 @@ namespace PMCSystem_Backend.Services.Implementations
             return false;
         }
 
-        public List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName)
+        public List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName, string? materialCategory)
         {
             if (componentTypeId == null && string.IsNullOrWhiteSpace(componentTypeName))
             {
                 _logger.LogError("部件类型不能为空");
                 throw new ArgumentException("部件类型不能为空");
+            }
+
+            var normalizedMaterialCategory = materialCategory?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedMaterialCategory))
+            {
+                _logger.LogError("主材料不能为空");
+                throw new ArgumentException("主材料不能为空");
+            }
+
+            var materialsCategoryCl = _codelistService
+                .GetCodeListNumberByShortDescriptionAsync("MaterialsCategory", normalizedMaterialCategory)
+                .GetAwaiter()
+                .GetResult();
+            if (!materialsCategoryCl.HasValue)
+            {
+                _logger.LogWarning("未找到对应主材料，MaterialCategory={MaterialCategory}", normalizedMaterialCategory);
+                return new List<string>();
             }
 
             int resolvedComponentTypeId;
@@ -359,7 +376,9 @@ namespace PMCSystem_Backend.Services.Implementations
 
             var standards = _context.S3dRulePipingCompStandards
                 .AsNoTracking()
-                .Where(x => x.ComponentTypeId == resolvedComponentTypeId)
+                .Where(x => x.ComponentTypeId == resolvedComponentTypeId
+                         && x.MaterialsCategoryCl == materialsCategoryCl.Value
+                         && x.Status)
                 .ToList();
 
             var codeValues = standards
@@ -424,17 +443,60 @@ namespace PMCSystem_Backend.Services.Implementations
                 .ToList();
         }
 
-        public List<string> GetMaterialsGrades()
+        public List<string> GetMaterialsGrades(string? materialCategory)
         {
-            var grades = _context.S3dClMaterialsGrades
-                .AsNoTracking()
-                .Select(x => x.ShortStringValue)
-                .Where(x => x != null && x != string.Empty)
+            var normalizedMaterialCategory = materialCategory?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedMaterialCategory))
+            {
+                _logger.LogError("主材料不能为空");
+                throw new ArgumentException("主材料不能为空");
+            }
+
+            var materialsCategoryCl = _codelistService
+                .GetCodeListNumberByShortDescriptionAsync("MaterialsCategory", normalizedMaterialCategory)
+                .GetAwaiter()
+                .GetResult();
+            if (!materialsCategoryCl.HasValue)
+            {
+                _logger.LogWarning("未找到对应主材料，MaterialCategory={MaterialCategory}", normalizedMaterialCategory);
+                return new List<string>();
+            }
+
+            var childCodeLists = _codelistService
+                .GetChildCodeListsByParentValueAsync("MaterialsCategory", materialsCategoryCl.Value)
+                .GetAwaiter()
+                .GetResult();
+
+            if (childCodeLists == null || childCodeLists.Count == 0)
+            {
+                _logger.LogWarning(
+                    "主材料未查到任何子级码表，MaterialCategory={MaterialCategory}, MaterialsCategoryCl={MaterialsCategoryCl}",
+                    normalizedMaterialCategory,
+                    materialsCategoryCl.Value);
+                return new List<string>();
+            }
+
+            var gradeTableKey = childCodeLists.Keys
+                .FirstOrDefault(k => string.Equals(k, "MaterialsGrade", StringComparison.OrdinalIgnoreCase))
+                ?? childCodeLists.Keys.FirstOrDefault(k => k.Contains("MaterialsGrade", StringComparison.OrdinalIgnoreCase));
+
+            if (string.IsNullOrWhiteSpace(gradeTableKey) || !childCodeLists.TryGetValue(gradeTableKey, out var gradeItems))
+            {
+                _logger.LogWarning(
+                    "主材料子级码表中未找到材料牌号表，MaterialCategory={MaterialCategory}, MaterialsCategoryCl={MaterialsCategoryCl}",
+                    normalizedMaterialCategory,
+                    materialsCategoryCl.Value);
+                return new List<string>();
+            }
+
+            var grades = gradeItems
+                .Where(x => x.Status && !string.IsNullOrWhiteSpace(x.ShortStringValue))
+                .Select(x => x.ShortStringValue.Trim())
                 .Distinct()
                 .OrderBy(x => x)
                 .ToList();
 
-            return grades!;
+            return grades;
         }
 
         /// <summary>

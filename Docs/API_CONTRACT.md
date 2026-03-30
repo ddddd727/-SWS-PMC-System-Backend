@@ -328,6 +328,7 @@ interface SpecNPDInfo {
 interface GetPipeFittingSpecRequest {
   componentTypeId?: number;     // 部件类型 ID（推荐），与 GetComponentTypes 返回的 id 一致
   componentTypeName?: string;   // 部件类型名称（兼容），长度≤255；与 componentTypeId 二选一，至少填一个
+  materialCategory: string;     // 主材料名称（必填，长度≤255；MaterialsCategory 的 ShortStringValue）
 }
 ```
 
@@ -456,7 +457,17 @@ interface GetNPDInfoRequest {
 
 ---
 
-### 3.9 GetMaterialsGradesResponse - 获取材料牌号响应
+### 3.9 GetMaterialsGradesRequest - 获取材料牌号请求
+
+```typescript
+interface GetMaterialsGradesRequest {
+  materialCategory: string;     // 主材料名称（必填，长度≤255；MaterialsCategory 的 ShortStringValue）
+}
+```
+
+---
+
+### 3.10 GetMaterialsGradesResponse - 获取材料牌号响应
 
 ```typescript
 type GetMaterialsGradesResponse = ApiResponse<string[]>;
@@ -973,7 +984,7 @@ interface SpecNPDInfo {
 
 ### 4.6 获取管附件标准
 
-根据部件类型获取对应的管附件标准名称列表。
+根据部件类型和主材料获取对应的管附件标准名称列表。
 
 #### 基本信息
 
@@ -988,11 +999,12 @@ interface SpecNPDInfo {
 | ----------------- | ------ | ----- | ---- | -------------------------------------------------------------------- | ----- |
 | componentTypeId   | number | Query | 否   | 部件类型 ID（推荐），与 GET /api/PmcSpec/ComponentTypes 返回的 id 一致 | 1     |
 | componentTypeName | string | Query | 否   | 部件类型名称（兼容），长度≤255；与 componentTypeId 至少填写一个        | Elbow |
+| materialCategory  | string | Query | 是   | 主材料名称（MaterialsCategory.ShortStringValue），长度≤255            | CarbonSteel |
 
 #### 请求示例
 
 ```
-GET /api/PmcSpec/PipeFittingSpec?componentTypeId=1
+GET /api/PmcSpec/PipeFittingSpec?componentTypeId=1&materialCategory=CarbonSteel
 ```
 
 #### 响应数据
@@ -1051,7 +1063,7 @@ type GetPipeFittingSpecResponse = ApiResponse<string[]>;
 
 ### 4.7 获取材料牌号
 
-获取所有材料牌号列表，来源于视图 `S3D_CL_MaterialsGrade` 的 `ShortStringValue` 列。
+根据主材料获取材料牌号列表。后端会先将主材料名称反查为 `MaterialsCategory` 的 Codelist 值，再通过 Codelist 父子关系获取其下属 `MaterialsGrade` 列表。
 
 #### 基本信息
 
@@ -1062,7 +1074,9 @@ type GetPipeFittingSpecResponse = ApiResponse<string[]>;
 
 #### 请求参数
 
-无
+| 参数名           | 类型   | 位置  | 必填 | 说明                                                        | 示例        |
+| ---------------- | ------ | ----- | ---- | ----------------------------------------------------------- | ----------- |
+| materialCategory | string | Query | 是   | 主材料名称（MaterialsCategory.ShortStringValue），长度≤255 | CarbonSteel |
 
 #### 成功响应 (200)
 
@@ -1814,15 +1828,15 @@ export const pmcSpecApi = {
   },
 
   // 获取管附件标准
-  getPipeFittingSpec(params: { componentTypeId?: number; componentTypeName?: string }) {
+  getPipeFittingSpec(params: { componentTypeId?: number; componentTypeName?: string; materialCategory: string }) {
     return apiClient.get<ApiResponse<string[]>>('/PmcSpec/PipeFittingSpec', {
       params
     });
   },
 
   // 获取材料牌号列表
-  getMaterialsGrades() {
-    return apiClient.get<ApiResponse<string[]>>('/PmcSpec/MaterialsGrades');
+  getMaterialsGrades(params: { materialCategory: string }) {
+    return apiClient.get<ApiResponse<string[]>>('/PmcSpec/MaterialsGrades', { params });
   },
 
   // 保存规格书配置
@@ -2107,6 +2121,7 @@ export interface CellStyle {
 | v1.8 | 2026-02-26 | **规格书配置状态管理**：① 三种状态：pending-待配置、review-待审核、approved-已审核。② 未配置/保存/生成时默认 pending；保存或生成后设为 review；接受审核后设为 approved。③ GET /api/PmcSpec/Analyze/{pmcCode} 响应新增 `configStatus`。④ 新增 POST /api/PmcSpec/AcceptReview 接受审核接口（占位，默认成功）。⑤ 模板导出时自动将状态设为 review。 | AI Assistant |
 | v1.9 | 2026-02-26 | **规格书版本管理**：① 每次保存规格书前自动生成历史快照。② 新增 GET /api/PmcSpec/{pmcCode}/versions 获取历史版本列表（分页，支持 shipType/shipNumber 精确匹配）。③ 新增 GET /api/PmcSpec/{pmcCode}/versions/{versionId} 获取版本详情。④ 新增 POST /api/PmcSpec/{pmcCode}/versions/{versionId}/revert 使用历史版本覆盖当前配置。 | AI Assistant |
 | v1.10 | 2026-03-30 | **GET /api/PmcSpec/NPDInfo 数据语义**：数据源改为 `S3D_Common_PlainPipingGenericData`；`endStandard`/`schedule` 与 Codelist `EndStandard`/`ScheduleThickness` 的 `ShortStringValue` 匹配（Trim、忽略大小写）；`outsideDiameter`/`wallThickness` 由 `PipingOutsideDiameter`/`WallThickness` 字符串列解析并去重返回；补充 400 场景说明（Codelist 无匹配或歧义）。**HTTP 路径、查询参数名、响应 JSON 字段名与类型未变。** | AI Assistant |
+| v1.11 | 2026-03-30 | **GetPipeFittingSpec / MaterialsGrades 入参变更**：① `GET /api/PmcSpec/PipeFittingSpec` 新增必填 Query 参数 `materialCategory`，按 `ComponentType + 主材料` 维度返回标准列表。② `GET /api/PmcSpec/MaterialsGrades` 改为必填 Query 参数 `materialCategory`，按 Codelist 父子关系获取主材料下属牌号。③ 更新 TypeScript 请求类型与前端调用示例。 | AI Assistant |
 
 ---
 
