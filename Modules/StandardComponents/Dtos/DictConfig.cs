@@ -1,7 +1,16 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Modules.StandardComponents.Dtos
 {
+    /// <summary>
+    /// 下拉选项加载策略，用于 <see cref="DictItemConfig"/> / <see cref="DictDataSourceConfig"/> 的 OptionsSource 字段。
+    /// </summary>
+    public static class DictOptionsSourceKind
+    {
+        public const string CodeList = "CodeList";
+        public const string View = "View";
+    }
+
     // 对应每个具体的字典配置（例如 "std-series"）
     public class DictItemConfig
     {
@@ -9,6 +18,18 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Dtos
         public string? ViewName { get; set; }
         public string? PhysicalTableName { get; set; }
         public string? CodeListTableName { get; set; }
+
+        /// <summary>
+        /// 表格级默认选项策略（列 DataSource 未指定时兜底）。CodeList=读 CodeList 表；View=读视图 DISTINCT（未配 OptionsViewName 时用本字典的 <see cref="ViewName"/>）。
+        /// </summary>
+        public string? OptionsSource { get; set; }
+
+        /// <summary>OptionsSource=View 时使用的视图名；不填则与 <see cref="ViewName"/> 相同。</summary>
+        public string? OptionsViewName { get; set; }
+
+        /// <summary>OptionsSource=View 时 DISTINCT 的列（表格级兜底）。</summary>
+        public List<string>? OptionsViewColumns { get; set; }
+
         public string? HandlerType { get; set; }
 
         /// <summary>联合唯一约束，每个子数组代表一组必须唯一的字段组合</summary>
@@ -135,7 +156,7 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Dtos
 
     public class DictDataSourceConfig
     {
-        /// <summary>动态数据源接口（与 Options 二选一）</summary>
+        /// <summary>动态数据源接口（与 Options 二选一）。可对同一 dict options 追加 ?source=view 或 ?source=codelist 覆盖策略。</summary>
         public string? Url { get; set; }
 
         /// <summary>静态选项列表（与 Url 二选一）</summary>
@@ -158,6 +179,23 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Dtos
 
         /// <summary>是否过滤已被其他行使用的选项，默认 true；设为 false 时始终显示全量选项</summary>
         public bool FilterUsed { get; set; } = true;
+
+        /// <summary>
+        /// 本列下拉的选项策略，优先于表格级 <see cref="DictItemConfig.OptionsSource"/>。
+        /// 便于同一字典内不同字段分别来自 CodeList 或不同物理视图。
+        /// </summary>
+        public string? OptionsSource { get; set; }
+
+        /// <summary>OptionsSource=View 时使用的视图名（列级可覆盖表格级）。</summary>
+        public string? OptionsViewName { get; set; }
+
+        /// <summary>OptionsSource=View 时 DISTINCT 的列名（列级可覆盖表格级）。</summary>
+        public List<string>? OptionsViewColumns { get; set; }
+
+        /// <summary>
+        /// OptionsSource=View 且未配 <see cref="OptionsViewName"/> 时，从该字典 type 的配置读取 <see cref="DictItemConfig.ViewName"/>（如复用 mat-category 已声明的视图）。
+        /// </summary>
+        public string? OptionsRefDictType { get; set; }
     }
 
     public class DataSourceRelationConfig

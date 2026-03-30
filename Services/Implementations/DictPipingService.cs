@@ -111,7 +111,10 @@ namespace PMCSystem_Backend.Services.Implementations
 
                                 ValueMapping = c.DataSource.ValueMapping,
 
-                                FilterUsed = c.DataSource.FilterUsed
+                                FilterUsed = c.DataSource.FilterUsed,
+                                OptionsSource = c.DataSource.OptionsSource,
+                                OptionsViewName = c.DataSource.OptionsViewName,
+                                OptionsViewColumns = c.DataSource.OptionsViewColumns
                             }
                         })
                 ]

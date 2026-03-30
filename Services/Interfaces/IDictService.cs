@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 
@@ -17,5 +17,14 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         Task<DictValidateResponse> ValidateFieldAsync(string type, DictValidateRequest request);
         Task<IEnumerable<dynamic>> GetCodeListOptionsAsync(string tableName, DataSourceRelationConfig? relation = null);
+
+        /// <summary>
+        /// 按列级/表格级 OptionsSource 策略解析下拉选项。field 对应列 DbField，多 Select 时需传。
+        /// optionsSource 为查询参数覆盖：view / codelist（与同字典内列配置冲突时以查询为准）。
+        /// </summary>
+        Task<IEnumerable<dynamic>> GetDropdownOptionsAsync(string dictType, string? field = null, string? optionsSource = null);
+
+        /// <summary>从视图 DISTINCT 查询选项行。</summary>
+        Task<IEnumerable<dynamic>> GetDictViewOptionsAsync(string viewName, IReadOnlyList<string> columns);
     }
 }

@@ -310,9 +310,208 @@ namespace PMCSystem_Backend.Services.Implementations
                     [$"{tableName}_CL"] = v.CodeListNumber,
                     [$"{tableName}_Short"] = v.ShortStringValue,
                     [$"{tableName}_Long"] = v.LongStringValue,
+                    // 需要 LoadRelation 时，补齐父节点信息，供前端 ValueMapping 使用
+                    [$"{tableName}_Parent_CL"] = parent?.CodeListNumber,
+                    [$"{tableName}_Parent_Short"] = parent?.ShortStringValue,
                     [$"{tableName}_Parent_Long"] = parent?.LongStringValue
                 };
             }).ToList();
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<dynamic>> GetDropdownOptionsAsync(string dictType, string? field = null, string? optionsSource = null)
+        {
+            var config = GetConfig(dictType);
+            var column = ResolveOptionsColumn(config, dictType, field);
+            var ds = column?.DataSource;
+
+            string source;
+            if (!string.IsNullOrWhiteSpace(optionsSource))
+            {
+                var o = optionsSource.Trim();
+                if (o.Equals(DictOptionsSourceKind.View, StringComparison.OrdinalIgnoreCase))
+                    source = DictOptionsSourceKind.View;
+                else if (o.Equals(DictOptionsSourceKind.CodeList, StringComparison.OrdinalIgnoreCase))
+                    source = DictOptionsSourceKind.CodeList;
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"不支持的 source 参数: {optionsSource}，请使用 {DictOptionsSourceKind.View} 或 {DictOptionsSourceKind.CodeList}。");
+                }
+            }
+            else
+            {
+                var sourceRaw = ds?.OptionsSource ?? config.OptionsSource;
+                if (string.IsNullOrWhiteSpace(sourceRaw))
+                {
+                    var hasViewHint = !string.IsNullOrEmpty(ds?.OptionsViewName)
+                                      || !string.IsNullOrEmpty(config.OptionsViewName)
+                                      || !string.IsNullOrEmpty(ds?.OptionsRefDictType)
+                                      || (ds?.OptionsViewColumns?.Count ?? 0) > 0
+                                      || (config.OptionsViewColumns?.Count ?? 0) > 0;
+                    source = hasViewHint ? DictOptionsSourceKind.View : DictOptionsSourceKind.CodeList;
+                }
+                else
+                {
+                    source = sourceRaw.Trim();
+                }
+            }
+
+            if (source.Equals(DictOptionsSourceKind.View, StringComparison.OrdinalIgnoreCase))
+            {
+                var viewName = ResolveOptionsViewName(config, ds);
+                var cols = ds?.OptionsViewColumns ?? config.OptionsViewColumns;
+                if (cols == null || cols.Count == 0)
+                    cols = InferViewColumnsFromDataSource(ds);
+
+                if (string.IsNullOrEmpty(viewName) || cols == null || cols.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        $"字典 '{dictType}' 使用 View 策略时须配置：本字典的 ViewName（或 OptionsViewName / OptionsRefDictType），以及 OptionsViewColumns 或由列 DataSource 的 LabelField/ValueField/ValueMapping 推断列。");
+                }
+
+                return await GetDictViewOptionsAsync(viewName, cols);
+            }
+
+            if (string.IsNullOrEmpty(config.CodeListTableName))
+            {
+                throw new InvalidOperationException(
+                    $"字典 '{dictType}' 未配置 CodeListTableName（CodeList 策略），或请改为 OptionsSource=View 并配置视图列。");
+            }
+
+            var relation = ds?.LoadRelation
+                           ?? config.Columns.FirstOrDefault(c => c.DataSource?.LoadRelation != null)
+                               ?.DataSource?.LoadRelation;
+
+            return await GetCodeListOptionsAsync(config.CodeListTableName, relation);
+        }
+
+        // 显式接口实现：避免由于可空引用类型/可选参数默认值等差异导致的编译器匹配失败。
+        Task<IEnumerable<dynamic>> IDictService.GetDropdownOptionsAsync(string dictType, string? field, string? optionsSource)
+            => GetDropdownOptionsAsync(dictType, field, optionsSource);
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<dynamic>> GetDictViewOptionsAsync(string viewName, IReadOnlyList<string> columns)
+        {
+            if (string.IsNullOrWhiteSpace(viewName) || columns == null || columns.Count == 0)
+                return Enumerable.Empty<dynamic>();
+
+            foreach (var col in columns)
+            {
+                if (string.IsNullOrEmpty(col) || !Regex.IsMatch(col, @"^[a-zA-Z_][a-zA-Z0-9_]*$"))
+                    throw new ArgumentException($"非法列名: {col}");
+            }
+
+            var distinctCols = string.Join(", ", columns.Select(c => $"[{c}]"));
+            var orderCol = columns[0];
+            var sql = $"SELECT DISTINCT {distinctCols} FROM [{viewName}] ORDER BY [{orderCol}]";
+
+            using var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync();
+
+            var rows = await conn.QueryAsync(sql);
+            var result = new List<dynamic>();
+            foreach (var row in rows)
+            {
+                if (row is not IDictionary<string, object> dict)
+                    continue;
+
+                var mapped = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+                foreach (var kv in dict)
+                    mapped[kv.Key] = kv.Value is DBNull ? null : kv.Value;
+
+                result.Add(mapped);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 列级 OptionsViewName 优先；否则通过 <see cref="DictDataSourceConfig.OptionsRefDictType"/> 读取目标字典的 <see cref="DictItemConfig.ViewName"/>。
+        /// </summary>
+        private string? ResolveOptionsViewName(DictItemConfig config, DictDataSourceConfig? ds)
+        {
+            var direct = ds?.OptionsViewName ?? config.OptionsViewName;
+            if (!string.IsNullOrWhiteSpace(direct))
+                return direct;
+
+            var refType = ds?.OptionsRefDictType;
+            if (!string.IsNullOrWhiteSpace(refType))
+            {
+                var refConfig = _configManager.GetConfig(refType);
+                if (string.IsNullOrWhiteSpace(refConfig.ViewName))
+                {
+                    throw new InvalidOperationException(
+                        $"字典 '{refType}' 未配置 ViewName，无法作为 OptionsRefDictType 的视图来源。");
+                }
+
+                return refConfig.ViewName;
+            }
+
+            // 未配 OptionsViewName / OptionsRefDictType 时，与本字典 JSON 中的列表 ViewName 一致（无需重复写）
+            return string.IsNullOrWhiteSpace(config.ViewName) ? null : config.ViewName;
+        }
+
+        /// <summary>
+        /// 未显式配置 OptionsViewColumns 时，用 ValueField、LabelField、ValueMapping 的值拼 DISTINCT 列（顺序与下拉回填一致）。
+        /// </summary>
+        private static List<string>? InferViewColumnsFromDataSource(DictDataSourceConfig? ds)
+        {
+            if (ds == null) return null;
+
+            var order = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            void Add(string? s)
+            {
+                if (string.IsNullOrWhiteSpace(s)) return;
+                if (seen.Add(s)) order.Add(s);
+            }
+
+            Add(ds.ValueField);
+            Add(ds.LabelField);
+            if (ds.ValueMapping != null)
+            {
+                foreach (var v in ds.ValueMapping.Values)
+                    Add(v);
+            }
+
+            return order.Count > 0 ? order : null;
+        }
+
+        /// <summary>
+        /// 定位当前请求对应的 Select 列：优先 field；否则 Url 自引用 /api/dict/options/{type}；否则第一个带 Url 的 Select。
+        /// </summary>
+        private static DictColumnConfig? ResolveOptionsColumn(DictItemConfig config, string dictType, string? field)
+        {
+            static bool IsSelectLike(string? ui) =>
+                ui is "Select" or "MultiSelect" or "TreeSelect";
+
+            var candidates = config.Columns
+                .Where(c => IsSelectLike(c.UiType) && c.DataSource != null)
+                .ToList();
+
+            if (candidates.Count == 0)
+                return null;
+
+            if (!string.IsNullOrWhiteSpace(field))
+            {
+                return candidates.FirstOrDefault(c =>
+                    c.DbField.Equals(field, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var needle = $"/options/{dictType}";
+            foreach (var c in candidates)
+            {
+                var url = c.DataSource!.Url;
+                if (string.IsNullOrEmpty(url))
+                    continue;
+                if (url.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                    return c;
+            }
+
+            return candidates[0];
         }
 
         #endregion
@@ -495,7 +694,11 @@ namespace PMCSystem_Backend.Services.Implementations
                 {
                     Direction = ds.LoadRelation.Direction,
                     MappedField = ds.LoadRelation.MappedField
-                }
+                },
+                OptionsSource = ds.OptionsSource,
+                OptionsViewName = ds.OptionsViewName,
+                OptionsViewColumns = ds.OptionsViewColumns,
+                OptionsRefDictType = ds.OptionsRefDictType
             };
         }
 

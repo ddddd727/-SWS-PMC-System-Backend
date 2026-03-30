@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace PMCSystem_Backend.Modules.StandardComponents.Dtos
 {
@@ -97,6 +97,15 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Dtos
         public Dictionary<string, string>? ValueMapping { get; set; }
         public DataSourceRelationDto? LoadRelation { get; set; }
         public bool FilterUsed { get; set; } = true;
+
+        /// <summary>CodeList / View，与配置 JSON 一致，供前端展示或调试。</summary>
+        public string? OptionsSource { get; set; }
+
+        public string? OptionsViewName { get; set; }
+        public List<string>? OptionsViewColumns { get; set; }
+
+        /// <summary>引用另一字典 type 以解析视图名（与 OptionsViewName 二选一）。</summary>
+        public string? OptionsRefDictType { get; set; }
     }
 
     public class DataSourceRelationDto

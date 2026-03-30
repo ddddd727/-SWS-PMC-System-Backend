@@ -1,3 +1,4 @@
+using System;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,11 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class DictPipingController(IDictPipingService dictPipingService,
-                                    IS3dCommonCodeListValueService codeListService,
+                                    IDictService dictService,
                                     DictConfigManager dictConfigManager) : ControllerBase
     {
         private readonly IDictPipingService _dictPipingService = dictPipingService;
-        private readonly IS3dCommonCodeListValueService _codeListService = codeListService;
+        private readonly IDictService _dictService = dictService;
         private readonly DictConfigManager _dictConfigManager = dictConfigManager;
 
         // =================================================================
@@ -32,24 +33,19 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
         /// </summary>
         /// <param name="type">业务类型</param>
         /// <returns>下拉框选项列表</returns>
+        /// <param name="field">可选，列 DbField。同一字典存在多个 Select 且策略不同时传入。</param>
+        /// <param name="source">可选，覆盖选项策略：view / codelist。</param>
         [HttpGet("options/{type}")]
-        public async Task<IActionResult> GetOptions(string type)
+        public async Task<IActionResult> GetOptions(string type, [FromQuery] string? field = null, [FromQuery] string? source = null)
         {
             try
             {
-                // 使用 DictConfigManager 获取配置
-                var config = _dictConfigManager.GetConfig(type);
-                var codeListTableName = config.CodeListTableName;
-
-                if (string.IsNullOrEmpty(codeListTableName))
-                {
-                    return NotFound(new { message = $"未找到业务类型 '{type}' 的 CodeListTableName 配置，请检查配置文件" });
-                }
-
-                // 调用通用服务获取下拉选项
-                var result = await _codeListService.GetOptionsAsync(codeListTableName);
-
+                var result = await _dictService.GetDropdownOptionsAsync(type, field, source);
                 return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PMCSystem_Backend.Modules.StandardComponents.Dtos;
@@ -26,24 +26,19 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
         // 1. 下拉框选项
         // GET /api/dict/options/std-series
         // ================================================================
+        /// <param name="field">可选，列 DbField。同一字典存在多个 Select 且策略不同时传入。</param>
+        /// <param name="source">可选，覆盖选项策略：view（走字典 ViewName DISTINCT）、codelist（走 CodeList 表）。</param>
         [HttpGet("options/{type}")]
-        public async Task<IActionResult> GetOptions(string type)
+        public async Task<IActionResult> GetOptions(string type, [FromQuery] string? field = null, [FromQuery] string? source = null)
         {
             try
             {
-                var config = _configManager.GetConfig(type);
-
-                if (string.IsNullOrEmpty(config.CodeListTableName))
-                    return NotFound(new { message = $"类型 '{type}' 未配置 CodeListTableName" });
-
-                // 从该 type 的列配置里找到 LoadRelation（有配就带父子级，没配走原逻辑）
-                var relation = config.Columns
-                    .FirstOrDefault(c => c.DataSource?.LoadRelation != null)
-                    ?.DataSource?.LoadRelation;
-
-                // 【修改点】改为调用 _dictService.GetCodeListOptionsAsync
-                var result = await _dictService.GetCodeListOptionsAsync(config.CodeListTableName, relation);
+                var result = await _dictService.GetDropdownOptionsAsync(type, field, source);
                 return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
