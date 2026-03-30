@@ -166,6 +166,10 @@
                     "Url": "/api/dict/options/piping-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
+                    "OptionsViewColumns": [
+                        "GeometricIndustryStandard_Long",
+                        "GeometricIndustryStandard_CL"
+                    ],
                     "LoadRelation": {
                         "Direction": "Parent",
                         "MappedField": "GeometricIndustryStandard_Parent_Long"
@@ -335,7 +339,7 @@
     },
     "mat-grade-rule": {
         "DisplayName": "B3-牌号规则",
-        "ViewName": "View_Rule_M    aterialsGrade",
+        "ViewName": "View_Rule_MaterialsGrade",
         "PhysicalTableName": "S3D_Rule_MaterialsGrade",
         "CodeListTableName": "",
         "HandlerType": "Attribute",
@@ -394,11 +398,20 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/geo-standard?source=view",
+                    "Url": "/api/dict/options/piping-standard?source=view",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
+                    "OptionsViewColumns": [
+                        "GeometricIndustryStandard_Long",
+                        "GeometricIndustryStandard_CL"
+                    ],
+                    "LoadRelation": {
+                        "Direction": "Parent",
+                        "MappedField": "GeometricIndustryStandard_Parent_Long"
+                    },
                     "ValueMapping": {
-                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL"
+                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL",
+                        "GeometricIndustryStandard_Long": "GeometricIndustryStandard_Long"
                     },
                     "FilterUsed": false
                 }
