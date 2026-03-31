@@ -440,7 +440,7 @@
         "DisplayName": "C1-法兰等级标准",
         "ViewName": "View_Dict_FlangeStandard",
         "PhysicalTableName": "S3D_Dict_FlangeStandard",
-        "CodeListTableName": "",
+        "CodeListTableName": "GeometricIndustryStandard",
         "HandlerType": "Attribute",
         "Columns": [
             {
@@ -454,22 +454,39 @@
                 "DbField": "GeometricIndustryStandard_CL",
                 "Title": "标准CL",
                 "UiType": "Input",
-                "IsHidden": true
+                "IsHidden": true,
+                "IsReadOnly": true
             },
             {
-                "DbField": "GeometricIndustryStandard_Short",
+                "DbField": "GeometricIndustryStandard_Long",
                 "Title": "标准",
                 "UiType": "Select",
+                "IsHidden": false,
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/geo-standard?source=view",
-                    "LabelField": "GeometricIndustryStandard_Short",
-                    "ValueField": "GeometricIndustryStandard_Short",
+                    "Url": "/api/dict/options/piping-standard",
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "OptionsViewColumns": [
+                        "GeometricIndustryStandard_Long",
+                        "GeometricIndustryStandard_CL"
+                    ],
+                    "LoadRelation": {
+                        "Direction": "Parent",
+                        "MappedField": "GeometricIndustryStandard_Parent_Long"
+                    },
                     "ValueMapping": {
-                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL"
-                    }
+                        "GeometricIndustryPractice_CL": "GeometricIndustryStandard_Parent_CL",
+                        "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL",
+                        "GeometricIndustryStandard_Long": "GeometricIndustryStandard_Long",
+                        "GeometricIndustryStandardParent_CL": "GeometricIndustryStandard_Parent_CL",
+                        "GeometricIndustryStandardParent_Short": "GeometricIndustryStandard_Parent_Short",
+                        "GeometricIndustryStandardParent_Long": "GeometricIndustryStandard_Parent_Long"
+                    },
+                    "FilterUsed": true
                 }
             },
+            
             {
                 "DbField": "FlangeStandardCode",
                 "Title": "法兰标准编码",
@@ -487,22 +504,24 @@
                 "DbField": "GeometricIndustryPractice_CL",
                 "Title": "标准系列CL",
                 "UiType": "Input",
-                "IsHidden": true
+                "IsHidden": true,
+                "IsRequired": true,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "GeometricIndustryPractice_Short",
+                "Title": "标准系列Short",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsReadOnly": true
             },
             {
                 "DbField": "GeometricIndustryPractice_Long",
                 "Title": "标准系列",
-                "UiType": "Select",
-                "IsRequired": false,
-                "DataSource": {
-                    "Url": "/api/dict/options/std-series?source=view",
-                    "LabelField": "GeometricIndustryPractice_Long",
-                    "ValueField": "GeometricIndustryPractice_Long",
-                    "ValueMapping": {
-                        "GeometricIndustryPractice_CL": "GeometricIndustryPractice_CL"
-                    },
-                    "FilterUsed": false
-                }
+                "UiType": "Input",
+                "IsHidden": false,
+                "IsReadOnly": true,
+                "IsRequired": false
             },
             {
                 "DbField": "JsonData",
