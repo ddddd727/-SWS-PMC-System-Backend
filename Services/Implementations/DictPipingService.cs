@@ -448,7 +448,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 获取几何行业标准下拉框选项
         /// </summary>
-        /// <param name="type">公司类型</param>
+        /// <param name="type">组件类型</param>
         /// <returns>几何行业标准下拉框选项列表</returns>
         public async Task<IEnumerable<dynamic>> GetGeoStandardOptionsAsync(string type)
         {
@@ -486,7 +486,7 @@ namespace PMCSystem_Backend.Services.Implementations
                     value = opt.GeometricIndustryStandard_CL
                 });
             } else {
-                throw new Exception($"未找到公司类型 '{type}' 对应的 ComponentType");
+                throw new Exception($"未找到组件类型 '{type}' 对应的 ComponentType");
             }
 
         }
