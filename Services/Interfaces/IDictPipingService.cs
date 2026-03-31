@@ -12,6 +12,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         Task<int> DeleteAsync(string type, int id);
         Task<int> BatchDeleteAsync(string type, List<int> ids);
         Task<List<dynamic>> GetComponentTypeListAsync();
-        Task<IEnumerable<dynamic>> GetGeoStandardOptionsAsync(string companyType);
+        Task<IEnumerable<dynamic>> GetGeoStandardOptionsAsync(string type);
     }
 }

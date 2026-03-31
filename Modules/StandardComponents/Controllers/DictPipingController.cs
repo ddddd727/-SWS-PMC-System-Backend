@@ -29,17 +29,17 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
         /// <summary>
         /// 获取几何行业标准下拉框选项
         /// </summary>
-        /// <param name="companyType">公司类型</param>
+        /// <param name="type">公司类型</param>
         /// <returns>几何行业标准下拉框选项列表</returns>
         [HttpGet("options/geo-standard")]
-        public async Task<IActionResult> GetGeoStandardOptions([FromQuery] string companyType)
+        public async Task<IActionResult> GetGeoStandardOptions([FromQuery] string type)
         {
             try
             {
-                if (string.IsNullOrEmpty(companyType))
+                if (string.IsNullOrEmpty(type))
                     return BadRequest(new { message = "companyType 不能为空" });
 
-                var result = await _dictPipingService.GetGeoStandardOptionsAsync(companyType);
+                var result = await _dictPipingService.GetGeoStandardOptionsAsync(type);
                 return Ok(result);
             }
             catch (Exception ex)

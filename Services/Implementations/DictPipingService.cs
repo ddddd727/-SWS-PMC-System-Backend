@@ -448,18 +448,17 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 获取几何行业标准下拉框选项
         /// </summary>
-        /// <param name="companyType">公司类型</param>
+        /// <param name="type">公司类型</param>
         /// <returns>几何行业标准下拉框选项列表</returns>
-        public async Task<IEnumerable<dynamic>> GetGeoStandardOptionsAsync(string companyType)
+        public async Task<IEnumerable<dynamic>> GetGeoStandardOptionsAsync(string type)
         {
             using var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
             // 1. 根据 companyType 获取 ComponentTypeID
-            var componentTypeName = companyType.Replace(PART_PREFIX, "");
             var componentTypeResult = await conn.QueryFirstOrDefaultAsync<dynamic>(
                 "SELECT ID FROM S3D_Dict_ComponentType WHERE ComponentTypeName = @ComponentTypeName",
-                new { ComponentTypeName = componentTypeName });
+                new { ComponentTypeName = type });
 
             if (componentTypeResult is not null)
                 {
@@ -487,7 +486,7 @@ namespace PMCSystem_Backend.Services.Implementations
                     value = opt.GeometricIndustryStandard_CL
                 });
             } else {
-                throw new Exception($"未找到公司类型 '{companyType}' 对应的 ComponentType");
+                throw new Exception($"未找到公司类型 '{type}' 对应的 ComponentType");
             }
 
         }
