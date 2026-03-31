@@ -164,25 +164,28 @@
                 "IsRequired": true,
                 "DataSource": {
                     "Url": "/api/dict/options/piping-standard",
-                    "LabelField": "GeometricIndustryStandard_Long",
-                    "ValueField": "GeometricIndustryStandard_Long",
+                    "OptionsSource": "View",
+                    "OptionsViewName": "View_Dict_GeometricIndustryStandard",
                     "OptionsViewColumns": [
                         "GeometricIndustryStandard_Long",
-                        "GeometricIndustryStandard_CL"
+                        "GeometricIndustryStandard_CL",
+                        "GeometricIndustryStandard_Short",
+                        "GeometricIndustryStandard_Parent_CL",
+                        "GeometricIndustryStandard_Parent_Short",
+                        "GeometricIndustryStandard_Parent_Long",
+                        "ComponentTypeID"
                     ],
-                    "LoadRelation": {
-                        "Direction": "Parent",
-                        "MappedField": "GeometricIndustryStandard_Parent_Long"
-                    },
+                    "LabelField": "GeometricIndustryStandard_Long",
+                    "ValueField": "GeometricIndustryStandard_Long",
+                    "FilterField": "ComponentTypeID",
+                    "FilterUsed": true,
                     "ValueMapping": {
-                        "GeometricIndustryPractice_CL": "GeometricIndustryStandard_Parent_CL",
                         "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL",
                         "GeometricIndustryStandard_Long": "GeometricIndustryStandard_Long",
                         "GeometricIndustryStandardParent_CL": "GeometricIndustryStandard_Parent_CL",
                         "GeometricIndustryStandardParent_Short": "GeometricIndustryStandard_Parent_Short",
                         "GeometricIndustryStandardParent_Long": "GeometricIndustryStandard_Parent_Long"
-                    },
-                    "FilterUsed": true
+                    }
                 }
             },
             {
@@ -458,35 +461,44 @@
                 "IsReadOnly": true
             },
             {
-                "DbField": "GeometricIndustryStandard_Long",
+                "DbField": "GeometricIndustryStandard_Short",
                 "Title": "标准",
                 "UiType": "Select",
                 "IsHidden": false,
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/piping-standard",
-                    "LabelField": "GeometricIndustryStandard_Long",
-                    "ValueField": "GeometricIndustryStandard_Long",
+                    "Url": "/api/dict/options/flange-standard",
+                    "OptionsSource": "View",
+                    "OptionsViewName": "View_Dict_GeometricIndustryStandard",
                     "OptionsViewColumns": [
+                        "GeometricIndustryStandard_Short",
+                        "GeometricIndustryStandard_CL",
                         "GeometricIndustryStandard_Long",
-                        "GeometricIndustryStandard_CL"
+                        "GeometricIndustryStandard_Parent_CL",
+                        "GeometricIndustryStandard_Parent_Short",
+                        "GeometricIndustryStandard_Parent_Long",
+                        "ComponentTypeID"
                     ],
-                    "LoadRelation": {
-                        "Direction": "Parent",
-                        "MappedField": "GeometricIndustryStandard_Parent_Long"
-                    },
+                    "LabelField": "GeometricIndustryStandard_Short",
+                    "ValueField": "GeometricIndustryStandard_Short",
+                    "FilterField": "ComponentTypeID",
+                    "FilterUsed": true,
                     "ValueMapping": {
-                        "GeometricIndustryPractice_CL": "GeometricIndustryStandard_Parent_CL",
                         "GeometricIndustryStandard_CL": "GeometricIndustryStandard_CL",
                         "GeometricIndustryStandard_Long": "GeometricIndustryStandard_Long",
-                        "GeometricIndustryStandardParent_CL": "GeometricIndustryStandard_Parent_CL",
-                        "GeometricIndustryStandardParent_Short": "GeometricIndustryStandard_Parent_Short",
-                        "GeometricIndustryStandardParent_Long": "GeometricIndustryStandard_Parent_Long"
-                    },
-                    "FilterUsed": true
+                        "GeometricIndustryPractice_CL": "GeometricIndustryStandard_Parent_CL",
+                        "GeometricIndustryPractice_Short": "GeometricIndustryStandard_Parent_Short",
+                        "GeometricIndustryPractice_Long": "GeometricIndustryStandard_Parent_Long"
+                    }
                 }
             },
-            
+            {
+                "DbField": "GeometricIndustryStandard_Long",
+                "Title": "标准Long",
+                "UiType": "Input",
+                "IsHidden": true,
+                "IsReadOnly": true
+            },
             {
                 "DbField": "FlangeStandardCode",
                 "Title": "法兰标准编码",
@@ -798,6 +810,50 @@
         "PhysicalTableName": "S3D_Dict_GeometricIndustryStandard",
         "CodeListTableName": "GeometricIndustryStandard",
         "HandlerType": "Attribute",
-        "Columns": []
+        "Columns": [
+            {
+                "DbField": "ID",
+                "Title": "ID",
+                "IsPrimaryKey": true,
+                "IsHidden": false,
+                "IsReadOnly": true
+            },
+            {
+                "DbField": "GeometricIndustryStandard_CL",
+                "Title": "标准CL",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
+                "DbField": "GeometricIndustryStandard_Short",
+                "Title": "标准",
+                "UiType": "Input",
+                "IsHidden": false
+            },
+            {
+                "DbField": "GeometricIndustryStandard_Long",
+                "Title": "标准描述",
+                "UiType": "Input",
+                "IsHidden": false
+            },
+            {
+                "DbField": "GeometricIndustryStandard_Parent_CL",
+                "Title": "父级CL(标准系列)",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
+                "DbField": "GeometricIndustryStandard_Parent_Short",
+                "Title": "父级Short(标准系列)",
+                "UiType": "Input",
+                "IsHidden": true
+            },
+            {
+                "DbField": "GeometricIndustryStandard_Parent_Long",
+                "Title": "父级Long(标准系列)",
+                "UiType": "Input",
+                "IsHidden": false
+            }
+        ]
     }
 }

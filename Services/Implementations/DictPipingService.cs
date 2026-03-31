@@ -120,7 +120,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 ]
             };
 
-            // 先查询 S3D_Dict_PipingComponentType 表，获取 componentTypeName = 'elbow' 的 ID 和 ConnectType
+            // 先查询 S3D_Dict_ComponentType 表，获取 componentTypeName = 'elbow' 的 ID 和 ConnectType
             using var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 

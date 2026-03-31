@@ -1,7 +1,7 @@
 namespace PMCSystem_Backend.Shared.Entities;
 
 /// <summary>
-/// 跨模块共享实体，映射表 S3D_Dict_PipingComponentType
+/// 跨模块共享实体，映射表 S3D_Dict_ComponentType
 /// 被 DesignRules、PipingSpecifications 等模块共用
 /// </summary>
 public partial class S3dDictPipingComponentType
