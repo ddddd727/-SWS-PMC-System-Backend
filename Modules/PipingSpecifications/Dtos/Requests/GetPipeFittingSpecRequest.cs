@@ -20,6 +20,12 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Dtos.Requests
         public string? ComponentTypeName { get; set; }
 
         /// <summary>
+        /// 主材料名称（Codelist: MaterialsCategory 的 ShortStringValue），长度≤255；必填
+        /// </summary>
+        [MaxLength(255, ErrorMessage = "主材料名称长度不能超过255个字符")]
+        public string? MaterialCategory { get; set; }
+
+        /// <summary>
         /// 交叉字段校验：ComponentTypeId 与 ComponentTypeName 至少提供一个
         /// </summary>
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -36,6 +42,13 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Dtos.Requests
                 yield return new ValidationResult(
                     "ComponentTypeId 必须为正整数",
                     new[] { nameof(ComponentTypeId) });
+            }
+
+            if (string.IsNullOrWhiteSpace(MaterialCategory))
+            {
+                yield return new ValidationResult(
+                    "MaterialCategory 不能为空",
+                    new[] { nameof(MaterialCategory) });
             }
         }
     }

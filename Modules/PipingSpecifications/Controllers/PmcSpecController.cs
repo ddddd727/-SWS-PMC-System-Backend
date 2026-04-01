@@ -184,7 +184,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
         [HttpGet("NPDInfo")]
         [ProducesResponseType(typeof(ApiResponse<SpecNPDInfoDto>), 200)]
         [ProducesResponseType(typeof(ApiResponse), 400)]
-        public IActionResult GetNPDInfo([FromQuery] GetNPDInfoRequest request)
+        public async Task<IActionResult> GetNPDInfo([FromQuery] GetNPDInfoRequest request)
         {
             // 使用ModelState自动验证
             if (!ModelState.IsValid)
@@ -198,7 +198,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
                     request.EndStandard, request.Schedule);
 
                 // 调用服务层方法获取通径、外径、壁厚信息
-                var result = _pmcSpecService.GetNPDInfoByPmc(request.EndStandard, request.Schedule);
+                var result = await _pmcSpecService.GetNPDInfoByPmcAsync(request.EndStandard, request.Schedule);
 
                 // 判断查询结果是否为空
                 if (result == null || IsNPDInfoEmpty(result))
@@ -249,25 +249,31 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
             try
             {
                 _logger.LogInformation(
-                    "开始获取管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                    "开始获取管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}, 主材料={MaterialCategory}",
                     request.ComponentTypeId,
-                    request.ComponentTypeName);
+                    request.ComponentTypeName,
+                    request.MaterialCategory);
 
-                var result = _pmcSpecService.GetPipeFittingSpec(request.ComponentTypeId, request.ComponentTypeName);
+                var result = _pmcSpecService.GetPipeFittingSpec(
+                    request.ComponentTypeId,
+                    request.ComponentTypeName,
+                    request.MaterialCategory);
 
                 if (result == null || !result.Any())
                 {
                     _logger.LogWarning(
-                        "未找到管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                        "未找到管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}, 主材料={MaterialCategory}",
                         request.ComponentTypeId,
-                        request.ComponentTypeName);
+                        request.ComponentTypeName,
+                        request.MaterialCategory);
                     return Fail(ApiErrorCode.ResourceNotFound, "未找到对应的标准列表");
                 }
 
                 _logger.LogInformation(
-                    "成功获取管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}，共 {Count} 条",
+                    "成功获取管附件标准，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}, 主材料={MaterialCategory}，共 {Count} 条",
                     request.ComponentTypeId,
                     request.ComponentTypeName,
+                    request.MaterialCategory,
                     result.Count);
                 return Success(result, "获取成功");
             }
@@ -275,45 +281,58 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
             {
                 _logger.LogWarning(
                     ex,
-                    "管附件标准参数验证失败，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                    "管附件标准参数验证失败，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}, 主材料={MaterialCategory}",
                     request.ComponentTypeId,
-                    request.ComponentTypeName);
+                    request.ComponentTypeName,
+                    request.MaterialCategory);
                 return Fail(ApiErrorCode.ValidationError, "参数验证失败");
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
-                    "获取管附件标准时发生错误，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}",
+                    "获取管附件标准时发生错误，部件类型: Id={ComponentTypeId}, Name={ComponentTypeName}, 主材料={MaterialCategory}",
                     request.ComponentTypeId,
-                    request.ComponentTypeName);
+                    request.ComponentTypeName,
+                    request.MaterialCategory);
                 return Fail(ApiErrorCode.BusinessRuleViolation, "查询失败，请稍后重试");
             }
         }
 
         /// <summary>
-        /// 获取所有材料牌号列表（来自视图 S3D_CL_MaterialsGrade，仅返回 ShortStringValue 列）。
+        /// 根据主材料获取材料牌号列表（基于 Codelist 父子关系）。
         /// </summary>
+        /// <param name="request">按主材料筛选材料牌号请求</param>
         /// <returns>材料牌号列表</returns>
         /// <response code="200">查询成功，返回材料牌号列表</response>
         /// <response code="400">查询失败</response>
         [HttpGet("MaterialsGrades")]
         [ProducesResponseType(typeof(ApiResponse<List<string>>), 200)]
         [ProducesResponseType(typeof(ApiResponse), 400)]
-        public IActionResult GetMaterialsGrades()
+        public IActionResult GetMaterialsGrades([FromQuery] GetMaterialsGradesRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                return ValidationFailed();
+            }
+
             try
             {
-                _logger.LogInformation("开始获取材料牌号列表");
+                _logger.LogInformation("开始获取材料牌号列表，主材料={MaterialCategory}", request.MaterialCategory);
 
-                var result = _pmcSpecService.GetMaterialsGrades();
+                var result = _pmcSpecService.GetMaterialsGrades(request.MaterialCategory);
 
-                _logger.LogInformation("成功获取材料牌号列表，共 {Count} 条", result.Count);
+                _logger.LogInformation("成功获取材料牌号列表，主材料={MaterialCategory}，共 {Count} 条", request.MaterialCategory, result.Count);
                 return Success(result, "获取成功");
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "材料牌号参数验证失败，主材料={MaterialCategory}", request.MaterialCategory);
+                return Fail(ApiErrorCode.ValidationError, "参数验证失败");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "获取材料牌号列表时发生错误");
+                _logger.LogError(ex, "获取材料牌号列表时发生错误，主材料={MaterialCategory}", request.MaterialCategory);
                 return Fail(ApiErrorCode.BusinessRuleViolation, "查询失败，请稍后重试");
             }
         }

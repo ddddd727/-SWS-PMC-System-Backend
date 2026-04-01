@@ -352,7 +352,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 使用已保存的规格书数据获取模板预览：按 pmcCode 拉取 PMC 基础信息与规格规则，扁平化为占位符字典后调用预览逻辑。
         /// </summary>
-        public TemplatePreviewResponse GetTemplatePreviewBySpec(string templateId, string pmcCode)
+        public async Task<TemplatePreviewResponse> GetTemplatePreviewBySpec(string templateId, string pmcCode)
         {
             _logger.LogInformation("开始按规格书获取模板预览，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
             if (string.IsNullOrWhiteSpace(pmcCode))
@@ -360,7 +360,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 _logger.LogWarning("按规格书预览失败：PmcCode 为空");
                 throw new ArgumentException("PmcCode cannot be null or empty", nameof(pmcCode));
             }
-            var parameters = BuildSpecPlaceholderDictionary(pmcCode);
+            var parameters = await BuildSpecPlaceholderDictionaryAsync(pmcCode);
             var result = GetTemplatePreview(templateId, parameters);
             _logger.LogInformation("按规格书模板预览成功，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
             return result;
@@ -369,7 +369,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// <summary>
         /// 使用已保存的规格书数据导出模板：按 pmcCode 拉取规格书并填充占位符后导出 xlsx。
         /// </summary>
-        public byte[] ExportTemplateBySpec(string templateId, string pmcCode)
+        public async Task<byte[]> ExportTemplateBySpec(string templateId, string pmcCode)
         {
             _logger.LogInformation("开始按规格书导出模板，TemplateId: {TemplateId}, PmcCode: {PmcCode}", templateId, pmcCode);
             if (string.IsNullOrWhiteSpace(pmcCode))
@@ -377,7 +377,7 @@ namespace PMCSystem_Backend.Services.Implementations
                 _logger.LogWarning("按规格书导出失败：PmcCode 为空");
                 throw new ArgumentException("PmcCode cannot be null or empty", nameof(pmcCode));
             }
-            var parameters = BuildSpecPlaceholderDictionary(pmcCode);
+            var parameters = await BuildSpecPlaceholderDictionaryAsync(pmcCode);
             // 生成规格书时，将配置状态更新为待审核
             _pmcSpecService.SetSpecConfigStatus(pmcCode, SpecConfigStatus.Review);
             var result = ExportTemplate(templateId, parameters);
@@ -408,7 +408,7 @@ namespace PMCSystem_Backend.Services.Implementations
         /// </remarks>
         /// <param name="pmcCode">PMC 编码</param>
         /// <returns>占位符键值对：PMC 基础信息 + 标准信息 + 通径范围信息</returns>
-        private Dictionary<string, string> BuildSpecPlaceholderDictionary(string pmcCode)
+        private async Task<Dictionary<string, string>> BuildSpecPlaceholderDictionaryAsync(string pmcCode)
         {
             _logger.LogDebug("构建规格书占位符字典，PmcCode: {PmcCode}", pmcCode);
             var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -429,7 +429,7 @@ namespace PMCSystem_Backend.Services.Implementations
             {
                 try
                 {
-                    var npdInfo = _pmcSpecService.GetNPDInfoByPmc(baseInfo.PipeStandard, baseInfo.WallThickness);
+                    var npdInfo = await _pmcSpecService.GetNPDInfoByPmcAsync(baseInfo.PipeStandard, baseInfo.WallThickness);
                     if (npdInfo != null)
                     {
                         // 通径列表（NPD）：逗号分隔的字符串，如 "15, 20, 25, 32, 40"

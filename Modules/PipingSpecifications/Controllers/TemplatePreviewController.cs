@@ -49,7 +49,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
-        public IActionResult GetPreview(
+        public async Task<IActionResult> GetPreview(
             [FromRoute] string templateId,
             [FromQuery] string pmcCode)
         {
@@ -59,7 +59,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
                 {
                     return Fail(ApiErrorCode.InvalidParameter, "PmcCode is required for template preview");
                 }
-                var preview = _templatePreviewService.GetTemplatePreviewBySpec(templateId, pmcCode.Trim());
+                var preview = await _templatePreviewService.GetTemplatePreviewBySpec(templateId, pmcCode.Trim());
                 return Success(preview);
             }
             catch (ArgumentException ex)
@@ -90,7 +90,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
-        public IActionResult Export(
+        public async Task<IActionResult> Export(
             [FromRoute] string templateId,
             [FromQuery] string pmcCode)
         {
@@ -100,7 +100,7 @@ namespace PMCSystem_Backend.Modules.PipingSpecifications.Controllers
                 {
                     return Fail(ApiErrorCode.InvalidParameter, "PmcCode is required for template export");
                 }
-                var fileContent = _templatePreviewService.ExportTemplateBySpec(templateId, pmcCode.Trim());
+                var fileContent = await _templatePreviewService.ExportTemplateBySpec(templateId, pmcCode.Trim());
                 var sig = fileContent.Length >= 4
                     ? BitConverter.ToString(fileContent, 0, 4)
                     : "N/A";
