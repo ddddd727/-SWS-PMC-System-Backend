@@ -144,6 +144,73 @@ namespace PMCSystem_Backend.Services.Implementations
             }
         }
 
+        /// <summary>
+        /// 根据 Codelist 表名和长描述反查对应的 Codelist 值
+        /// </summary>
+        /// <param name="codelistTableName">Codelist 表名</param>
+        /// <param name="longDescription">长描述（LongStringValue）</param>
+        /// <returns>匹配到的 CodeListNumber；未命中或歧义时返回 null</returns>
+        public async Task<int?> GetCodeListNumberByLongDescriptionAsync(string codelistTableName, string longDescription)
+        {
+            if (string.IsNullOrWhiteSpace(codelistTableName))
+            {
+                _logger.LogWarning("Codelist表名不能为空");
+                return null;
+            }
+
+            var normalizedDescription = longDescription?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedDescription))
+            {
+                _logger.LogWarning("长描述不能为空，表名：{CodelistTableName}", codelistTableName);
+                return null;
+            }
+
+            try
+            {
+                var codelistTableId = await GetCodelistTableIdAsync(codelistTableName);
+                if (codelistTableId == 0)
+                {
+                    _logger.LogWarning("未找到Codelist表：{CodelistTableName}", codelistTableName);
+                    return null;
+                }
+
+                var normalizedLower = normalizedDescription.ToLower();
+                var matchedValues = await _pmcContext.S3dCommonCodeListValues
+                    .Where(v =>
+                        v.CodeListTableId == codelistTableId
+                        && v.Status
+                        && v.LongStringValue != null
+                        && v.LongStringValue.Trim().ToLower() == normalizedLower)
+                    .Select(v => new { v.CodeListNumber, v.LongStringValue })
+                    .ToListAsync();
+
+                if (matchedValues.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "未找到匹配的Codelist值，表名：{CodelistTableName}，长描述：{LongDescription}",
+                        codelistTableName, normalizedDescription);
+                    return null;
+                }
+
+                if (matchedValues.Count > 1)
+                {
+                    _logger.LogWarning(
+                        "长描述匹配到多个Codelist值，表名：{CodelistTableName}，长描述：{LongDescription}，数量：{Count}",
+                        codelistTableName, normalizedDescription, matchedValues.Count);
+                    return null;
+                }
+
+                return matchedValues[0].CodeListNumber;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "根据长描述反查Codelist值失败，表名：{CodelistTableName}，长描述：{LongDescription}",
+                    codelistTableName, normalizedDescription);
+                return null;
+            }
+        }
+
 
         /// <summary>
         /// 解析列名，获取对应的Codelist表名

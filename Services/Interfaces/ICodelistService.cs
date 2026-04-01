@@ -29,6 +29,14 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <returns>匹配到的 CodeListNumber；未命中或歧义时返回 null</returns>
         Task<int?> GetCodeListNumberByShortDescriptionAsync(string codelistTableName, string shortDescription);
 
+        /// <summary>
+        /// 根据 Codelist 表名和长描述反查对应的 Codelist 值
+        /// </summary>
+        /// <param name="codelistTableName">Codelist 表名</param>
+        /// <param name="longDescription">长描述（LongStringValue）</param>
+        /// <returns>匹配到的 CodeListNumber；未命中或歧义时返回 null</returns>
+        Task<int?> GetCodeListNumberByLongDescriptionAsync(string codelistTableName, string longDescription);
+
 
         /// <summary>
         /// 批量获取Codelist描述

@@ -26,7 +26,7 @@ namespace PMCSystem_Backend.Services.Implementations
             new(StringComparer.OrdinalIgnoreCase)
             {
                 ["Elbow"] = (e, list) => e.ElbowStandard = list,
-                ["Reducer"] = (e, list) => e.RedStandard = list,
+                ["Red"] = (e, list) => e.RedStandard = list,
                 ["Tee"] = (e, list) => e.TeeStandard = list,
                 ["Sleeve"] = (e, list) => e.SleeveStandard = list,
                 ["Bosses"] = (e, list) => e.BossesStandard = list,
@@ -336,7 +336,7 @@ namespace PMCSystem_Backend.Services.Implementations
             }
 
             var materialsCategoryCl = _codelistService
-                .GetCodeListNumberByShortDescriptionAsync("MaterialsCategory", normalizedMaterialCategory)
+                .GetCodeListNumberByLongDescriptionAsync("MaterialsCategory", normalizedMaterialCategory)
                 .GetAwaiter()
                 .GetResult();
             if (!materialsCategoryCl.HasValue)
@@ -453,7 +453,7 @@ namespace PMCSystem_Backend.Services.Implementations
             }
 
             var materialsCategoryCl = _codelistService
-                .GetCodeListNumberByShortDescriptionAsync("MaterialsCategory", normalizedMaterialCategory)
+                .GetCodeListNumberByLongDescriptionAsync("MaterialsCategory", normalizedMaterialCategory)
                 .GetAwaiter()
                 .GetResult();
             if (!materialsCategoryCl.HasValue)
