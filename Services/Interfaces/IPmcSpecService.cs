@@ -52,7 +52,7 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// <param name="EndStandard"> 端面标准 </param>
         /// <param name="Schedule"> 壁厚系列 </param>
         /// <returns></returns>
-        SpecNPDInfoDto GetNPDInfoByPmc(string EndStandard, string Schedule);
+        Task<SpecNPDInfoDto> GetNPDInfoByPmcAsync(string EndStandard, string Schedule);
 
 
 
@@ -61,14 +61,16 @@ namespace PMCSystem_Backend.Services.Interfaces
         /// </summary>
         /// <param name="componentTypeId">部件类型 ID（推荐），与 S3D_Dict_PipingComponentType.ID 一致</param>
         /// <param name="componentTypeName">部件类型名称（兼容旧逻辑），与 componentTypeId 二选一</param>
+        /// <param name="materialCategory">主材料名称（Codelist: MaterialsCategory.ShortStringValue）</param>
         /// <returns>标准名称列表</returns>
-        List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName);
+        List<string> GetPipeFittingSpec(int? componentTypeId, string? componentTypeName, string? materialCategory);
 
         /// <summary>
-        /// 获取所有材料牌号列表（来自视图 S3D_CL_MaterialsGrade，仅返回 ShortStringValue）。
+        /// 根据主材料获取材料牌号列表（通过 Codelist 父子关系获取 MaterialsGrade）。
         /// </summary>
+        /// <param name="materialCategory">主材料名称（Codelist: MaterialsCategory.ShortStringValue）</param>
         /// <returns>材料牌号列表</returns>
-        List<string> GetMaterialsGrades();
+        List<string> GetMaterialsGrades(string? materialCategory);
 
 
         /// <summary>

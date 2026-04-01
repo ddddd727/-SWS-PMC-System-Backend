@@ -31,10 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="appsettings.Development.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Core\Exceptions\" />
     <Folder Include="Core\Extensions\" />
     <Folder Include="Core\DependencyInjection\" />
