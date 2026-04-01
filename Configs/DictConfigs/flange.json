@@ -25,7 +25,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=flange",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
@@ -98,7 +98,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=blindFlange",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
@@ -171,7 +171,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=gasket",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
@@ -244,7 +244,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=bolt",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
@@ -317,7 +317,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=nut",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
@@ -390,7 +390,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=washer",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
@@ -463,7 +463,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=accessories",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
@@ -536,7 +536,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dictPiping/options/geo-standard?type=joints",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": { "geometricIndustryStandardCL": "GeometricIndustryStandard_CL" },
