@@ -761,11 +761,12 @@
                 "IsHidden": false,
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-grade?source=view",
-                    "LabelField": "MaterialsGrade_Long",
-                    "ValueField": "MaterialsGrade_Long",
+                    "Url": "/api/dict/options/mat-grade",
+                    "LabelField": "MaterialsGrade_Short",
+                    "ValueField": "MaterialsGrade_Short",
                     "ValueMapping": {
-                        "MaterialsGrade_CL": "MaterialsGrade_CL"
+                        "MaterialsGrade_CL": "MaterialsGrade_CL",
+                        "MaterialsGrade_Long": "MaterialsGrade_Short"
                     }
                 }
             },
@@ -783,7 +784,7 @@
                 "IsHidden": false,
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/geo-standard?source=view",
+                    "Url": "/api/dict/options/geo-standard",
                     "LabelField": "GeometricIndustryStandard_Long",
                     "ValueField": "GeometricIndustryStandard_Long",
                     "ValueMapping": {
