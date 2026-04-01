@@ -4,6 +4,9 @@
         "ViewName": "View_Fitting_Elbow",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -77,6 +80,9 @@
         "ViewName": "View_Fitting_Red",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -150,6 +156,9 @@
         "ViewName": "View_Fitting_Tee",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -223,6 +232,9 @@
         "ViewName": "View_Fitting_Sleeve",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -296,6 +308,9 @@
         "ViewName": "View_Fitting_Bosses",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -369,6 +384,9 @@
         "ViewName": "View_Fitting_Saddles",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -442,6 +460,9 @@
         "ViewName": "View_Fitting_Caps",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -515,6 +536,9 @@
         "ViewName": "View_Fitting_Overpass",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Fitting",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",

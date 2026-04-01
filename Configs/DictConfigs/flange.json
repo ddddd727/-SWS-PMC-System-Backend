@@ -4,6 +4,9 @@
         "ViewName": "View_Flange_Main",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -77,6 +80,9 @@
         "ViewName": "View_BlindFlange_Main",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -150,6 +156,9 @@
         "ViewName": "View_Gasket_Main",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -223,6 +232,9 @@
         "ViewName": "View_Flange_Bolts",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -296,6 +308,9 @@
         "ViewName": "View_Nut_Main",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -369,6 +384,9 @@
         "ViewName": "View_Washer_Main",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -442,6 +460,9 @@
         "ViewName": "View_Accessories_Main",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
@@ -515,6 +536,9 @@
         "ViewName": "View_Joints_Main",
         "PhysicalTableName": "S3D_Rule_PipingCompStandard",
         "HandlerType": "Flange",
+        "UniqueConstraints": [
+            [ "materialsCategoryLong", "geometricIndustryStandardLong" ]
+        ],
         "Columns": [
             {
                 "DbField": "id",
