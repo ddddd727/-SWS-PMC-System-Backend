@@ -23,6 +23,32 @@ namespace PMCSystem_Backend.Modules.StandardComponents.Controllers
         private readonly IS3dCommonCodeListValueService _codeListService = codeListService;
         private readonly DictConfigManager _dictConfigManager = dictConfigManager;
 
+        // 1. 下拉框选项接口 (Get Options)
+        // URL: GET /api/dict/piping/options/geo-standard
+        // =================================================================
+        /// <summary>
+        /// 获取几何行业标准下拉框选项
+        /// </summary>
+        /// <param name="type">公司类型</param>
+        /// <returns>几何行业标准下拉框选项列表</returns>
+        [HttpGet("options/geo-standard")]
+        public async Task<IActionResult> GetGeoStandardOptions([FromQuery] string type)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(type))
+                    return BadRequest(new { message = "companyType 不能为空" });
+
+                var result = await _dictPipingService.GetGeoStandardOptionsAsync(type);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"获取几何行业标准选项失败: {ex.Message}" });
+            }
+        }
+
+
         // =================================================================
         // 1. 下拉框选项接口 (Get Options)
         // URL: GET /api/dict/piping/options/std-series

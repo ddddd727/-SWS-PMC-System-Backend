@@ -30,7 +30,7 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
         v2.LongStringValue as materialsCategoryLong,
         t1.status,
         t1.JsonData
-    FROM S3D_Dict_PipingComponentType t 
+    FROM S3D_Dict_ComponentType t 
     LEFT JOIN S3D_Rule_PipingCompStandard t1 ON t.id = t1.ComponentTypeID 
     LEFT JOIN S3D_Common_CodeListTable ct1 ON ct1.CodeListTableName = 'GeometricIndustryStandard'
     LEFT JOIN S3D_Common_CodeListValue v1 ON t1.GeometricIndustryStandard_CL = v1.CodeListNumber 
