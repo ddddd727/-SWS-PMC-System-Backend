@@ -38,7 +38,8 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
     LEFT JOIN S3D_Common_CodeListTable ct2 ON ct2.CodeListTableName = 'MaterialsCategory'
     LEFT JOIN S3D_Common_CodeListValue v2 ON t1.MaterialsCategory_CL = v2.CodeListNumber 
         AND v2.CodeListTableID = ct2.ID
-    WHERE t.ID = @ComponentTypeId";
+    WHERE t.ID = @ComponentTypeId
+      AND t1.ID IS NOT NULL";
 
             return await conn.QueryAsync(sql, new { ComponentTypeId = componentTypeId });
         }
