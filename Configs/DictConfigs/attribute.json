@@ -186,7 +186,8 @@
                         "GeometricIndustryStandard_Long": "GeometricIndustryStandard_Long",
                         "GeometricIndustryStandardParent_CL": "GeometricIndustryStandard_Parent_CL",
                         "GeometricIndustryStandardParent_Short": "GeometricIndustryStandard_Parent_Short",
-                        "GeometricIndustryStandardParent_Long": "GeometricIndustryStandard_Parent_Long"
+                        "GeometricIndustryStandardParent_Long": "GeometricIndustryStandard_Parent_Long",
+                        "GeometricIndustryPractice_CL": "GeometricIndustryStandard_Parent_CL"
                     }
                 }
             },
