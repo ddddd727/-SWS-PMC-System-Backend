@@ -630,12 +630,36 @@ namespace PMCSystem_Backend.Services.Implementations
             var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
+            var physicalCols = await GetObjectColumnsAsync(conn, config.PhysicalTableName);
+            HashSet<string>? viewCols = null;
+
             foreach (var group in config.UniqueConstraints)
             {
                 if (!group.All(f => row.ContainsKey(f))) continue;
 
+                // 优先用实表校验；当字段不在实表时，退回到视图校验（满足“用视图字段做联合校验”的业务语义）
+                var missingInPhysical = group.Any(f => !physicalCols.Contains(f));
+                var fromObject = config.PhysicalTableName;
+                HashSet<string> fromCols = physicalCols;
+
+                if (missingInPhysical)
+                {
+                    if (string.IsNullOrWhiteSpace(config.ViewName))
+                        throw new Exception(
+                            $"联合唯一校验失败：字段 {string.Join(", ", group)} 在物理表 '{config.PhysicalTableName}' 中不存在，且未配置 ViewName 无法降级校验。");
+
+                    viewCols ??= await GetObjectColumnsAsync(conn, config.ViewName);
+
+                    var hasAllInView = group.All(f => viewCols.Contains(f));
+                    if (hasAllInView)
+                    {
+                        fromObject = config.ViewName!;
+                        fromCols = viewCols;
+                    }
+                }
+
                 var conditions = group.Select((f, i) => $"[{f}] = @p{i}").ToList();
-                var sql = $"SELECT COUNT(1) FROM [{config.PhysicalTableName}] WHERE {string.Join(" AND ", conditions)}";
+                var sql = $"SELECT COUNT(1) FROM [{fromObject}] WHERE {string.Join(" AND ", conditions)}";
                 var parameters = new DynamicParameters();
                 for (int i = 0; i < group.Count; i++)
                     parameters.Add($"p{i}", row[group[i]]?.ToString());
@@ -643,8 +667,12 @@ namespace PMCSystem_Backend.Services.Implementations
                 // 编辑时排除自身
                 if (row.TryGetValue("ID", out var idObj) && idObj != null)
                 {
-                    sql += " AND ID != @Id";
-                    parameters.Add("Id", idObj.ToString());
+                    // 只有目标对象上存在 ID 列时，才能做“排除自身”的编辑校验
+                    if (fromCols.Contains("ID"))
+                    {
+                        sql += " AND [ID] != @Id";
+                        parameters.Add("Id", idObj.ToString());
+                    }
                 }
 
                 var count = await conn.ExecuteScalarAsync<int>(sql, parameters);
@@ -658,6 +686,35 @@ namespace PMCSystem_Backend.Services.Implementations
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 获取数据库对象（表/视图）的列名集合，用于在“校验字段来自视图但实表缺列”时做降级。
+        /// </summary>
+        private static async Task<HashSet<string>> GetObjectColumnsAsync(System.Data.Common.DbConnection conn, string objectName)
+        {
+            static (string? schema, string name) SplitSchema(string fullName)
+            {
+                var trimmed = fullName.Trim();
+                var parts = trimmed.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                return parts.Length == 2 ? (parts[0], parts[1]) : (null, trimmed);
+            }
+
+            var (schema, name) = SplitSchema(objectName);
+
+            // 兼容 TABLE / VIEW：如果传入的是视图名，在信息架构里也能取到对应列
+            var sql = @"
+SELECT c.COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS c
+JOIN INFORMATION_SCHEMA.TABLES t
+  ON c.TABLE_NAME = t.TABLE_NAME
+ AND c.TABLE_SCHEMA = t.TABLE_SCHEMA
+WHERE c.TABLE_NAME = @Name
+  AND (@Schema IS NULL OR c.TABLE_SCHEMA = @Schema)
+  AND (t.TABLE_TYPE = 'BASE TABLE' OR t.TABLE_TYPE = 'VIEW');";
+
+            var cols = await conn.QueryAsync<string>(sql, new { Name = name, Schema = schema });
+            return new HashSet<string>(cols, StringComparer.OrdinalIgnoreCase);
         }
 
         private static ConditionRuleDto? MapConditionRule(ConditionRule? rule)
