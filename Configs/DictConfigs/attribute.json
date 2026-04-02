@@ -47,6 +47,7 @@
                 "UiType": "Input",
                 "IsHidden": false,
                 "IsRequired": true,
+                "IsUnique": true,
                 "Validation": {
                     "MaxLength": 1,
                     "MinLength": 1,
@@ -109,6 +110,7 @@
                 "UiType": "Input",
                 "IsHidden": false,
                 "IsRequired": true,
+                "IsUnique": true,
                 "Validation": {
                     "MaxLength": 1,
                     "MinLength": 1,
@@ -272,6 +274,12 @@
         "PhysicalTableName": "S3D_Dict_MaterialsGrade",
         "CodeListTableName": "MaterialsGrade",
         "HandlerType": "Attribute",
+        "UniqueConstraints": [
+            [
+                "MaterialsCategory_Long",
+                "MaterialsGradeCode"
+            ]
+        ],
         "Columns": [
             {
                 "DbField": "ID",
@@ -589,6 +597,7 @@
                 "UiType": "Input",
                 "IsHidden": false,
                 "IsRequired": true,
+                "IsUnique": true,
                 "Validation": {
                     "MaxLength": 1,
                     "MinLength": 1,

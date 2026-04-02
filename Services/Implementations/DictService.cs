@@ -544,7 +544,18 @@ namespace PMCSystem_Backend.Services.Implementations
 
                 // 内置 Validation 规则
                 var builtinError = ValidateBuiltinRules(column, value);
-                if (builtinError != null) errors.Add(builtinError);
+                if (builtinError != null)
+                {
+                    errors.Add(builtinError);
+                    continue;
+                }
+
+                // IsUnique 单列唯一（与列配置一致，保存时兜底）
+                if (column.IsUnique && !string.IsNullOrEmpty(config.PhysicalTableName))
+                {
+                    var uniqueError = await ValidateUniqueAsync(config.PhysicalTableName, column.DbField, value, data);
+                    if (uniqueError != null) errors.Add(uniqueError);
+                }
             }
 
             // UniqueConstraints 联合唯一（后端兜底）
