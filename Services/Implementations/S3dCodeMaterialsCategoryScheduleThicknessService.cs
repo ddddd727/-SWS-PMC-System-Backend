@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +10,9 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dCodeMaterialsCategoryScheduleThicknessService : IS3dCodeMaterialsCategoryScheduleThicknessService
     {
-        private readonly SpecContext _context;
+        private readonly AppDbContext _context;
 
-        public S3dCodeMaterialsCategoryScheduleThicknessService(SpecContext context)
+        public S3dCodeMaterialsCategoryScheduleThicknessService(AppDbContext context)
         {
             _context = context;
         }

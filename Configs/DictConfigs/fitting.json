@@ -58,7 +58,7 @@
                 "UiType": "Select",
                 "IsRequired": true,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
@@ -131,7 +131,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
@@ -204,7 +204,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
@@ -277,7 +277,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
@@ -350,7 +350,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
@@ -423,7 +423,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
@@ -496,7 +496,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },
@@ -569,7 +569,7 @@
                 "UiType": "Select",
                 "IsRequired": false,
                 "DataSource": {
-                    "Url": "/api/dict/options/mat-category",
+                    "Url": "/api/dict/options/mat-category?source=view",
                     "LabelField": "MaterialsCategory_Long",
                     "ValueField": "MaterialsCategory_Long",
                     "ValueMapping": { "materialsCategoryCL": "MaterialsCategory_CL" },

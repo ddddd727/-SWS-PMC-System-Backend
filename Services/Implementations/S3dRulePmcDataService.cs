@@ -1,10 +1,10 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Common.Models;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.PipeSpecConfig;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Shared.Models;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
@@ -13,11 +13,11 @@ namespace PMCSystem_Backend.Services.Implementations
     /// </summary>
     public class S3dRulePmcDataService : IS3dRulePmcDataService
     {
-        private readonly PmcContext _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
         private readonly ILogger<S3dRulePmcDataService> _logger;
 
-        public S3dRulePmcDataService(PmcContext context, IMapper mapper, ILogger<S3dRulePmcDataService> logger)
+        public S3dRulePmcDataService(AppDbContext context, IMapper mapper, ILogger<S3dRulePmcDataService> logger)
         {
             _context = context;
             _mapper = mapper;

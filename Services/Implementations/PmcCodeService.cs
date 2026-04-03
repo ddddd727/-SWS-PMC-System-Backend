@@ -1,19 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Models;
-using PMCSystem_Backend.Services.Interface;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
+using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
 
-namespace PMCSystem_Backend.Services.Impletation
+namespace PMCSystem_Backend.Services.Implementations
 {
     public class PmcCodeService : IPmcCodeService
     {
-        private readonly PmcContextLr _context;
+        private readonly AppDbContext _context;
         private readonly ILogger<PmcCodeService> _logger;
 
-        public PmcCodeService(PmcContextLr context, ILogger<PmcCodeService> logger)
+        public PmcCodeService(AppDbContext context, ILogger<PmcCodeService> logger)
         {
             _context = context;
             _logger = logger;
@@ -222,7 +221,7 @@ namespace PMCSystem_Backend.Services.Impletation
                     if (!existingByCode.TryGetValue(item.PmcCode, out var entity))
                     {
                         // Add only if not exists
-                        entity = new S3dRulePmcdatum
+                        entity = new S3dRulePmcData
                         {
                             ShipType = shipType,
                             ShipNo = shipNo,
@@ -425,7 +424,7 @@ namespace PMCSystem_Backend.Services.Impletation
                 }
 
                 // 3. 准备新数据
-                var newItems = sourceItems.Select(src => new S3dRulePmcdatum
+                var newItems = sourceItems.Select(src => new S3dRulePmcData
                 {
                     ShipType = targetShipType,
                     ShipNo = targetShipNo,

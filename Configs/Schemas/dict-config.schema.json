@@ -29,6 +29,21 @@
                     "description": "字典编码表名称（如果有）"
                 },
 
+                "OptionsSource": {
+                    "type": "string",
+                    "enum": [ "CodeList", "View" ],
+                    "description": "表格级默认：GET options 用 CodeList 表或 View DISTINCT（列 DataSource 可覆盖）"
+                },
+                "OptionsViewName": {
+                    "type": "string",
+                    "description": "OptionsSource=View 时的视图名；不填则使用本字典的 ViewName"
+                },
+                "OptionsViewColumns": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "OptionsSource=View 时 DISTINCT 的列（表格级兜底）"
+                },
+
                 "HandlerType": {
                     "type": "string",
                     "enum": [ "Attribute", "Rule", "General" ],
@@ -386,6 +401,24 @@
                                         "type": "object",
                                         "description": "选中后需要同步映射到当前行其他字段的配置，key=目标 DbField，value=数据源响应中的字段名",
                                         "additionalProperties": { "type": "string" }
+                                    },
+                                    "OptionsSource": {
+                                        "type": "string",
+                                        "enum": [ "CodeList", "View" ],
+                                        "description": "本列下拉选项策略，优先于表格级 OptionsSource"
+                                    },
+                                    "OptionsViewName": {
+                                        "type": "string",
+                                        "description": "OptionsSource=View 时使用的视图名（可覆盖表格级）"
+                                    },
+                                    "OptionsViewColumns": {
+                                        "type": "array",
+                                        "items": { "type": "string" },
+                                        "description": "OptionsSource=View 时 DISTINCT 的列名"
+                                    },
+                                    "OptionsRefDictType": {
+                                        "type": "string",
+                                        "description": "OptionsSource=View 且未配 OptionsViewName 时，从该字典 type 读取 ViewName（如 mat-category）"
                                     },
                                     "LoadRelation": {
                                         "type": "object",

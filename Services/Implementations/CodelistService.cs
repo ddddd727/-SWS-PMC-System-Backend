@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.CodelistTable;
+using Microsoft.EntityFrameworkCore;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos.CodelistTable;
 using PMCSystem_Backend.Services.Interfaces;
 
 namespace PMCSystem_Backend.Services.Implementations
@@ -8,14 +8,14 @@ namespace PMCSystem_Backend.Services.Implementations
     public class CodelistService : ICodelistService
     {
         private readonly ILogger<CodelistService> _logger;
-        private readonly PmcContext _pmcContext;
+        private readonly AppDbContext _pmcContext;
 
         private static readonly Dictionary<string, int> _codelistTableCache = new();
         private static readonly Dictionary<string, Dictionary<int, string>> _codelistValueCache = new();
         private static DateTime _lastCacheRefresh = DateTime.MinValue;
         private static readonly TimeSpan _cacheRefreshInterval = TimeSpan.FromMinutes(30);
 
-        public CodelistService(ILogger<CodelistService> logger, PmcContext pmcContext)
+        public CodelistService(ILogger<CodelistService> logger, AppDbContext pmcContext)
         {
             _logger = logger;
             _pmcContext = pmcContext;
@@ -69,6 +69,146 @@ namespace PMCSystem_Backend.Services.Implementations
 
             _logger.LogWarning("Codelist值无法转换为整数：{CodelistValue}", codelistValue);
             return null;
+        }
+
+        /// <summary>
+        /// 根据 Codelist 表名和短描述反查对应的 Codelist 值
+        /// </summary>
+        /// <param name="codelistTableName">Codelist 表名</param>
+        /// <param name="shortDescription">短描述（ShortStringValue）</param>
+        /// <returns>匹配到的 CodeListNumber；未命中或歧义时返回 null</returns>
+        public async Task<int?> GetCodeListNumberByShortDescriptionAsync(string codelistTableName, string shortDescription)
+        {
+            if (string.IsNullOrWhiteSpace(codelistTableName))
+            {
+                _logger.LogWarning("Codelist表名不能为空");
+                return null;
+            }
+
+            var normalizedDescription = shortDescription?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedDescription))
+            {
+                _logger.LogWarning("短描述不能为空，表名：{CodelistTableName}", codelistTableName);
+                return null;
+            }
+
+            try
+            {
+                var codelistTableId = await GetCodelistTableIdAsync(codelistTableName);
+                if (codelistTableId == 0)
+                {
+                    _logger.LogWarning("未找到Codelist表：{CodelistTableName}", codelistTableName);
+                    return null;
+                }
+
+                var normalizedLower = normalizedDescription.ToLower();
+                var matchedValues = await _pmcContext.S3dCommonCodeListValues
+                    .Where(v =>
+                        v.CodeListTableId == codelistTableId
+                        && v.Status
+                        && v.ShortStringValue != null
+                        && v.ShortStringValue.Trim().ToLower() == normalizedLower)
+                    .Select(v => new { v.CodeListNumber, v.ShortStringValue })
+                    .ToListAsync();
+
+                if (matchedValues.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "未找到匹配的Codelist值，表名：{CodelistTableName}，短描述：{ShortDescription}",
+                        codelistTableName, normalizedDescription);
+                    return null;
+                }
+
+                if (matchedValues.Count > 1)
+                {
+                    _logger.LogWarning(
+                        "短描述匹配到多个Codelist值，表名：{CodelistTableName}，短描述：{ShortDescription}，数量：{Count}",
+                        codelistTableName, normalizedDescription, matchedValues.Count);
+                    return null;
+                }
+
+                var matched = matchedValues[0];
+                UpdateCache(codelistTableName, new Dictionary<int, string>
+                {
+                    { matched.CodeListNumber, matched.ShortStringValue }
+                });
+
+                return matched.CodeListNumber;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "根据短描述反查Codelist值失败，表名：{CodelistTableName}，短描述：{ShortDescription}",
+                    codelistTableName, normalizedDescription);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 根据 Codelist 表名和长描述反查对应的 Codelist 值
+        /// </summary>
+        /// <param name="codelistTableName">Codelist 表名</param>
+        /// <param name="longDescription">长描述（LongStringValue）</param>
+        /// <returns>匹配到的 CodeListNumber；未命中或歧义时返回 null</returns>
+        public async Task<int?> GetCodeListNumberByLongDescriptionAsync(string codelistTableName, string longDescription)
+        {
+            if (string.IsNullOrWhiteSpace(codelistTableName))
+            {
+                _logger.LogWarning("Codelist表名不能为空");
+                return null;
+            }
+
+            var normalizedDescription = longDescription?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedDescription))
+            {
+                _logger.LogWarning("长描述不能为空，表名：{CodelistTableName}", codelistTableName);
+                return null;
+            }
+
+            try
+            {
+                var codelistTableId = await GetCodelistTableIdAsync(codelistTableName);
+                if (codelistTableId == 0)
+                {
+                    _logger.LogWarning("未找到Codelist表：{CodelistTableName}", codelistTableName);
+                    return null;
+                }
+
+                var normalizedLower = normalizedDescription.ToLower();
+                var matchedValues = await _pmcContext.S3dCommonCodeListValues
+                    .Where(v =>
+                        v.CodeListTableId == codelistTableId
+                        && v.Status
+                        && v.LongStringValue != null
+                        && v.LongStringValue.Trim().ToLower() == normalizedLower)
+                    .Select(v => new { v.CodeListNumber, v.LongStringValue })
+                    .ToListAsync();
+
+                if (matchedValues.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "未找到匹配的Codelist值，表名：{CodelistTableName}，长描述：{LongDescription}",
+                        codelistTableName, normalizedDescription);
+                    return null;
+                }
+
+                if (matchedValues.Count > 1)
+                {
+                    _logger.LogWarning(
+                        "长描述匹配到多个Codelist值，表名：{CodelistTableName}，长描述：{LongDescription}，数量：{Count}",
+                        codelistTableName, normalizedDescription, matchedValues.Count);
+                    return null;
+                }
+
+                return matchedValues[0].CodeListNumber;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "根据长描述反查Codelist值失败，表名：{CodelistTableName}，长描述：{LongDescription}",
+                    codelistTableName, normalizedDescription);
+                return null;
+            }
         }
 
 

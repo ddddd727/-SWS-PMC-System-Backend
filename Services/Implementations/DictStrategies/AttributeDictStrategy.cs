@@ -1,7 +1,7 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 using PMCSystem_Backend.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -14,8 +14,8 @@ namespace PMCSystem_Backend.Services.Implementations.DictStrategies
 {
     public class AttributeDictStrategy : IDictStrategy
     {
-        private readonly PmcContext _context;
-        public AttributeDictStrategy(PmcContext context) => _context = context;
+        private readonly AppDbContext _context;
+        public AttributeDictStrategy(AppDbContext context) => _context = context;
 
         public async Task<int> AddAsync(string type, DictItemConfig config, DictInputDto data)
         {

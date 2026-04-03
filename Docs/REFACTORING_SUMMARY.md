@@ -206,10 +206,9 @@ DbContext
 
 ### 中优先级
 1. **引入策略模式**：替换 `SaveSpecRules` 中的 16 个 Switch-Case
-2. **添加Repository层**：进一步解耦数据访问逻辑
 
 ### 低优先级
-3. **重构实体设计**：优化 `S3dRulePmcData` 的 16 个独立字段（需要数据库迁移）
+2. **重构实体设计**：优化 `S3dRulePmcData` 的 16 个独立字段（需要数据库迁移）
 
 ---
 

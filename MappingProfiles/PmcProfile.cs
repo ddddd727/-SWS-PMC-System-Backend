@@ -1,7 +1,9 @@
 using AutoMapper;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Models;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Modules.DesignRules.Dtos;
+using PMCSystem_Backend.Modules.DesignRules.Entities;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
+using PMCSystem_Backend.Shared.Entities;
 
 namespace PMCSystem_Backend.MappingProfiles
 {
@@ -12,18 +14,14 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<S3dDictPipingBendData, S3dDictPipingBendDataDto>().ReverseMap();
             CreateMap<CreateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
             CreateMap<UpdateS3dDictPipingBendDataDto, S3dDictPipingBendData>();
-            CreateMap<S3dCodeWallThickness, S3dCodeWallThicknessDto>();
             CreateMap<S3dCodePipingBendParameter, S3dCodePipingBendParameterDto>();
+            CreateMap<S3dCodePlainPipingGenericData, S3dCodePlainPipingGenericDataDto>();
             CreateMap<S3dCodeShortCodeMap, S3dCodeShortCodeMapDto>();
-            CreateMap<PMCSystem_Backend.Entities.PipeSpecConfig.S3dDictPipingComponentType, S3dDictPipingComponentTypeDto>().ReverseMap();
+            CreateMap<S3dDictPipingComponentType, S3dDictPipingComponentTypeDto>().ReverseMap();
 
             CreateMap<S3dRuleShortCodeMap, S3dRuleShortCodeMapDto>().ReverseMap();
             CreateMap<CreateS3dRuleShortCodeMapDto, S3dRuleShortCodeMap>();
             CreateMap<UpdateS3dRuleShortCodeMapDto, S3dRuleShortCodeMap>();
-
-            CreateMap<S3dDictWallThickness, S3dDictWallThicknessDto>().ReverseMap();
-            CreateMap<CreateS3dDictWallThicknessDto, S3dDictWallThickness>();
-            CreateMap<UpdateS3dDictWallThicknessDto, S3dDictWallThickness>();
 
             CreateMap<S3dRuleShortCodeHierarchyRule, S3dRuleShortCodeHierarchyRuleDto>().ReverseMap();
             CreateMap<CreateS3dRuleShortCodeHierarchyRuleDto, S3dRuleShortCodeHierarchyRule>();
@@ -32,6 +30,14 @@ namespace PMCSystem_Backend.MappingProfiles
             CreateMap<CreateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
             CreateMap<UpdateS3dRulePipingBendParameterDto, S3dRulePipingBendParameter>();
             CreateMap<S3dRulePipingBendParameter, UpdateS3dRulePipingBendParameterDto>();
+
+            CreateMap<S3dCommonPlainPipingGenericData, S3dCommonPlainPipingGenericDataDto>().ReverseMap();
+            CreateMap<CreateS3dCommonPlainPipingGenericDataDto, S3dCommonPlainPipingGenericData>();
+            CreateMap<UpdateS3dCommonPlainPipingGenericDataDto, S3dCommonPlainPipingGenericData>();
+
+            // CodeListTableCatelog Mappings
+            CreateMap<S3dCommonCodeListTable, CodeListTableCatelogDto>().ReverseMap();
+            CreateMap<CreateCodeListTableCatelogDto, S3dCommonCodeListTable>();
         }
     }
 }

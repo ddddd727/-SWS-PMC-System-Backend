@@ -1,18 +1,17 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Models;
-using PMCSystem_Backend.Services.Interface;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
+using PMCSystem_Backend.Services.Interfaces;
 
-namespace PMCSystem_Backend.Services.Impletation
+namespace PMCSystem_Backend.Services.Implementations
 {
     public class PipeLimitRuleService : IPipeLimitRuleService
     {
-        private readonly PmcContextLr _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public PipeLimitRuleService(PmcContextLr context, IMapper mapper)
+        public PipeLimitRuleService(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

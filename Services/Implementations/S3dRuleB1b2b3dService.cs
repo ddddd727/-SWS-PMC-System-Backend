@@ -1,8 +1,8 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Entities;
 using PMCSystem_Backend.Services.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +12,10 @@ namespace PMCSystem_Backend.Services.Implementations
 {
     public class S3dRuleB1b2b3dService : IS3dRuleB1b2b3dService
     {
-        private readonly SpecContext _context;
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public S3dRuleB1b2b3dService(SpecContext context, IMapper mapper)
+        public S3dRuleB1b2b3dService(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;

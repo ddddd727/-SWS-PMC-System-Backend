@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {
@@ -12,5 +12,6 @@ namespace PMCSystem_Backend.Services.Interfaces
         Task<int> DeleteAsync(string type, int id);
         Task<int> BatchDeleteAsync(string type, List<int> ids);
         Task<List<dynamic>> GetComponentTypeListAsync();
+        Task<IEnumerable<dynamic>> GetGeoStandardOptionsAsync(string type);
     }
 }

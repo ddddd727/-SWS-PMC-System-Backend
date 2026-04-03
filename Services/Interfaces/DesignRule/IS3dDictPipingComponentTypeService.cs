@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
+using PMCSystem_Backend.Modules.DesignRules.Dtos;
 
 namespace PMCSystem_Backend.Services.Interfaces
 {

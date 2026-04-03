@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using PMCSystem_Backend.Dtos.Dict;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

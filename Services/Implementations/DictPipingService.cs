@@ -7,10 +7,10 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
-using PMCSystem_Backend.Dtos.Dict;
 using PMCSystem_Backend.Services.Implementations.DictStrategies;
 using PMCSystem_Backend.Services.Interfaces;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Modules.StandardComponents.Dtos;
 
 namespace PMCSystem_Backend.Services.Implementations
 {
@@ -34,7 +34,7 @@ namespace PMCSystem_Backend.Services.Implementations
     public class DictPipingService(
         DictStrategyFactory strategyFactory,
         DictConfigManager configManager,
-        PmcContext context,
+        AppDbContext context,
         ILogger<DictPipingService> logger) : IDictPipingService
     {
         // 缓存 JsonSerializerOptions 实例，避免每次序列化/反序列化时重复创建
@@ -58,7 +58,7 @@ namespace PMCSystem_Backend.Services.Implementations
 
         private readonly DictStrategyFactory _strategyFactory = strategyFactory;
         private readonly DictConfigManager _configManager = configManager;
-        private readonly PmcContext _context = context;
+        private readonly AppDbContext _context = context;
         private readonly ILogger<DictPipingService> _logger = logger;
 
         #region 1. 查询 (GetTableData)
@@ -109,19 +109,24 @@ namespace PMCSystem_Backend.Services.Implementations
                                     Disabled = o.Disabled
                                 }).ToList(),
 
-                                ValueMapping = c.DataSource.ValueMapping
+                                ValueMapping = c.DataSource.ValueMapping,
+
+                                FilterUsed = c.DataSource.FilterUsed,
+                                OptionsSource = c.DataSource.OptionsSource,
+                                OptionsViewName = c.DataSource.OptionsViewName,
+                                OptionsViewColumns = c.DataSource.OptionsViewColumns
                             }
                         })
                 ]
             };
 
-            // 先查询 S3D_Dict_PipingComponentType 表，获取 componentTypeName = 'elbow' 的 ID 和 ConnectType
+            // 先查询 S3D_Dict_ComponentType 表，获取 componentTypeName = 'elbow' 的 ID 和 ConnectType
             using var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
             var componentTypeName = type.Replace(PART_PREFIX, "");
             var componentTypeResult = await conn.QueryFirstOrDefaultAsync<dynamic>(
-                "SELECT ID, ConnectType FROM S3D_Dict_PipingComponentType WHERE ComponentTypeName = @ComponentTypeName",
+                "SELECT ID, ConnectType FROM S3D_Dict_ComponentType WHERE ComponentTypeName = @ComponentTypeName",
                 new { ComponentTypeName = componentTypeName });
 
             if (componentTypeResult is not null)
@@ -437,6 +442,56 @@ namespace PMCSystem_Backend.Services.Implementations
             string sql = "SELECT id, ComponentTypeName, ComponentTypeDescription FROM S3D_Dict_PipingComponentType WHERE status = 1";
             var result = await conn.QueryAsync<dynamic>(sql);
             return [.. result];
+        }
+
+        #endregion
+
+        #region 8. 获取几何行业标准选项
+
+        /// <summary>
+        /// 获取几何行业标准下拉框选项
+        /// </summary>
+        /// <param name="type">组件类型</param>
+        /// <returns>几何行业标准下拉框选项列表</returns>
+        public async Task<IEnumerable<dynamic>> GetGeoStandardOptionsAsync(string type)
+        {
+            using var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+
+            // 1. 根据 companyType 获取 ComponentTypeID
+            var componentTypeResult = await conn.QueryFirstOrDefaultAsync<dynamic>(
+                "SELECT ID FROM S3D_Dict_ComponentType WHERE ComponentTypeName = @ComponentTypeName",
+                new { ComponentTypeName = type });
+
+            if (componentTypeResult is not null)
+                {
+                    int componentTypeId = componentTypeResult.ID;
+
+                // 2. 执行 SQL 查询获取几何行业标准选项
+                string sql = @"
+                    SELECT 
+                        t.GeometricIndustryStandard_CL GeometricIndustryStandard_CL, 
+                        t2.ShortStringValue GeometricIndustryStandard_Short, 
+                        t2.LongStringValue GeometricIndustryStandard_Long 
+                    FROM S3D_Dict_GeometricIndustryStandard t 
+                    left join S3D_Dict_ComponentType t1 on t.ComponentTypeID = t1.ID 
+                    left join S3D_Common_CodeListValue t2 on t.GeometricIndustryStandard_CL = t2.CodeListNumber 
+                    left join S3D_Common_CodeListTable t3 on t2.CodeListTableID = t3.ID 
+                    where t.Status = 1 and t3.CodeListTableName = 'GeometricIndustryStandard' and t.ComponentTypeID = @ComponentTypeID
+                ";
+
+                var options = await conn.QueryAsync<dynamic>(sql, new { ComponentTypeID = componentTypeId });
+
+                // 3. 转换为下拉框选项格式
+                return options.Select(opt => new
+                {
+                    label = opt.GeometricIndustryStandard_Long ?? opt.GeometricIndustryStandard_Short ?? opt.GeometricIndustryStandard_CL.ToString(),
+                    value = opt.GeometricIndustryStandard_CL
+                });
+            } else {
+                throw new Exception($"未找到组件类型 '{type}' 对应的 ComponentType");
+            }
+
         }
 
         #endregion

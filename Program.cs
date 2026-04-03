@@ -2,18 +2,18 @@ using System.Text;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PMCSystem_Backend.Data;
 using PMCSystem_Backend.MappingProfiles;
 using PMCSystem_Backend.MappingProfiles.PipeSpecMappers;
-using PMCSystem_Backend.Common.Middelswares;
 using Serilog;
 using System.Text.Json;
 using PMCSystem_Backend.Services.Interfaces;
 using PMCSystem_Backend.Services.Implementations;
-using PMCSystem_Backend.Services.Impletation;
-using PMCSystem_Backend.Services.Interface;
 using PMCSystem_Backend.Services.Implementations.DictStrategies;
+using PMCSystem_Backend.Services.Interfaces.CodeListManagement;
+using PMCSystem_Backend.Services.Implementations.CodeListManagement;
 using OfficeOpenXml;
+using PMCSystem_Backend.Core.Data;
+using PMCSystem_Backend.Core.Middlewares;
 
 // 注册编码提供程序，确保 EPPlus 处理 ZIP/xlsx 时正确解析编码（修复导出 Excel 无法打开问题）
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -51,9 +51,6 @@ try
     builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.AttributeDictStrategy>();
     builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.FittingDictStrategy>();
     builder.Services.AddScoped<PMCSystem_Backend.Services.Implementations.DictStrategies.FlangeDictStrategy>();
-    builder.Services.AddScoped<PMCSystem_Backend.Services.Interfaces.IDictService, PMCSystem_Backend.Services.Implementations.DictService>();
-
-    // 这是你本来就有的（确保工厂注册在它的上面或附近）
     builder.Services.AddScoped<IDictService, DictService>();
     // 注册DictPipingService
     builder.Services.AddScoped<IDictPipingService, DictPipingService>();
@@ -67,12 +64,12 @@ try
     builder.Services.AddScoped<IFlangeRuleService, FlangeRuleService>();
     builder.Services.AddScoped<IPmcCodeService, PmcCodeService>();
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
-    builder.Services.AddScoped<IS3dCodeWallThicknessService, S3dCodeWallThicknessService>();
-    builder.Services.AddScoped<IS3dDictWallThicknessService, S3dDictWallThicknessService>();
+    builder.Services.AddScoped<IS3dCodePlainPipingGenericDataService, S3dCodePlainPipingGenericDataService>();
     builder.Services.AddScoped<IS3dRuleShortCodeHierarchyRuleService, S3dRuleShortCodeHierarchyRuleService>();
     builder.Services.AddScoped<IS3dRulePipingBendParameterService, S3dRulePipingBendParameterService>();
     builder.Services.AddScoped<IS3dCodePipingBendParameterService, S3dCodePipingBendParameterService>();
     builder.Services.AddScoped<IS3dDictPipingBendDataService, S3dDictPipingBendDataService>();
+    builder.Services.AddScoped<IS3dCommonPlainPipingGenericDataService, S3dCommonPlainPipingGenericDataService>();
     builder.Services.AddScoped<IS3dCommonCodeListValueService, S3dCommonCodeListValueService>();
     builder.Services.AddScoped<IS3dCodeShortCodeMapService, S3dCodeShortCodeMapService>();
     builder.Services.AddScoped<IS3dRuleShortCodeMapService, S3dRuleShortCodeMapService>();
@@ -91,6 +88,7 @@ try
     builder.Services.AddScoped<IS3dRuleAb2b3c2Service, S3dRuleAb2b3c2Service>();
     builder.Services.AddScoped<IS3dRuleB1b2b3dService, S3dRuleB1b2b3dService>();
     builder.Services.AddScoped<IS3dRuleC1c2Service, S3dRuleC1c2Service>();
+    builder.Services.AddScoped<ICodeListTableCatelogService, CodeListTableCatelogService>();
 
     // 注册服务层的接口与实现
     // 注册自定义服务为Scoped生命周期，每个请求创建一个新实例
@@ -111,26 +109,29 @@ try
     // 注册管系规格书版本管理服务
     builder.Services.AddScoped<IPipeSpecVersionService, PipeSpecVersionService>();
 
-    builder.Services.AddControllers();
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add(new ProducesAttribute("application/json"));
+    })
+    .AddJsonOptions(options =>
+    {
+        // 统一使用小驼峰命名
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        // 空值属性可选
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        // 时间格式
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowVueFrontend",
-        policy => policy.WithOrigins("http://10.8.98.105").AllowAnyHeader().AllowAnyMethod());
+        policy => policy.WithOrigins("http://10.8.98.15").AllowAnyHeader().AllowAnyMethod());
     });
 
-    //  DbContext
-    builder.Services.AddDbContext<SpecContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    // 注册多个 DbContext
-    builder.Services.AddDbContext<PmcContextCky>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-    builder.Services.AddDbContext<PmcContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-    builder.Services.AddDbContext<PmcContextLr>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    // 统一 DbContext（合并原 PmcContext、PmcContextCky、PmcContextLr、SpecContext）
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 
@@ -138,14 +139,15 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // ע AutoMapper
-    builder.Services.AddAutoMapper(typeof(RuleProfiles));
-    // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
-    builder.Services.AddControllers(options =>
+    // 注册 AutoMapper
+    builder.Services.AddAutoMapper(cfg =>
     {
-        options.Filters.Add(new ProducesAttribute("application/json"));
+        cfg.AddProfile<RuleProfiles>();
+        cfg.AddProfile<PmcProfile>();
+        cfg.AddProfile<PmcSpecRuleProfile>();
+        cfg.AddProfile<S3dMappingProfile>();
     });
+    // builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
     builder.Configuration.AddJsonFile("Configs/dicts.json", optional: true, reloadOnChange: true);
 
@@ -156,18 +158,6 @@ try
         options.KnownNetworks.Clear();
         options.KnownProxies.Clear();
     });
-
-    // 配置JSON序列化
-    builder.Services.AddControllers()
-        .AddJsonOptions(options =>
-        {
-            // 统一使用小驼峰命名
-            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            // 空值属性可选
-            options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-            // 时间格式
-            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        });
 
     // 注册日志服务
     builder.Services.AddLogging();

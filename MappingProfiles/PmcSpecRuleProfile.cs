@@ -1,9 +1,7 @@
 using AutoMapper;
-using PMCSystem_Backend.Dtos.PipeSpecConfig;
-using PMCSystem_Backend.Dtos.PmcSpecRuleConfig;
-using PMCSystem_Backend.Entities;
-using PMCSystem_Backend.Entities.PipeSpecConfig;
-using PMCSystem_Backend.Models;
+using PMCSystem_Backend.Modules.PipingSpecifications.Dtos;
+using PMCSystem_Backend.Modules.PipingSpecifications.Entities;
+using PMCSystem_Backend.Modules.PMCRuleConfig.Dtos;
 
 namespace PMCSystem_Backend.MappingProfiles
 {
